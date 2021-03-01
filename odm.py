@@ -19,6 +19,12 @@ def parse_dt(x,y):
         return pd.NaT
 
 def parse_text(x,y):
+    if x is None and y is None:
+        return ""
+    if x is None:
+        return y
+    if y is None:
+        return x
     if x == "" and y == "":
         return ""
     elif x == "":
@@ -52,7 +58,7 @@ def agg_by_type(series):
         if "object" in data_type:
             return reduce(parse_text, series)
 
-        if "float64" in data_type:
+        if "float64" in data_type or "int" in data_type:
             return reduce(parse_nums, series)
         else:
             raise TypeError(f"could not parse series {name}")
@@ -105,7 +111,7 @@ class Odm:
 
     def combine_per_sample(self):
         #TODO: Combine with CPHD data
-        ww_measure = self.data["WWMeasure"]
+        ww_measure = self.data["WWMeasure"].groupby("WWMeasure.sampleID").agg(agg_by_type)
         sample = self.data["Sample"]
         site_measure = self.data["SiteMeasure"]
         site = self.data["Site"]
@@ -124,6 +130,10 @@ class Odm:
         date_column_names = ["analysisDate", "reportDate"]
         for col in date_column_names:
             df[col] = pd.to_datetime(df[col])
+        for col in df.columns.to_list():
+            if "notes" in col:
+                df[col] = df[col].fillna("")
+        df["index"] = df["index"].astype(str)
         assay_col = "assayID" if "assayID" in df.columns.to_list() else "assayMethodID"
         df[[assay_col, "notes"]].fillna("", inplace=True)
         df["qualityFlag"].fillna("NO", inplace=True)

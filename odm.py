@@ -42,7 +42,7 @@ def parse_nums(x,y):
     elif not pd.isna(x) and pd.isna(y):
         return x
     else:
-        return x+y/2;
+        return x+y/2
 
 def remove_columns(cols, df):
     to_remove = [col for col in cols if col in df.columns]
@@ -84,7 +84,7 @@ class Odm:
     def read_excel(self, filepath, table_names=None):
         if table_names is None:
             table_names = list(self.LOOKUP.keys())
-        xls = pd.read_excel(filepath, engine="xlrd", sheet_name=None)
+        xls = pd.read_excel(filepath, sheet_name=None)
         sheet_names = [self.LOOKUP[name]["sheet"] for name in table_names]
         parsers = [self.LOOKUP[name]["parser"] for name in table_names]
 

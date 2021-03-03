@@ -7,6 +7,9 @@ import geodaisy.converters as convert
 from pygeoif import geometry
 from collections import defaultdict
 from sqlalchemy import create_engine
+import warnings
+
+pd.options.mode.chained_assignment = 'raise'
 
 def parse_dt(x,y):
     if pd.isna(x) and pd.isna(y):
@@ -29,7 +32,7 @@ def parse_text(x,y):
         return ""
     elif x == "":
         return y
-    elif y == "":
+    elif y == "" or x == y:
         return x
     else:
         return ";".join([x, y])
@@ -42,26 +45,27 @@ def parse_nums(x,y):
     elif not pd.isna(x) and pd.isna(y):
         return x
     else:
-        return x+y/2;
+        return x+y/2
 
 def remove_columns(cols, df):
     to_remove = [col for col in cols if col in df.columns]
     df.drop(to_remove, axis=1, inplace=True)
     return df
 
+
 def agg_by_type(series):
-        data_type = str(series.dtype)
-        name = series.name
-        if "datetime" in data_type:
-            return reduce(parse_dt, series)
+    data_type = str(series.dtype)
+    name = series.name
+    if "datetime" in data_type:
+        return reduce(parse_dt, series)
 
-        if "object" in data_type:
-            return reduce(parse_text, series)
+    if "object" in data_type:
+        return reduce(parse_text, series)
 
-        if "float64" in data_type or "int" in data_type:
-            return reduce(parse_nums, series)
-        else:
-            raise TypeError(f"could not parse series {name}")
+    if "float64" in data_type or "int" in data_type:
+        return reduce(parse_nums, series)
+    else:
+        raise TypeError(f"could not parse series of dtype {name}")
 
 def convert_geojson(s):
     if s in ["-", ""]:
@@ -80,18 +84,21 @@ class Odm:
             "features": []
         }
         self.map_center = None
-
+    
     def read_excel(self, filepath, table_names=None):
         if table_names is None:
             table_names = list(self.LOOKUP.keys())
-        xls = pd.read_excel(filepath, engine="xlrd", sheet_name=None)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            xls = pd.read_excel(filepath, sheet_name=None)
+        
         sheet_names = [self.LOOKUP[name]["sheet"] for name in table_names]
         parsers = [self.LOOKUP[name]["parser"] for name in table_names]
 
         for table, sheet, fn in zip(table_names, sheet_names, parsers):
             df = xls[sheet].copy(deep=True)
             df = fn(df)
-            self.data[table] = df
+            self.data[table] = df if table not in self.data.keys() else self.data[table].append(df).drop_duplicates()
 
 
     def read_db(self, cnxn_str, table_names=None):
@@ -103,7 +110,7 @@ class Odm:
         for table, fn in zip(table_names, parsers):
             df = pd.read_sql(f"select * from {table}", engine)
             df = fn(df)
-            self.data[table] = df
+            self.data[table] = df if table not in self.data.keys() else self.data[table].append(df).drop_duplicates()
 
     def parse_geometry(self):
         self.geo = self.extract_geo_features(self.data["Polygon"])
@@ -132,10 +139,10 @@ class Odm:
             df[col] = pd.to_datetime(df[col])
         for col in df.columns.to_list():
             if "notes" in col:
-                df[col] = df[col].fillna("")
+                df[col].fillna("", inplace=True)
         df["index"] = df["index"].astype(str)
         assay_col = "assayID" if "assayID" in df.columns.to_list() else "assayMethodID"
-        df[[assay_col, "notes"]].fillna("", inplace=True)
+        df.loc[:, (assay_col, "notes")].fillna("", inplace=True)
         df["qualityFlag"].fillna("NO", inplace=True)
         #making a copy of the df I can iterate over while I modify the original DataFrame
         df_copy = df.copy(deep=True)
@@ -251,8 +258,7 @@ class Odm:
         return df
 
     def parse_polygon(df):
-        df["wkt"] = df["wkt"].fillna("")
-        df["geoJSON"] = df["wkt"].apply(lambda x: convert_geojson(x))
+        df["wkt"].fillna("", inplace=True)
         df = df.add_prefix("Polygon.")
         return df
 
@@ -317,11 +323,11 @@ class Odm:
             "features": []
         }
         for i, row in polygon_df.iterrows():
-            if row["Polygon.geoJSON"] is None:
+            if row["Polygon.wkt"] in [None, ""]:
                 continue
             new_feature = {
                 "type": "Feature",
-                "geometry": row["Polygon.geoJSON"],
+                "geometry": convert_geojson(row["Polygon.wkt"]),
                 "properties":{
                     "polygonID":row["Polygon.polygonID"],
                 },
@@ -388,10 +394,19 @@ def test_samples_from_db():
     odm_instance.parse_geometry()
     return odm_instance.combine_per_sample()
 
+def test_from_excel_and_db():
+    # run with example db data
+    path = "Data/WBE.db"
+    connection_string= f"sqlite:///{path}"
+    odm_instance = Odm()
+    filename = "Data/Ville de Québec 202102.xlsx"
+    odm_instance.read_excel(filename)
+    odm_instance.read_db(connection_string)
+    odm_instance.parse_geometry()
+    return odm_instance.combine_per_sample()
 
 if __name__ == "__main__":
-    samples = test_samples_from_excel()
-
-    samples = test_samples_from_db()
-
+    # samples = test_samples_from_excel()
+    # samples = test_samples_from_db()
+    samples = test_from_excel_and_db()
 

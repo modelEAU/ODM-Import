@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import numpy as np
 from functools import reduce
@@ -9,9 +10,11 @@ from sqlalchemy import create_engine
 import warnings
 
 pd.options.mode.chained_assignment = 'raise'
+with open('types.json') as f:
+    TYPES = json.load(f) 
 
 
-def parse_dt(x, y):
+def reduce_dt(x, y):
     if pd.isna(x) and pd.isna(y):
         return pd.NaT
     elif pd.isna(x) and not pd.isna(y):
@@ -22,7 +25,7 @@ def parse_dt(x, y):
         return pd.NaT
 
 
-def parse_text(x, y):
+def reduce_text(x, y):
     if x is None and y is None:
         return ""
     if x is None:
@@ -39,7 +42,7 @@ def parse_text(x, y):
         return ";".join([x, y])
 
 
-def parse_nums(x, y):
+def reduce_nums(x, y):
     if pd.isna(x) and pd.isna(y):
         return np.nan
     elif pd.isna(x) and not pd.isna(y):
@@ -56,17 +59,18 @@ def remove_columns(cols, df):
     return df
 
 
-def agg_by_type(series):
+def reduce_by_type(series):
+    
     data_type = str(series.dtype)
     name = series.name
     if "datetime" in data_type:
-        return reduce(parse_dt, series)
+        return reduce(reduce_dt, series)
 
     if "object" in data_type:
-        return reduce(parse_text, series)
+        return reduce(reduce_text, series)
 
     if "float64" in data_type or "int" in data_type:
-        return reduce(parse_nums, series)
+        return reduce(reduce_nums, series)
     else:
         raise TypeError(f"could not parse series of dtype {name}")
 
@@ -92,25 +96,26 @@ class Odm:
 
     def read_excel(self, filepath, table_names=None):
         if table_names is None:
-            table_names = list(LOOKUP.keys())
+            table_names = list(PARSERS.keys())
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             xls = pd.read_excel(filepath, sheet_name=None)
 
-        sheet_names = [LOOKUP[name]["sheet"] for name in table_names]
-        parsers = [LOOKUP[name]["parser"] for name in table_names]
+        sheet_names = [PARSERS[name]["sheet"] for name in table_names]
+        parsers = [PARSERS[name]["parser"] for name in table_names]
 
         for table, sheet, fn in zip(table_names, sheet_names, parsers):
             df = xls[sheet].copy(deep=True)
+            df = df.apply(lambda x: parse_types(table, x), axis=0)
             df = fn(df)
             self.data[table] = df if table not in self.data.keys() \
                 else self.data[table].append(df).drop_duplicates()
 
     def read_db(self, cnxn_str, table_names=None):
         if table_names is None:
-            table_names = list(LOOKUP.keys())
+            table_names = list(PARSERS.keys())
         engine = create_engine(cnxn_str)
-        parsers = [LOOKUP[name]["parser"] for name in table_names]
+        parsers = [PARSERS[name]["parser"] for name in table_names]
 
         for table, fn in zip(table_names, parsers):
             df = pd.read_sql(f"select * from {table}", engine)
@@ -125,7 +130,7 @@ class Odm:
     def combine_per_sample(self):
         # TODO: Combine with CPHD data
         ww_measure = self.data["WWMeasure"].groupby(
-            "WWMeasure.sampleID").agg(agg_by_type)
+            "WWMeasure.sampleID").agg(reduce_by_type)
         sample = self.data["Sample"]
         site_measure = self.data["SiteMeasure"]
         site = self.data["Site"]
@@ -188,6 +193,42 @@ class Odm:
         return geo
 
 
+def parse_types(table, series):
+    name = series.name
+    desired_type = TYPES[table].get(name, "string")
+    if desired_type == "bool":
+        series = series.apply(lambda x: clean_bool(x))
+    elif desired_type == "string": 
+        series = series.apply(lambda x:clean_string(x))
+    if desired_type in ["inst64", "float64"]:
+        series = series.apply(lambda x: clean_num(x))
+    series = series.astype(desired_type)
+    return series
+
+
+def clean_bool(x):
+    return str(x)\
+        .lower()\
+        .strip()\
+        .replace("yes", "true")\
+        .replace("oui", "true")\
+        .replace("non", "false")\
+        .replace("no", "false")
+
+
+def clean_string(x):
+    if str(x).lower() in ["nan", "na", "nd" "n.d", "none", "-"]:
+        x = ""
+    return str(x).lower().strip()
+    
+
+def clean_num(x):
+    try:
+        return float(x)
+    except Exception:
+        return None
+
+
 def parse_ww_measure(df):
     # Parsing date columns into the datetime format
     date_column_names = ["analysisDate", "reportDate"]
@@ -201,7 +242,7 @@ def parse_ww_measure(df):
     df["index"] = df["index"].astype(str)
     assay_col = "assayID" if "assayID" in df.columns.to_list() \
         else "assayMethodID"
-    
+
     df.loc[:, (assay_col, "notes")].fillna("", inplace=True)
     df["qualityFlag"].fillna("NO", inplace=True)
     # making a copy of the df I can iterate over
@@ -309,7 +350,7 @@ def parse_site_measure(df):
         "notes"
     ]
     df = remove_columns(to_remove, df)
-    df = df.groupby("siteID").agg(agg_by_type)
+    df = df.groupby("siteID").agg(reduce_by_type)
     df.reset_index(inplace=True)
     df = df.add_prefix("SiteMeasure.")
     return df
@@ -383,7 +424,7 @@ def parse_cphd(df):
     del df_copy
     to_remove = ["reporterID", "date", "dateType", "type", "value", "notes"]
     df = remove_columns(to_remove, df)
-    df = df.groupby("cphdID").agg(agg_by_type)
+    df = df.groupby("cphdID").agg(reduce_by_type)
     df.reset_index(inplace=True)
     df = df.add_prefix("CPHD.")
     return df
@@ -400,7 +441,7 @@ def replace_into_db(df, table_name, engine):
     return
 
 
-LOOKUP = {
+PARSERS = {
     "WWMeasure": {
         "sheet": "WWMeasure",
         "parser": parse_ww_measure,

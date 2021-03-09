@@ -1,17 +1,19 @@
 import json
-import pandas as pd
-import numpy as np
-from functools import reduce
-from shapely.geometry import asShape
-from geojson_rewind import rewind
-import geodaisy.converters as convert
-from pygeoif import geometry
-from sqlalchemy import create_engine
+import sqlite3
 import warnings
+from functools import reduce
+
+import geodaisy.converters as convert
+import numpy as np
+import pandas as pd
+from geojson_rewind import rewind
+from pygeoif import geometry
+from shapely.geometry import asShape
+from sqlalchemy import create_engine
 
 pd.options.mode.chained_assignment = 'raise'
 with open('types.json') as f:
-    TYPES = json.load(f) 
+    TYPES = json.load(f)
 
 
 def reduce_dt(x, y):
@@ -60,7 +62,6 @@ def remove_columns(cols, df):
 
 
 def reduce_by_type(series):
-    
     data_type = str(series.dtype)
     name = series.name
     if "datetime" in data_type:
@@ -141,13 +142,21 @@ class Odm:
             left_on="Sample.sampleID",
             right_on="WWMeasure.sampleID"
         )
-        merge = pd.merge(
-            merge,
-            site_measure,
-            how="left",
-            left_on="Sample.siteID",
-            right_on="SiteMeasure.siteID"
-        )
+
+        # Make the db in memory
+        conn = sqlite3.connect(':memory:')
+        # write the tables
+        merge.to_sql('merge', conn, index=False)
+        site_measure.to_sql("site_measure", conn, index=False)
+
+        # write the query
+        qry = "select * from merge" + \
+            " left join site_measure on" + \
+            " [SiteMeasure.dateTime] between [Sample.dateTimeStart] and [Sample.dateTimeEnd]"
+        merge = pd.read_sql_query(qry, conn)
+
+        conn.close()
+
         merge = pd.merge(
             merge,
             site,
@@ -198,10 +207,12 @@ def parse_types(table, series):
     desired_type = TYPES[table].get(name, "string")
     if desired_type == "bool":
         series = series.apply(lambda x: clean_bool(x))
-    elif desired_type == "string": 
-        series = series.apply(lambda x:clean_string(x))
-    if desired_type in ["inst64", "float64"]:
+    elif desired_type == "string":
+        series = series.apply(lambda x: clean_string(x))
+    elif desired_type in ["inst64", "float64"]:
         series = series.apply(lambda x: clean_num(x))
+    elif desired_type == "category":
+        series = series.apply(lambda x: clean_category(x, name))
     series = series.astype(desired_type)
     return series
 
@@ -216,17 +227,25 @@ def clean_bool(x):
         .replace("no", "false")
 
 
+UNKNOWNS = ["nan", "na", "nd" "n.d", "none", "-", "unknown", "n/a", "n/d"]
+
+
 def clean_string(x):
-    if str(x).lower() in ["nan", "na", "nd" "n.d", "none", "-"]:
+    if str(x).lower() in UNKNOWNS:
         x = ""
     return str(x).lower().strip()
-    
+
 
 def clean_num(x):
     try:
         return float(x)
     except Exception:
-        return None
+        return np.nan
+
+
+def clean_category(x, name):
+    x = clean_string(x)
+    return f"{name} unknown" if x == "" else x
 
 
 def parse_ww_measure(df):
@@ -254,11 +273,7 @@ def parse_ww_measure(df):
         value_type = row["type"]
         value_unit = row["unit"].replace("/", "-")
         value_aggregate = row["aggregation"]
-        value_issue = row["qualityFlag"] \
-            .strip() \
-            .lower() \
-            .replace("yes", "issue") \
-            .replace("no", "ok")
+        value_issue = row["qualityFlag"]
 
         notes = row["notes"]
         analysisDate = row["analysisDate"]
@@ -268,7 +283,9 @@ def parse_ww_measure(df):
             value_type,
             value_unit,
             value_aggregate,
-            value_issue
+            str(value_issue) \
+                .replace("True", "Issue") \
+                .replace("False", "No Issue")
         ])
         combined_value_name = ".".join([combined_name, "value"])
         combined_notes_name = ".".join([combined_name, "notes"])
@@ -320,14 +337,11 @@ def parse_site_measure(df):
         value_type = str(row["type"])
         value_unit = str(row["unit"]).replace("/", "-")
         value_aggregate = str(row["aggregation"])
-
         notes = row["notes"]
-        dateTime = row["dateTime"]
 
         combined_name = ".".join([value_type, value_unit, value_aggregate])
         combined_value_name = ".".join([combined_name, "value"])
         combined_notes_name = ".".join([combined_name, "notes"])
-        combined_dateTime_name = ".".join([combined_name, "dateTime"])
 
         if combined_value_name not in df.columns.tolist():
             df[combined_value_name] = np.nan
@@ -337,20 +351,16 @@ def parse_site_measure(df):
             df[combined_notes_name] = ""
         df.loc[i, combined_notes_name] = notes
 
-        if combined_dateTime_name not in df.columns.tolist():
-            df[combined_dateTime_name] = pd.NaT
-        df.loc[i, combined_dateTime_name] = dateTime
-
     del df_copy
     to_remove = [
-        "dateTime", "type", "aggregation",
+        "type", "aggregation",
         "value", "unit", "accessToPublic",
         "accessToAllOrgs", "accessToPHAC", "accessToLocalHA",
         "accessToProvHA", "accessToOtherProv", "accessToDetails",
         "notes"
     ]
     df = remove_columns(to_remove, df)
-    df = df.groupby("siteID").agg(reduce_by_type)
+    df = df.groupby("dateTime").agg(reduce_by_type)
     df.reset_index(inplace=True)
     df = df.add_prefix("SiteMeasure.")
     return df

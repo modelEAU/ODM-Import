@@ -34,7 +34,8 @@
 		"ms-python.python",
 		"ms-toolsai.jupyter",
 		"christian-kohler.path-intellisense",
-		"alexcvzz.vscode-sqlite"
+		"alexcvzz.vscode-sqlite",
+		"ms-python.vscode-pylance"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

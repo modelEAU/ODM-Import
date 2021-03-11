@@ -101,12 +101,11 @@ def time_series_1(x_col, y_col, data):
         return px.scatter()
     df = samples if data is None else pd.read_json(data)
 
-    fig = px.scatter(
+    return px.scatter(
         df, x=x_col, y=y_col,
         color_continuous_scale="Viridis",
         title=f"{y_col} over {x_col}"
     )
-    return fig
 
 
 @app.callback(

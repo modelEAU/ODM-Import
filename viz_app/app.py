@@ -1,22 +1,40 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import glob
+import os
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 from dash.dependencies import Input, Output
 
 import odm
+from odm import visualization_helpers
+from odm import table_parsers
 
 pd.options.display.max_columns = None
 pio.templates.default = "plotly_white"
 # get data
-filename = "Data/Template - Data Model - 20210127.xls"
+filename = "Data/Ville de Québec 202102.xlsx"
 model = odm.Odm()
-model.read_excel(filename)
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+fake_wkt_path = "/".join(dir_path.split("/")[:-1])
+
+fake_wkt_path += "/Data/polygons/*.wkt"
+polygon_files = glob.glob(fake_wkt_path)
+
+fake_poly = visualization_helpers.create_dummy_polygons(polygon_files)
+fake_poly = table_parsers.parse_polygon(fake_poly)
+
+model.data["Polygon"] = fake_poly
+model.load_from_excel(filename)
+
+
+model.ingest_geometry()
 samples = model.combine_per_sample()
 geo = model.geo
-map_center = model.map_center
+map_center = visualization_helpers.get_map_center(geo)
 
 
 def draw_map():

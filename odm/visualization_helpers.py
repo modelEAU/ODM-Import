@@ -34,7 +34,7 @@ def recombine_times(df):
     df = add_missing_columns(df, categories)
 
 
-def create_dummy_polygons(filepath):
+def create_dummy_polygons(filepaths):
     polygons = {}
     default_polygon = {
         "polygonID": None,
@@ -45,9 +45,7 @@ def create_dummy_polygons(filepath):
         "file": None,
         "link": None
     }
-    complete_path = os.path.join(filepath, "*.wkt")
-    polygon_files = glob.glob(complete_path)
-    for i, file in enumerate(polygon_files):
+    for i, file in enumerate(filepaths):
         polygon = default_polygon.copy()
         with open(file, "r") as f:
             polygon["wkt"] = f.read()
@@ -59,7 +57,7 @@ def create_dummy_polygons(filepath):
     return pd.DataFrame.from_dict(polygons, orient="index")
 
 
-def get_map_center(self, geo_json):
+def get_map_center(geo_json):
     x_s = []
     y_s = []
     if len(geo_json["features"]) == 0:

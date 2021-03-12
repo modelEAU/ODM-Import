@@ -8,6 +8,8 @@ from sqlalchemy import create_engine
 
 import table_parsers
 import utilities
+import visualization_helpers
+import constants
 
 pd.options.mode.chained_assignment = 'raise'
 
@@ -151,7 +153,7 @@ class Odm:
         site = self.data["Site"]
         merged = combine_site_sample(merged, site)
 
-        cphd = self.data["CPHD"]
+        cphd = self.data["CovidPublicHealthData"]
         merged = combine_cphd_by_geo(merged, cphd)
 
         merged.set_index("Sample.sampleID", inplace=True)
@@ -204,7 +206,7 @@ def destroy_db(filepath):
 # testing functions
 def test_samples_from_excel():
     # run with example excel data
-    filename = "Data/Site measure/Ville de Quebec 202012.xlsx"
+    filename = "Data/Ville de Québec 202102.xlsx"
     odm_instance = Odm()
     odm_instance.load_from_excel(filename)
     odm_instance.ingest_geometry()
@@ -234,8 +236,8 @@ def test_from_excel_and_db():
 
 
 if __name__ == "__main__":
-    test_path = "Data/db/WBE.db"
-    create_db(test_path)
-    destroy_db(test_path)
+    #test_path = "Data/db/WBE.db"
+    #create_db(test_path)
+    #destroy_db(test_path)
     # samples = test_samples_from_db()
-    # samples = test_from_excel_and_db()
+    samples = test_from_excel_and_db()

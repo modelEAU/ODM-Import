@@ -5,7 +5,7 @@ from geojson_rewind import rewind
 from pygeoif import geometry
 import geodaisy.converters as convert
 import constants
-
+import table_parsers
 
 def reduce_dt(x, y):
     if pd.isna(x) and pd.isna(y):
@@ -77,7 +77,14 @@ def convert_wkt_to_geojson(s):
     return geojson_feature
 
 
-def parse_types(table, series):
+def get_attribute_from_name(name):
+    for attribute, dico in TABLE_LOOKUP.items():
+        if name in dico.values():
+            return attribute
+    return None
+
+
+def parse_types(odm_name, series):
     def clean_bool(x):
         return str(x)\
             .lower()\
@@ -102,7 +109,7 @@ def parse_types(table, series):
         x = clean_string(x)
         return f"{name} unknown" if x == "" else x
     name = series.name
-    desired_type = constants.TYPES[table].get(name, "string")
+    desired_type = constants.TYPES[odm_name].get(name, "string")
     if desired_type == "bool":
         series = series.apply(lambda x: clean_bool(x))
     elif desired_type == "string":
@@ -113,3 +120,37 @@ def parse_types(table, series):
         series = series.apply(lambda x: clean_category(x, name))
     series = series.astype(desired_type)
     return series
+
+
+TABLE_LOOKUP = {
+    "ww_measure": {
+        "odm_name": "WWMeasure",
+        "excel_name": "WWMeasure",
+        "parser": table_parsers.parse_ww_measure,
+    },
+    "site_measure": {
+        "odm_name": "SiteMeasure",
+        "excel_name": "SiteMeasure",
+        "parser": table_parsers.parse_site_measure,
+    },
+    "sample": {
+        "odm_name": "Sample",
+        "excel_name": "Sample",
+        "parser": table_parsers.parse_sample,
+    },
+    "site": {
+        "odm_name": "Site",
+        "excel_name": "Site",
+        "parser": table_parsers.parse_site,
+    },
+    "polygon": {
+        "odm_name": "Polygon",
+        "excel_name": "Polygon",
+        "parser":table_parsers.parse_polygon,
+    },
+    "cphd": {
+        "odm_name": "CovidPublicHealthData",
+        "excel_name": "CPHD",
+        "parser": table_parsers.parse_cphd,
+    },
+}

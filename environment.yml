@@ -17,6 +17,7 @@ dependencies:
   - plotly
   - pygeoif
   - python=3.8.8
+  - rope
   - shapely
   - sqlalchemy
   - pytest

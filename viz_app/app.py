@@ -2,40 +2,19 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import glob
+import numpy as np
 import os
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State, PreventUpdate
 
-import odm
+from odm import Odm, CustomEncoder
 from odm import visualization_helpers
 from odm import table_parsers
 
 pd.options.display.max_columns = None
 pio.templates.default = "plotly_white"
-# get data
-filename = "Data/Ville de Québec 202102.xlsx"
-model = odm.Odm()
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-fake_wkt_path = "/".join(dir_path.split("/")[:-1])
-
-fake_wkt_path += "/Data/polygons/*.wkt"
-polygon_files = glob.glob(fake_wkt_path)
-
-fake_poly = visualization_helpers.create_dummy_polygons(polygon_files)
-fake_poly = table_parsers.parse_polygon(fake_poly)
-
-model.data["Polygon"] = fake_poly
-model.load_from_excel(filename)
-
-
-model.ingest_geometry()
-samples = model.combine_per_sample()
-geo = model.geo
-map_center = visualization_helpers.get_map_center(geo)
-
 
 def draw_map():
     fig = px.choropleth_mapbox(
@@ -72,12 +51,27 @@ def get_values_names(names):
 # Build App
 app = dash.Dash(__name__)  # JupyterDash(__name__)
 app.layout = html.Div([
+    dcc.Store(id='odm-store'),
+    dcc.Store(id="sewershed-store"),
+    dcc.Store(id="sample-store"),
     dcc.Store(id="site-store"),
+
     html.H1(
         "Data exploration - COVID Wastewater data",
         style={"textAlign": "center"}
     ),
     html.Br(),
+    html.Div([
+        dcc.Upload(
+            id='upload-data',
+            children=html.Button(
+                'Upload Excel Template File',
+                id='upload-button',
+                className='button-primary',
+            ),
+            multiple=True,
+        ),
+    ]),
     html.Div([
         html.Div([
             html.Label("X-Axis"),
@@ -108,12 +102,28 @@ app.layout = html.Div([
 ])
 
 
+def parse_uploaded_files(contents, filename, date):
+
+
+# Define callback to parse the uploaded file(s)
+@app.callback(
+    Output('odm-store', 'data'),
+    [Input('upload-data', 'contents')],
+    [State('upload-data', 'filename'),
+     State('odm-store', 'data')]
+)
+def read_uploaded_excel(contents, filename):
+    if contents is None:
+        raise PreventUpdate
+    serialized = json.dumps(sensors, indent=4, cls=Sensors.CustomEncoder)
+    return serialized
+
 # Define callback to update graphs
 @app.callback(
     Output('timeseries-1', 'figure'),
     [Input("x-dropdown-1", "value"),
      Input("y-dropdown-1", "value"),
-     Input("site-store", "data")])
+     Input("sewershed-store", "data")])
 def time_series_1(x_col, y_col, data):
     if x_col is None or y_col is None:
         return px.scatter()
@@ -127,9 +137,10 @@ def time_series_1(x_col, y_col, data):
 
 
 @app.callback(
-    Output("site-store", "data"),
-    Input('map-1', 'clickData'))
-def filter_by_clicked_location(clickData):
+    Output("sewershed-store", "data"),
+    [Input('map-1', 'clickData'),
+     Input('sample-store', 'data')])
+def filter_by_clicked_sewershed(clickData, samples):
     if clickData is None:
         return None
     point = clickData["points"][0]
@@ -139,27 +150,62 @@ def filter_by_clicked_location(clickData):
 
 
 @app.callback(
-    Output("y-dropdown-1", "options"),
-    Input('site-store', 'data'))
-def update_y_dropdown(data):
-    df = samples if data is None else pd.read_json(data)
-    return [
+    [Output("x-dropdown-1", "options"),
+     Output('y-dropdown-1', 'options')],
+    [Input('sewershed-store', 'data'),
+     Input('sample-store', 'data')])
+def update_dropdowns_1(sewershed_data, samples_data):
+    if not samples_data:
+        return None
+    df = pd.read_json(samples_data) if sewershed_data is None else pd.read_json(sewershed_data)
+    x_options = [
         {'label': c, 'value': c}
-        for c in samples.columns if c in get_values_names(df.columns.to_list())
+        for c in df.columns.to_list()
     ]
+    y_options = x_options
+    return x_options, y_options
 
-
-@app.callback(
-    Output("x-dropdown-1", "options"),
-    Input('site-store', 'data'))
-def update_x_dropdown(data):
-    df = samples if data is None else pd.read_json(data)
-    return [
-        {'label': c, 'value': c}
-        for c in samples.columns
-        if c in get_timeseries_names(df.columns.to_list())
-    ]
 
 
 if __name__ == "__main__":
+    # Set up test data 
+    # get data
+    filename = "/workspaces/ODM-Import/Data/Ville de Québec 202102.xlsx"
+    model = Odm()
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    fake_wkt_path = "/".join(dir_path.split("/")[:-1])
+
+    fake_wkt_path += "/Data/polygons/*.wkt"
+    polygon_files = glob.glob(fake_wkt_path)
+
+    fake_poly = visualization_helpers.create_dummy_polygons(polygon_files)
+    fake_poly = table_parsers.parse_polygon(fake_poly)
+
+    model.data["Polygon"] = fake_poly
+    model.load_from_excel(filename)
+
+
+    model.ingest_geometry()
+    samples = model.combine_per_sample()
+
+    #edit the samples data so that they point to the dummy polygons
+    polys = model.data["Polygon"]
+    east_poly_id = polys.loc[polys["Polygon.name"].str.contains("east"), ["Polygon.polygonID"]].values[0][0]
+    west_poly_id = polys.loc[polys["Polygon.name"].str.contains("west"), ["Polygon.polygonID"]].values[0][0]
+
+    def fill_poly_id(row):
+        if "quebec est" in row["Site.name"].lower():
+            return east_poly_id
+        elif "quebec ouest" in row["Site.name"].lower():
+            return  west_poly_id
+        return np.nan
+
+    samples["Site.polygonID"] = samples.apply(lambda x: fill_poly_id(x), axis=1)
+
+
+
+    geo = model.geo
+    map_center = visualization_helpers.get_map_center(geo)
+
     app.run_server(debug=True)  # inline

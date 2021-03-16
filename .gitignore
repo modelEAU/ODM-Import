@@ -139,3 +139,8 @@ cython_debug/
 
 .DS_Store
 
+
+.gitignore
+some_output_file.txt
+orig.json
+deserialized.json

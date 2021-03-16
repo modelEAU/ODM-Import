@@ -16,13 +16,11 @@ dependencies:
   - pip
   - plotly
   - pygeoif
-  - python=3.8.8
-  - rope
+  - python=3.9.2
   - shapely
   - sqlalchemy
   - pytest
   - pip:
-    - geodaisy
     - geojson-rewind
-    - typing
+    - geomet
 prefix: /Users/jeandavidt/miniconda3/envs/covid

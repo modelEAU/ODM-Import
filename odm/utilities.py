@@ -1,11 +1,45 @@
+import json
+import re
 from functools import reduce
+
 import numpy as np
 import pandas as pd
 from geojson_rewind import rewind
-from pygeoif import geometry
-import geodaisy.converters as convert
-import constants
-import table_parsers
+from geomet import wkt
+
+
+UNKNOWN_TOKENS = [
+    "nan",
+    "na",
+    "nd"
+    "n.d",
+    "none",
+    "-",
+    "unknown",
+    "n/a",
+    "n/d"
+]
+
+
+def get_data_types():
+    url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
+    variables = pd.read_csv(url)
+    variables["variableName"] = variables["variableName"].str.lower()
+    variables["variableType"] = variables["variableType"].apply(
+        lambda x: re.sub(r"date(time)?", "datetime64[ns]", x)
+    )
+    variables["variableType"] = variables["variableType"].apply(
+        lambda x:
+            x.replace("boolean", "bool")
+            .replace("float", "float64")
+            .replace("integer", "int64")
+            .replace("blob", "object")
+    )
+    return variables\
+        .groupby("tableName")[['variableName', 'variableType']] \
+        .apply(lambda x: x.set_index('variableName').to_dict(orient='index')) \
+        .to_dict()
+
 
 def reduce_dt(x, y):
     if pd.isna(x) and pd.isna(y):
@@ -46,12 +80,6 @@ def reduce_nums(x, y):
         return x+y/2
 
 
-def remove_columns(cols, df):
-    to_remove = [col for col in cols if col in df.columns]
-    df.drop(to_remove, axis=1, inplace=True)
-    return df
-
-
 def reduce_by_type(series):
     data_type = str(series.dtype)
     name = series.name
@@ -70,21 +98,12 @@ def reduce_by_type(series):
 def convert_wkt_to_geojson(s):
     if s in ["-", ""]:
         return None  # {"type":"Polygon", "coordinates":None}
-    from_wkt = geometry.from_wkt(s)
-    geo_interface = from_wkt.__geo_interface__
-    geojson_feature = convert.geo_interface_to_geojson(geo_interface)
+    geojson_feature = json.dumps(wkt.loads(s))
     geojson_feature = rewind(geojson_feature, rfc7946=False)
     return geojson_feature
 
 
-def get_attribute_from_name(name):
-    for attribute, dico in TABLE_LOOKUP.items():
-        if name in dico.values():
-            return attribute
-    return None
-
-
-def parse_types(odm_name, series):
+def parse_types(table_name, series):
     def clean_bool(x):
         return str(x)\
             .lower()\
@@ -95,9 +114,9 @@ def parse_types(odm_name, series):
             .replace("no", "false")
 
     def clean_string(x):
-        if str(x).lower() in constants.UNKNOWN_TOKENS:
+        if str(x).lower() in UNKNOWN_TOKENS:
             x = ""
-        return str(x).lower().strip()
+        return str(x).strip()
 
     def clean_num(x):
         try:
@@ -108,49 +127,39 @@ def parse_types(odm_name, series):
     def clean_category(x, name):
         x = clean_string(x)
         return f"{name} unknown" if x == "" else x
-    name = series.name
-    desired_type = constants.TYPES[odm_name].get(name, "string")
+
+    variable_name = series.name.lower()
+    types = get_data_types()
+    lookup_table = types[table_name]
+    lookup_type = lookup_table.get(variable_name, dict())
+    desired_type = lookup_type.get("variableType", "string")
     if desired_type == "bool":
         series = series.apply(lambda x: clean_bool(x))
-    elif desired_type == "string":
+    elif desired_type == "string" and variable_name != "wkt":
+        series = series.apply(lambda x: clean_string(x).lower())
+    elif desired_type == "string" and variable_name == "wkt":
         series = series.apply(lambda x: clean_string(x))
     elif desired_type in ["inst64", "float64"]:
         series = series.apply(lambda x: clean_num(x))
     elif desired_type == "category":
-        series = series.apply(lambda x: clean_category(x, name))
+        series = series.apply(lambda x: clean_category(x, variable_name))
     series = series.astype(desired_type)
     return series
 
 
-TABLE_LOOKUP = {
-    "ww_measure": {
-        "odm_name": "WWMeasure",
-        "excel_name": "WWMeasure",
-        "parser": table_parsers.parse_ww_measure,
-    },
-    "site_measure": {
-        "odm_name": "SiteMeasure",
-        "excel_name": "SiteMeasure",
-        "parser": table_parsers.parse_site_measure,
-    },
-    "sample": {
-        "odm_name": "Sample",
-        "excel_name": "Sample",
-        "parser": table_parsers.parse_sample,
-    },
-    "site": {
-        "odm_name": "Site",
-        "excel_name": "Site",
-        "parser": table_parsers.parse_site,
-    },
-    "polygon": {
-        "odm_name": "Polygon",
-        "excel_name": "Polygon",
-        "parser":table_parsers.parse_polygon,
-    },
-    "cphd": {
-        "odm_name": "CovidPublicHealthData",
-        "excel_name": "CPHD",
-        "parser": table_parsers.parse_cphd,
-    },
-}
+def keep_only_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Creates a DataFrame that only contains features information
+    about a sample that can be used for machine learning.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame of joined ODM tables with each row representing a
+        sample.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame without id's notes, or data access columns.
+    """
+    return df

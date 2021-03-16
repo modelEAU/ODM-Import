@@ -37,6 +37,7 @@
 		"ms-toolsai.jupyter",
 		"christian-kohler.path-intellisense",
 		"alexcvzz.vscode-sqlite",
+		"njpwerner.autodocstring"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

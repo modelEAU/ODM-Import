@@ -7,25 +7,25 @@ import os
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
-from dash.dependencies import Input, Output, State, PreventUpdate
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 
 from odm import Odm, CustomEncoder
 from odm import visualization_helpers
-from odm import table_parsers
 
 pd.options.display.max_columns = None
 pio.templates.default = "plotly_white"
 
-def draw_map():
+def draw_map(sample_data, geo):
     fig = px.choropleth_mapbox(
-        samples,
+        sample_data,
         geojson=geo,
         locations="Site.polygonID",
         featureidkey="properties.polygonID",
         custom_data=["Site.name"],
         color="Site.name",
         labels={"name": "Sampling Location"},
-        center=map_center,
+        center=visualization_helpers.get_map_center(geo),
         opacity=0.5,
         mapbox_style="open-street-map",
         zoom=6,
@@ -96,14 +96,14 @@ app.layout = html.Div([
         dcc.Graph(id='timeseries-1'),
     ], style={'width': '45%', 'display': 'inlineBlock', 'float': 'right'}),
     html.Div([
-        dcc.Graph(id='map-1', figure=draw_map()),
+        dcc.Graph(id='map-1', figure=draw_map(sample_data=None, geo=None)),
     ], style={'width': '45%', 'display': 'inlineBlock', 'float': 'right'}),
     html.Br(),
 ])
 
 
 def parse_uploaded_files(contents, filename, date):
-
+    pass
 
 # Define callback to parse the uploaded file(s)
 @app.callback(
@@ -168,7 +168,7 @@ def update_dropdowns_1(sewershed_data, samples_data):
 
 
 if __name__ == "__main__":
-    # Set up test data 
+    # Set up test data
     # get data
     filename = "/workspaces/ODM-Import/Data/Ville de Québec 202102.xlsx"
     model = Odm()

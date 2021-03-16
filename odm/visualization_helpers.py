@@ -1,6 +1,4 @@
 import pandas as pd
-import glob
-import os.path
 import random
 from shapely.geometry import asShape
 

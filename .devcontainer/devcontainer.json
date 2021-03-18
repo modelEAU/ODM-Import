@@ -32,12 +32,12 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"sourcery.sourcery",
 		"ms-python.vscode-pylance",
 		"ms-toolsai.jupyter",
 		"christian-kohler.path-intellisense",
 		"alexcvzz.vscode-sqlite",
-		"njpwerner.autodocstring"
+		"njpwerner.autodocstring",
+		"hediet.vscode-drawio"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

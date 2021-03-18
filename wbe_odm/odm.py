@@ -1,15 +1,14 @@
 import json
 import os
 import sqlite3
-import warnings
 
 import numpy as np
 import pandas as pd
 import requests
-from sqlalchemy import create_engine
 
-import utilities
-import visualization_helpers
+from wbe_odm import utilities
+from wbe_odm import visualization_helpers
+from wbe_odm.odm_mappers import base_mapper, excel_template_mapper, sqlite3_mapper
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -48,49 +47,6 @@ class Odm:
         self.instrument = instrument
         self.polygon = polygon
         self.cphd = cphd
-
-    conversion_dict = {
-        "ww_measure": {
-            "odm_name": "WWMeasure",
-            "excel_name": "WWMeasure",
-        },
-        "site_measure": {
-            "odm_name": "SiteMeasure",
-            "excel_name": "SiteMeasure",
-        },
-        "sample": {
-            "odm_name": "Sample",
-            "excel_name": "Sample",
-        },
-        "site": {
-            "odm_name": "Site",
-            "excel_name": "Site",
-        },
-        "polygon": {
-            "odm_name": "Polygon",
-            "excel_name": "Polygon",
-        },
-        "cphd": {
-            "odm_name": "CovidPublicHealthData",
-            "excel_name": "CPHD",
-        },
-        "reporter": {
-            "odm_name": "Reporter",
-            "excel_name": "Reporter"
-        },
-        "lab": {
-            "odm_name": "Lab",
-            "excel_name": "Lab"
-        },
-        "assay_method": {
-            "odm_name": "AssayMethod",
-            "excel_name": "AssayMethod"
-        },
-        "instrument": {
-            "odm_name": "Instrument",
-            "excel_name": "Instrument"
-        },
-    }
 
     def __default_value_by_dtype(
         self, dtype: str
@@ -336,131 +292,54 @@ class Odm:
         df = df.add_prefix("CPHD.")
         return df
 
-    def add_to_attr(self, attribute: str, new_df: pd.DataFrame) -> None:
-        """Concatenate + set the value of attributes.
+    def append_from(self, mapper) -> None:
+        """Concatenates the Odm object's current data with
+        that of a mapper.
 
-        Method that tries to concatenate the
-        new value with the data already stored in the Odm attribute.
+        Parameters
+        ----------
+        mapper : odm_mappers.BaseMapper
+            A mapper class implementing BaseMapper and adapted to one's
+            specific use case
         """
-
-        current_value = getattr(self, attribute)
-        if current_value is None:
-            setattr(self, attribute, new_df)
+        if isinstance(mapper, Odm):
+            validates = True
+        else:
+            validates = mapper.validates()
+        if not validates:
             return
-        try:
-            combined_df = current_value.append(new_df).drop_duplicates()
-            setattr(self, attribute, combined_df)
-        except Exception as e:
-            print(e)
-            setattr(self, attribute, current_value)
+        self_attrs = self.__dict__
+        mapper_attrs = mapper.__dict__
+        for key, value in self_attrs.items():
+            if value is None:
+                setattr(self, key, mapper_attrs[key])
+            elif mapper_attrs[key] is None:
+                continue
+            else:
+                try:
+                    combined = value.append(
+                        mapper_attrs[key]).drop_duplicates()
+                    setattr(self, key, combined)
+                except Exception as e:
+                    setattr(self, key, value)
+                    raise e
         return
 
-    def get_attribute_from_name(self, name: str):
-        """ Lookup from excel/sql name to python attribute
-
-        Find the correct Odm attribute base on
-        an Excel Sheet name or a SQL table name.
-        """
-
-        for attribute, dico in self.conversion_dict.items():
-            if name in dico.values():
-                return attribute
-        return None
-
-    def load_from_excel(
-            self,
-            filepath: str,
-            sheet_names: list[int] = None
-            ) -> None:
-        """Reads an ODM-compatible excel file and loads the data into the Odm object.
+    def load_from(self, mapper: base_mapper.BaseMapper) -> None:
+        """Reads an odm mapper object and loads the data into the Odm object.
 
         Parameters
         ----------
-        filepath : str
-            [description]
-        sheet_names : [type], optional
-            [description], by default None
+        mapper : odm_mappers.BaseMapper
+            A mapper class implementing BaseMapper and adapted to one's
+            specific use case
+
         """
-
-        if sheet_names is None:
-            sheet_names = [
-                self.conversion_dict[x]["excel_name"]
-                for x in self.conversion_dict.keys()
-            ]
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings(action="ignore")
-            xls = pd.read_excel(filepath, sheet_name=sheet_names)
-
-        attributes_to_fill = [
-            self.get_attribute_from_name(sheet_name)
-            for sheet_name in sheet_names
-        ]
-        odm_names = [
-            self.conversion_dict[attribute]["odm_name"]
-            for attribute in attributes_to_fill
-        ]
-
-        for attribute, odm_name, sheet in zip(
-            attributes_to_fill,
-            odm_names,
-            sheet_names,
-        ):
-            df = xls[sheet].copy(deep=True)
-            # catch breaking change in data model
-            if sheet == "WWMeasure" and "assayMethodID" in df.columns:
-                df.rename(
-                    columns={
-                        "assayMethodID": "assayID"
-                    },
-                    inplace=True
-                )
-            type_cast_df = df.apply(
-                lambda x: utilities.parse_types(odm_name, x),
-                axis=0
-            )
-            self.add_to_attr(attribute, type_cast_df)
-        return None
-
-    def load_from_db(
-        self,
-        cnxn_str: str,
-        table_names: list[str] = None
-            ) -> None:
-        """Loads data from a Ottawa Data Model compatible database into an ODM object
-
-        Parameters
-        ----------
-        cnxn_str : str
-            connextion string to the db
-        table_names : list[str], optional
-            Names of the tables you want to read in.
-            By default None, in which case the function
-            collects data from every table.
-        """
-        if table_names is None:
-            table_names = [
-                self.conversion_dict[attribute]["odm_name"]
-                for attribute in self.conversion_dict.keys()
-            ]
-
-        engine = create_engine(cnxn_str)
-        attributes_to_fill = [
-            self.get_attribute_from_name(table_name)
-            for table_name in table_names
-        ]
-
-        for attribute, table in zip(
-            attributes_to_fill,
-            table_names,
-        ):
-            df = pd.read_sql(f"select * from {table}", engine)
-            type_cast_df = df.apply(
-                lambda x: utilities.parse_types(table, x),
-                axis=0
-            )
-            self.add_to_attr(attribute, type_cast_df)
-        return None
+        if mapper.validates():
+            self_attrs = self.__dict__
+            mapper_attrs = mapper.__dict__
+            for key in self_attrs.keys():
+                self_attrs[key] = mapper_attrs.get(key, None)
 
     def get_geoJSON(self) -> dict:
         """Transforms the polygon Table into a geoJSON-like Python dictionary
@@ -748,8 +627,9 @@ def destroy_db(filepath):
 def test_samples_from_excel():
     # run with example excel data
     filename = "Data/Ville de Québec 202102.xlsx"
+    excel_mapper = ExcelTemplateMapper(filename)
     odm_instance = Odm()
-    odm_instance.load_from_excel(filename)
+    odm_instance.load_from(excel_mapper)
     geo = odm_instance.get_geoJSON()
     samples = odm_instance.combine_per_sample()
     return geo, samples
@@ -847,7 +727,7 @@ if __name__ == "__main__":
 
     # engine = create_db()
     # destroy_db(test_path)
-    # samples = test_samples_from_excel()
+    samples = test_samples_from_excel()
     # samples = test_samples_from_db()
     # samples = test_from_excel_and_db()
     test_serialization_deserialization()

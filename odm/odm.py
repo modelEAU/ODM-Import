@@ -1,7 +1,6 @@
 import json
 import os
 import sqlite3
-import time
 import warnings
 
 import numpy as np
@@ -10,6 +9,7 @@ import requests
 from sqlalchemy import create_engine
 
 import utilities
+import visualization_helpers
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -49,9 +49,52 @@ class Odm:
         self.polygon = polygon
         self.cphd = cphd
 
+    conversion_dict = {
+        "ww_measure": {
+            "odm_name": "WWMeasure",
+            "excel_name": "WWMeasure",
+        },
+        "site_measure": {
+            "odm_name": "SiteMeasure",
+            "excel_name": "SiteMeasure",
+        },
+        "sample": {
+            "odm_name": "Sample",
+            "excel_name": "Sample",
+        },
+        "site": {
+            "odm_name": "Site",
+            "excel_name": "Site",
+        },
+        "polygon": {
+            "odm_name": "Polygon",
+            "excel_name": "Polygon",
+        },
+        "cphd": {
+            "odm_name": "CovidPublicHealthData",
+            "excel_name": "CPHD",
+        },
+        "reporter": {
+            "odm_name": "Reporter",
+            "excel_name": "Reporter"
+        },
+        "lab": {
+            "odm_name": "Lab",
+            "excel_name": "Lab"
+        },
+        "assay_method": {
+            "odm_name": "AssayMethod",
+            "excel_name": "AssayMethod"
+        },
+        "instrument": {
+            "odm_name": "Instrument",
+            "excel_name": "Instrument"
+        },
+    }
+
     def __default_value_by_dtype(
         self, dtype: str
-            ) -> [pd.NaT, np.nan, str, None]:
+            ):
         """gets you a default value of the correct data type to create new
         columns in a pandas DataFrame
 
@@ -68,9 +111,10 @@ class Odm:
         null_values = {
             "datetime64[ns]": pd.NaT,
             "float64": np.nan,
+            "int64": np.nan,
             "object": ""
         }
-        return null_values.get(dtype, None)
+        return null_values.get(dtype, np.nan)
 
     def __widen(
         self,
@@ -189,6 +233,7 @@ class Odm:
                 "analysisDate",
                 "reportDate",
                 "notes",
+                "qualityFlag",
                 assay_col
             ],
             qualifiers=[
@@ -196,7 +241,6 @@ class Odm:
                 "type",
                 "unit",
                 "aggregation",
-                "qualityFlag"
             ]
         )
         df = df.add_prefix("WWMeasure.")
@@ -250,6 +294,12 @@ class Odm:
                     new_row = df.iloc[i].copy()
                     new_row["siteID"] = site_id
                     df = df.append(new_row, ignore_index=True)
+        # I will be copying sample.dateTime over to sample.dateTimeStart and
+        #  sample.dateTimeEnd so that grab samples are seen in visualizations
+        df["dateTimeStart"] = df["dateTimeStart"].fillna(df["dateTime"])
+        df["dateTimeEnd"] = df["dateTimeEnd"].fillna(df["dateTime"])
+
+        df.drop(columns=["dateTime"], inplace=True)
 
         df = df.add_prefix("Sample.")
         return df
@@ -286,50 +336,6 @@ class Odm:
         df = df.add_prefix("CPHD.")
         return df
 
-    conversion_dict = {
-        "ww_measure": {
-            "odm_name": "WWMeasure",
-            "excel_name": "WWMeasure",
-        },
-        "site_measure": {
-            "odm_name": "SiteMeasure",
-            "excel_name": "SiteMeasure",
-        },
-        "sample": {
-            "odm_name": "Sample",
-            "excel_name": "Sample",
-        },
-        "site": {
-            "odm_name": "Site",
-            "excel_name": "Site",
-        },
-        "polygon": {
-            "odm_name": "Polygon",
-            "excel_name": "Polygon",
-        },
-        "cphd": {
-            "odm_name": "CovidPublicHealthData",
-            "excel_name": "CPHD",
-        },
-        "reporter": {
-            "odm_name": "Reporter",
-            "excel_name": "Reporter"
-        },
-        "lab": {
-            "odm_name": "Lab",
-            "excel_name": "Lab"
-        },
-        "assay_method": {
-            "odm_name": "AssayMethod",
-            "excel_name": "AssayMethod"
-        },
-        "instrument": {
-            "odm_name": "Instrument",
-            "excel_name": "Instrument"
-        },
-
-    }
-
     def add_to_attr(self, attribute: str, new_df: pd.DataFrame) -> None:
         """Concatenate + set the value of attributes.
 
@@ -349,7 +355,7 @@ class Odm:
             setattr(self, attribute, current_value)
         return
 
-    def get_attribute_from_name(self, name: str) -> [None, str]:
+    def get_attribute_from_name(self, name: str):
         """ Lookup from excel/sql name to python attribute
 
         Find the correct Odm attribute base on
@@ -681,7 +687,7 @@ class Odm:
         return
 
 
-class CustomEncoder(json.JSONEncoder):
+class OdmEncoder(json.JSONEncoder):
     def default(self, o):
         if (isinstance(o, Odm)):
             return {
@@ -693,7 +699,7 @@ class CustomEncoder(json.JSONEncoder):
         elif isinstance(o, pd.DataFrame):
             return {
                 '__DataFrame__':
-                o.to_json(date_format='epoch', orient='split')
+                o.to_json(date_format='iso', orient='split')
             }
         else:
             return json.JSONEncoder.default(self, o)
@@ -716,10 +722,12 @@ def decode_object(o):
         return o
 
 
-def create_db(filepath):
+def create_db(filepath=None):
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/dev/src/wbe_create_table_SQLITE_en.sql"  # noqa
     sql = requests.get(url).text
     conn = None
+    if filepath is None:
+        filepath = "file::memory"
     try:
         conn = sqlite3.connect(filepath)
         conn.executescript(sql)
@@ -736,33 +744,17 @@ def destroy_db(filepath):
         os.remove(filepath)
 
 
-def timeit(method):
-    def timed(*args, **kw):
-        ts = time.time()
-        result = method(*args, **kw)
-        te = time.time()
-        if 'log_time' in kw:
-            name = kw.get('log_name', method.__name__.upper())
-            kw['log_time'][name] = int((te - ts) * 1000)
-        else:
-            print('%r  %2.2f ms' %
-                  (method.__name__, (te - ts) * 1000))
-        return result
-    return timed
-
-
 # testing functions
-@timeit
 def test_samples_from_excel():
     # run with example excel data
     filename = "Data/Ville de Québec 202102.xlsx"
     odm_instance = Odm()
     odm_instance.load_from_excel(filename)
     geo = odm_instance.get_geoJSON()
-    return geo, odm_instance.combine_per_sample()
+    samples = odm_instance.combine_per_sample()
+    return geo, samples
 
 
-@timeit
 def test_samples_from_db():
     # run with example db data
     path = "Data/WBE.db"
@@ -773,7 +765,6 @@ def test_samples_from_db():
     return geo, odm_instance.combine_per_sample()
 
 
-@timeit
 def test_from_excel_and_db():
     # run with example db data
     path = "Data/WBE.db"
@@ -786,7 +777,6 @@ def test_from_excel_and_db():
     return geo, odm_instance.combine_per_sample()
 
 
-@timeit
 def test_serialization_deserialization():
     # run with example db data
     odm_instance = Odm()
@@ -794,32 +784,72 @@ def test_serialization_deserialization():
     odm_instance.load_from_excel(filename)
     odm_instance.get_geoJSON()
 
-    serialized = json.dumps(odm_instance, indent=4, cls=CustomEncoder)
+    serialized = json.dumps(odm_instance, indent=4, cls=OdmEncoder)
     deserialized = json.loads(serialized, object_hook=decode_object)
 
-    with open('orig.json', 'w') as f:
-        json.dump(odm_instance, f, sort_keys=True, indent=4, cls=CustomEncoder)
-    with open('deserialized.json', 'w') as g:
-        json.dump(deserialized, g, sort_keys=True, indent=4, cls=CustomEncoder)
+    deserialized.combine_per_sample()
 
-    print(deserialized == odm_instance)
-    with open('orig.json', 'r') as file1:
-        with open('deserialized.json', 'r') as file2:
-            same = set(file1).intersection(file2)
 
-    same.discard('\n')
+def test_visualization_helpers():
+    wkts = []
+    wkt_dir = "/workspaces/ODM Import/Data/polygons"
+    for file in os.listdir(wkt_dir):
+        if file.endswith(".wkt"):
+            wkts.append(os.path.join(wkt_dir, file))
+    polys = visualization_helpers.create_dummy_polygons(wkts)
 
-    with open('some_output_file.txt', 'w') as file_out:
-        for line in same:
-            file_out.write(line)
-    return None
+    inst = Odm()
+    inst.add_to_attr("polygon", polys)
+    geo_json = inst.get_geoJSON()
+    map_center = visualization_helpers.get_map_center(geo_json)
+    zoom = visualization_helpers.get_zoom_level(geo_json, 800)
+    print(zoom)
+    return map_center, zoom
+
+
+def test_finding_polygons():
+    # run with example excel data
+    filename = "Data/Ville de Québec 202102.xlsx"
+    odm_instance = Odm()
+    odm_instance.load_from_excel(filename)
+    samples = odm_instance.combine_per_sample()
+    geo = odm_instance.get_geoJSON()
+
+    def get_polygon_name_from_agg_samples(
+        odm_instance: Odm,
+        df: pd.DataFrame
+            ) -> pd.Series:
+        poly_df = odm_instance.polygon
+        df["Polygon.name"] = ""
+        df.reset_index(inplace=True)
+        for i, row in df.iterrows():
+            poly_id = row["Site.polygonID"]
+            poly_name = poly_df.loc[poly_df["polygonID"] == poly_id, "name"]
+            df.iloc[i, df.columns.get_loc("Polygon.name")] = poly_name
+        return df["Polygon.name"]
+
+    poly_names = get_polygon_name_from_agg_samples(
+        odm_instance, samples)
+
+    def get_id_from_name_geojson(geo, name):
+        features = geo["features"]
+        for feature in features:
+            if feature["properties"]["name"] == name:
+                return feature["properties"]["polygonID"]
+
+        return None
+
+    poly_id = get_id_from_name_geojson(geo, "quebec est wwtp sewer catchment")
+    return poly_names, poly_id
 
 
 if __name__ == "__main__":
-    test_path = "Data/db/WBE.db"
-    create_db(test_path)
-    destroy_db(test_path)
-    samples = test_samples_from_excel()
-    samples = test_samples_from_db()
-    samples = test_from_excel_and_db()
+
+    # engine = create_db()
+    # destroy_db(test_path)
+    # samples = test_samples_from_excel()
+    # samples = test_samples_from_db()
+    # samples = test_from_excel_and_db()
     test_serialization_deserialization()
+    test_visualization_helpers()
+    test_finding_polygons()

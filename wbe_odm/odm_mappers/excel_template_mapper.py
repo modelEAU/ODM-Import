@@ -45,10 +45,10 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
         attributes = []
         odm_names = []
         for sheet in sheet_names:
-            for k, v in self.conversion_dict:
-                if v["source_name"] == sheet:
-                    attributes.append(k)
-                    odm_names.append(k["odm_name"])
+            for attribute, names in self.conversion_dict.items():
+                if names["source_name"] == sheet:
+                    attributes.append(attribute)
+                    odm_names.append(names["odm_name"])
 
         for attribute, odm_name, sheet in zip(
             attributes,
@@ -65,7 +65,7 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
                     inplace=True
                 )
             df = self.type_cast_table(odm_name, df)
-            self.setattr(attribute, df)
+            setattr(self, attribute, df)
         return
 
     def validates(table):

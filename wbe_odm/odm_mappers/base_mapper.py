@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-import numpy as np
-import re
 
 
 UNKNOWN_TOKENS = [
@@ -16,70 +14,54 @@ UNKNOWN_TOKENS = [
     "n/d",
     ""
 ]
+UNKNOWN_REGEX = r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none"
 
 
 def get_data_types():
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)
     variables["variableName"] = variables["variableName"].str.lower()
-    variables["variableType"] = variables["variableType"].apply(
-        lambda x: re.sub(r"date(time)?", "datetime64[ns]", x)
-    )
-    variables["variableType"] = variables["variableType"].apply(
-        lambda x:
-            x.replace("boolean", "bool")
-            .replace("float", "float64")
-            .replace("integer", "int64")
-            .replace("blob", "object")
-    )
+    variables["variableType"] = variables["variableType"]\
+        .replace(r"date(time)?", "datetime64[ns]", regex=True) \
+        .replace("boolean", "bool") \
+        .replace("float", "float64") \
+        .replace("integer", "int64") \
+        .replace("blob", "object")
+
     return variables\
         .groupby("tableName")[['variableName', 'variableType']] \
         .apply(lambda x: x.set_index('variableName').to_dict(orient='index')) \
         .to_dict()
 
 
+DATA_TYPES = get_data_types()
+
+
 def parse_types(table_name, series):
-    def clean_bool(x, name):
-        x = str(x).lower()
-        if x in UNKNOWN_TOKENS:
-            x = "false" if "quality" in name else "true"
-        x = x\
-            .lower()\
-            .strip()\
-            .replace("non", "false")
-        x = x.replace("no", "false")
-        return False if x == "false" else True
-
-    def clean_string(x):
-        if str(x).lower() in UNKNOWN_TOKENS:
-            x = ""
-        return str(x).strip()
-
-    def clean_num(x):
-        try:
-            return float(x)
-        except Exception:
-            return np.nan
-
-    def clean_category(x, name):
-        x = clean_string(x)
-        return f"{name} unknown" if x == "" else x
-
     variable_name = series.name.lower()
-    types = get_data_types()
+    types = DATA_TYPES
     lookup_table = types[table_name]
     lookup_type = lookup_table.get(variable_name, dict())
     desired_type = lookup_type.get("variableType", "string")
     if desired_type == "bool":
-        series = series.apply(lambda x: clean_bool(x, variable_name))
-    elif desired_type == "string" and variable_name != "wkt":
-        series = series.apply(lambda x: clean_string(x).lower())
-    elif desired_type == "string" and variable_name == "wkt":
-        series = series.apply(lambda x: clean_string(x))
+        series = series.astype(str)
+        default_bool = "false" if "qualityFlag" in variable_name else "true"
+        series = series.str.strip().str.lower()
+        series = series.str.replace(
+            UNKNOWN_REGEX, default_bool, regex=True)\
+            .str.replace("oui", "true", case=False)\
+            .str.replace("yes", "true", case=False)\
+            .str.startswith("true")
+    elif desired_type == "string" or desired_type == "category":
+        series = series.astype(str)
+        series = series.str.strip()
+        series = series.str.replace(
+            UNKNOWN_REGEX, "", regex=True, case=False)
+        if variable_name != "wkt":
+            series = series.str.lower()
     elif desired_type in ["inst64", "float64"]:
-        series = series.apply(lambda x: clean_num(x))
-    elif desired_type == "category":
-        series = series.apply(lambda x: clean_category(x, variable_name))
+        series = pd.to_numeric(series, errors="coerce")
+
     series = series.astype(desired_type)
     return series
 
@@ -144,10 +126,10 @@ class BaseMapper(ABC):
         pass
 
     @abstractmethod
-    def validates():
+    def validates(self):
         pass
 
-    def type_cast_table(odm_name, df):
+    def type_cast_table(self, odm_name, df):
         return df.apply(
                 lambda x: parse_types(odm_name, x),
                 axis=0)

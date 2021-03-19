@@ -1,14 +1,17 @@
 import json
 import os
 import sqlite3
+import time
 
 import numpy as np
 import pandas as pd
 import requests
 
-from wbe_odm import utilities
-from wbe_odm import visualization_helpers
-from wbe_odm.odm_mappers import base_mapper, excel_template_mapper, sqlite3_mapper
+from wbe_odm import utilities, visualization_helpers
+from wbe_odm.odm_mappers import base_mapper as bm
+from wbe_odm.odm_mappers import excel_template_mapper as em
+from wbe_odm.odm_mappers import serialized_mapper as sem
+from wbe_odm.odm_mappers import sqlite3_mapper as sqm
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -325,7 +328,7 @@ class Odm:
                     raise e
         return
 
-    def load_from(self, mapper: base_mapper.BaseMapper) -> None:
+    def load_from(self, mapper: bm.BaseMapper) -> None:
         """Reads an odm mapper object and loads the data into the Odm object.
 
         Parameters
@@ -584,23 +587,6 @@ class OdmEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, o)
 
 
-def decode_object(o):
-    if '__Odm__' in o:
-        a = Odm(
-            o['__Odm__'],
-        )
-        a.__dict__.update(o['__Odm__'])
-        return a
-
-    elif '__DataFrame__' in o:
-        a = pd.read_json(o['__DataFrame__'], orient='split')
-        return(a)
-    elif '__Timestamp__' in o:
-        return pd.to_datetime(o['__Timestamp__'])
-    else:
-        return o
-
-
 def create_db(filepath=None):
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/dev/src/wbe_create_table_SQLITE_en.sql"  # noqa
     sql = requests.get(url).text
@@ -627,20 +613,23 @@ def destroy_db(filepath):
 def test_samples_from_excel():
     # run with example excel data
     filename = "Data/Ville de Québec 202102.xlsx"
-    excel_mapper = ExcelTemplateMapper(filename)
+    excel_mapper = em.ExcelTemplateMapper()
+    excel_mapper.read(filename)
     odm_instance = Odm()
     odm_instance.load_from(excel_mapper)
     geo = odm_instance.get_geoJSON()
     samples = odm_instance.combine_per_sample()
-    return geo, samples
+    return geo, samples, odm_instance
 
 
 def test_samples_from_db():
     # run with example db data
     path = "Data/WBE.db"
     connection_string = f"sqlite:///{path}"
+    db_mapper = sqm.SQLite3Mapper()
+    db_mapper.read(connection_string)
     odm_instance = Odm()
-    odm_instance.load_from_db(connection_string)
+    odm_instance.load_from(db_mapper)
     geo = odm_instance.get_geoJSON()
     return geo, odm_instance.combine_per_sample()
 
@@ -649,25 +638,39 @@ def test_from_excel_and_db():
     # run with example db data
     path = "Data/WBE.db"
     connection_string = f"sqlite:///{path}"
-    odm_instance = Odm()
     filename = "Data/Ville de Québec 202102.xlsx"
-    odm_instance.load_from_excel(filename)
-    odm_instance.load_from_db(connection_string)
+    excel_mapper = em.ExcelTemplateMapper()
+    excel_mapper.read(filename)
+    odm_instance = Odm()
+    odm_instance.load_from(excel_mapper)
+    db_mapper = sqm.SQLite3Mapper()
+    db_mapper.read(connection_string)
+    odm_instance.append_from(db_mapper)
+    odm2 = Odm()
+    odm2.load_from(excel_mapper)
+    odm2.append_from(db_mapper)
+
     geo = odm_instance.get_geoJSON()
     return geo, odm_instance.combine_per_sample()
 
 
 def test_serialization_deserialization():
     # run with example db data
-    odm_instance = Odm()
-    filename = "Data/Ville de Québec 202102.xlsx"
-    odm_instance.load_from_excel(filename)
-    odm_instance.get_geoJSON()
-
+    _, _, odm_instance = test_samples_from_excel()
+    start = time.time()
+    print("serializing")
     serialized = json.dumps(odm_instance, indent=4, cls=OdmEncoder)
-    deserialized = json.loads(serialized, object_hook=decode_object)
+    print('Serialization took', time.time()-start, 'seconds.')
 
-    deserialized.combine_per_sample()
+    start = time.time()
+    print("deserializing")
+    j_mapper = sem.SerializedMapper()
+    j_mapper.read(serialized)
+    odm_instance = Odm()
+    odm_instance.load_from(j_mapper)
+    print('Derialization took', time.time()-start, 'seconds.')
+
+    return odm_instance
 
 
 def test_visualization_helpers():
@@ -727,9 +730,22 @@ if __name__ == "__main__":
 
     # engine = create_db()
     # destroy_db(test_path)
+    """print("Testing from Excel")
+    start = time.time()
     samples = test_samples_from_excel()
-    # samples = test_samples_from_db()
-    # samples = test_from_excel_and_db()
+    print('It took', time.time()-start, 'seconds.')
+    print("testing from db")
+    start = time.time()
+    samples = test_samples_from_db()
+    print('It took', time.time()-start, 'seconds.')
+    print("testing from excel and db")
+    start = time.time()
+    samples = test_from_excel_and_db()
+    print('It took', time.time()-start, 'seconds.')"""
+    print("testing serialization_deserialization")
+    start = time.time()
     test_serialization_deserialization()
-    test_visualization_helpers()
-    test_finding_polygons()
+    print('It took', time.time()-start, 'seconds.')
+
+    # test_visualization_helpers()
+    # test_finding_polygons()

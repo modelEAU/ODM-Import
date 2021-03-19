@@ -2,6 +2,7 @@ import pandas as pd
 import datetime as dt
 from wbe_odm.odm_mappers import base_mapper
 
+
 def replace_excel_dates(series):
     return series.apply(
         lambda x: pd.to_timedelta(x, unit='d') +
@@ -204,10 +205,22 @@ def get_measurements_from_lab_sheet(df):
     return measurements
 
 
+class ModelEauMapper(base_mapper.BaseMapper):
+    def read(self, filepath, sheet_name):
+        df = pd.read_excel(path, sheet_name=sheet_name)
+        df = clean_up(df)
+        self.samples = get_samples_from_lab_sheet(df)
+        self.ww_measure = get_measurements_from_lab_sheet(df)
+        return
+
+    def validates(self):
+        return True
+
+
 if __name__ == "__main__":
-    path = "Data/Lab/COVIDProject_Lab Measurements.xlsx"
+    path = "Data/Lab/modelEAU/COVIDProject_Lab Measurements.xlsx"
     sheet_name = "Lab analyses"
-    df = pd.read_excel(path, sheet_name=sheet_name)
-    df = clean_up(df)
-    samples = get_samples_from_lab_sheet(df)
-    measurements = get_measurements_from_lab_sheet(df)
+    mapper = ModelEauMapper()
+    mapper.read(path, sheet_name)
+    print(mapper.ww_measure)
+

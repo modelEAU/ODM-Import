@@ -27,7 +27,7 @@ class SQLite3Mapper(base_mapper.BaseMapper):
 
         attributes = []
         for table_name in table_names:
-            for k, v in self.conversion_dict:
+            for k, v in self.conversion_dict.items():
                 if v["odm_name"] == table_name:
                     attributes.append(k)
 
@@ -38,9 +38,8 @@ class SQLite3Mapper(base_mapper.BaseMapper):
         ):
             df = pd.read_sql(f"select * from {table_name}", engine)
             df = self.type_cast_table(table_name, df)
-            if self.validates(df):
-                self.setattr(attribute, df)
+            setattr(self, attribute, df)
         return
 
-    def validate(table):
+    def validates(table):
         return True

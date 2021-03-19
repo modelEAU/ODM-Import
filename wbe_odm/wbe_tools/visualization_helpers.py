@@ -138,7 +138,7 @@ def get_zoom_level(geo_json, map_height_px):
     if mapbox_lat_high > 80:
         mapbox_lat_high = 80
     mapbox_zoom = pd.read_csv(
-        "/workspaces/ODM Import/mapbox_zoom.csv",
+        "./wbe_odm/wbe_tools/mapbox_zoom.csv",
         index_col="Zoom level"
     )
 
@@ -159,4 +159,3 @@ def get_zoom_level(geo_json, map_height_px):
         required_pixel_density
     )
     return zoom_level
-

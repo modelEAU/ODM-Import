@@ -1,7 +1,7 @@
 import base64
 import io
 import json
-
+import sys; sys.path.append("/workspaces/ODM Import")  # noqa
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -11,10 +11,11 @@ import plotly.io as pio
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from wbe_odm import odm
-from wbe_odm import visualization_helpers
+from wbe_odm.wbe_tools import visualization_helpers
+from wbe_odm.odm_mappers import excel_template_mapper
+from wbe_odm.odm_mappers import serialized_mapper
 
 OdmEncoder = odm.OdmEncoder
-decode_object = odm.decode_object
 Odm = odm.Odm
 
 pd.options.display.max_columns = None
@@ -89,7 +90,7 @@ def draw_map(sample_data, odm_instance, geo):
         "Site.geoLong",
         "Site.icon"
     ]].drop_duplicates()
-    print(site_data["Site.icon"].to_list())
+    # print(site_data["Site.icon"].to_list())
     # Choropleth layer for sewersheds
     fig = px.choropleth_mapbox(
         sample_data,
@@ -174,7 +175,7 @@ app.layout = html.Div(
                         html.Br(),
                         html.Br(),
                         html.Br(),
-                        dcc.Graph(id='timeseries-1'),
+                        dcc.Graph(id='map-1'),
                     ],
                     style={
                         'width': '45%',
@@ -217,7 +218,7 @@ app.layout = html.Div(
                         html.Br(),
                         html.Br(),
 
-                        dcc.Graph(id='map-1'),
+                        dcc.Graph(id='timeseries-1'),
                     ],
                     style={
                         'width': '45%',
@@ -243,11 +244,21 @@ def parse_contents(contents, filename):
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             # TODO: Should validate here
-            odm_instance.load_from_excel(io.BytesIO(decoded))
+            excel_mapper = excel_template_mapper.ExcelTemplateMapper()
+            excel_mapper.read(io.BytesIO(decoded))
+            odm_instance.load_from(excel_mapper)
     except Exception as e:
         return html.Div([
             f'There was an error processing this file: {e}'
         ])
+    return odm_instance
+
+
+def load_serialized(serialized):
+    odm_instance = Odm()
+    mapper = serialized_mapper.SerializedMapper()
+    mapper.read(serialized)
+    odm_instance.load_from(mapper)
     return odm_instance
 
 
@@ -272,8 +283,7 @@ def read_uploaded_excel(contents, filename):
 def map_from_samples(odm_data):
     if not odm_data:
         raise PreventUpdate
-    odm_instance = json.loads(odm_data, object_hook=decode_object)
-
+    odm_instance = load_serialized(odm_data)
     samples = odm_instance.combine_per_sample()
     geo = odm_instance.get_geoJSON()
     return samples.to_json(date_format='iso'), geo
@@ -287,9 +297,17 @@ def map_from_samples(odm_data):
 def combine_per_samples(samples, geo, odm_data):
     if None in [samples, geo, odm_data]:
         raise PreventUpdate
-    odm_instance = json.loads(odm_data, object_hook=decode_object)
+    odm_instance = load_serialized(odm_data)
     samples = pd.read_json(samples)
     return draw_map(samples, odm_instance, geo)
+
+
+def find_label_by_value(value, options):
+    for option in options:
+        this_value = option["value"]
+        if value == this_value:
+            return option["label"]
+    return None
 
 
 # Define callback to update graphs
@@ -297,15 +315,25 @@ def combine_per_samples(samples, geo, odm_data):
     Output('timeseries-1', 'figure'),
     [Input("x-dropdown-1", "value"),
      Input("y-dropdown-1", "value"),
-     Input("plot-1-store", "data")])
-def time_series_1(x_col, y_col, data):
-    if y_col is None:
+     Input("plot-1-store", "data")],
+    [State("x-dropdown-1", "options"),
+     State("y-dropdown-1", "options")])
+def time_series_1(x_col, y_col, data, x_names, y_names):
+    if None in [x_col, y_col]:
         return px.scatter()
+    x_label = find_label_by_value(x_col, x_names)
+    y_label = find_label_by_value(y_col, y_names)
+
     df = pd.read_json(data)
 
     return px.scatter(
         df, x=x_col, y=y_col,
-        title=f"{y_col} over time"
+        title=f"{y_label} over time",
+        labels={
+            x_col: x_label,
+            y_col: y_label,
+        }
+
     )
 
 
@@ -319,7 +347,7 @@ def filter_by_clicked_location(click_data, samples_data, geo):
         raise PreventUpdate
     samples = pd.read_json(samples_data)
     point = click_data["points"][0]
-    print("point data", point)
+    # print("point data", point)
     custom_data = point.get("customdata", None)
     if custom_data is None:
         filt = True
@@ -344,7 +372,7 @@ def get_times(df):
 
 
 def clean_labels_y(cols):
-    clean_labels = {}
+    clean_labels = []
     for col in cols:
         table_name = col.split(".")[0]
         if table_name == "WWMeasure":
@@ -359,17 +387,19 @@ def clean_labels_y(cols):
             unit = unit.replace("-", "/")
             clean_label = f"{table_name} {param} ({unit})"
 
-        clean_labels.add(clean_label)
+        if clean_label not in clean_labels:
+            clean_labels.append(clean_label)
     return clean_labels
 
 
 def clean_labels_x(cols):
-    clean_labels = {}
+    clean_labels = []
     for col in cols:
         fields = col.split(".")
         for field in fields:
             if "date" in field:
-                clean_labels.add(field)
+                if field not in clean_labels:
+                    clean_labels.append(field)
     return clean_labels
 
 
@@ -381,8 +411,8 @@ def update_dropdown_y1(plot_data):
         raise PreventUpdate
     df = pd.read_json(plot_data)
 
-    series_y = get_series(df)
-    cols_y = series_y.columns.tolist()
+    cols_y = get_series(df)
+    print(cols_y)
     labels_y = clean_labels_y(cols_y)
     y_options = [
         {'label': label, 'value': col}
@@ -399,9 +429,8 @@ def update_dropdown_x1(plot_data, y_col):
         raise PreventUpdate
     df = pd.read_json(plot_data)
 
-    series_x = get_times(df)
-    cols_x = series_x.columns.tolist()
-    labels_x = clean_labels_x(cols_x, "date")
+    cols_x = get_times(df)
+    labels_x = clean_labels_x(cols_x)
     x_options = [
         {'label': label, 'value': col}
         for label, col in zip(labels_x, cols_x)]

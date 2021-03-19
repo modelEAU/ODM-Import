@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 import requests
 
-from wbe_odm import utilities, visualization_helpers
-from wbe_odm.odm_mappers import base_mapper as bm
-from wbe_odm.odm_mappers import excel_template_mapper as em
-from wbe_odm.odm_mappers import serialized_mapper as sem
-from wbe_odm.odm_mappers import sqlite3_mapper as sqm
+from wbe_odm import utilities
+from wbe_odm.odm_mappers import base_mapper
+from wbe_odm.odm_mappers import excel_template_mapper
+from wbe_odm.odm_mappers import serialized_mapper
+from wbe_odm.odm_mappers import sqlite3_mapper
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -202,6 +202,7 @@ class Odm:
                 "aggregation",
             ]
         )
+        df.drop(columns=["index"], inplace=True)
         df = df.add_prefix("WWMeasure.")
         return df
 
@@ -328,7 +329,7 @@ class Odm:
                     raise e
         return
 
-    def load_from(self, mapper: bm.BaseMapper) -> None:
+    def load_from(self, mapper: base_mapper.BaseMapper) -> None:
         """Reads an odm mapper object and loads the data into the Odm object.
 
         Parameters
@@ -453,7 +454,8 @@ class Odm:
             # Pandas doesn't provide good joining capability using dates, so we
             # go through SQLite to perform the join and come back to pandas
             # afterwards.
-
+            if site_measure.empty:
+                return sample
             # Make the db in memory
             conn = sqlite3.connect(':memory:')
             # write the tables
@@ -613,7 +615,7 @@ def destroy_db(filepath):
 def test_samples_from_excel():
     # run with example excel data
     filename = "Data/Ville de Québec 202102.xlsx"
-    excel_mapper = em.ExcelTemplateMapper()
+    excel_mapper = excel_template_mapper.ExcelTemplateMapper()
     excel_mapper.read(filename)
     odm_instance = Odm()
     odm_instance.load_from(excel_mapper)
@@ -626,7 +628,7 @@ def test_samples_from_db():
     # run with example db data
     path = "Data/WBE.db"
     connection_string = f"sqlite:///{path}"
-    db_mapper = sqm.SQLite3Mapper()
+    db_mapper = sqlite3_mapper.SQLite3Mapper()
     db_mapper.read(connection_string)
     odm_instance = Odm()
     odm_instance.load_from(db_mapper)
@@ -639,11 +641,11 @@ def test_from_excel_and_db():
     path = "Data/WBE.db"
     connection_string = f"sqlite:///{path}"
     filename = "Data/Ville de Québec 202102.xlsx"
-    excel_mapper = em.ExcelTemplateMapper()
+    excel_mapper = excel_template_mapper.ExcelTemplateMapper()
     excel_mapper.read(filename)
     odm_instance = Odm()
     odm_instance.load_from(excel_mapper)
-    db_mapper = sqm.SQLite3Mapper()
+    db_mapper = sqlite3_mapper.SQLite3Mapper()
     db_mapper.read(connection_string)
     odm_instance.append_from(db_mapper)
     odm2 = Odm()
@@ -664,7 +666,7 @@ def test_serialization_deserialization():
 
     start = time.time()
     print("deserializing")
-    j_mapper = sem.SerializedMapper()
+    j_mapper = serialized_mapper.SerializedMapper()
     j_mapper.read(serialized)
     odm_instance = Odm()
     odm_instance.load_from(j_mapper)
@@ -673,79 +675,23 @@ def test_serialization_deserialization():
     return odm_instance
 
 
-def test_visualization_helpers():
-    wkts = []
-    wkt_dir = "/workspaces/ODM Import/Data/polygons"
-    for file in os.listdir(wkt_dir):
-        if file.endswith(".wkt"):
-            wkts.append(os.path.join(wkt_dir, file))
-    polys = visualization_helpers.create_dummy_polygons(wkts)
-
-    inst = Odm()
-    inst.add_to_attr("polygon", polys)
-    geo_json = inst.get_geoJSON()
-    map_center = visualization_helpers.get_map_center(geo_json)
-    zoom = visualization_helpers.get_zoom_level(geo_json, 800)
-    print(zoom)
-    return map_center, zoom
-
-
-def test_finding_polygons():
-    # run with example excel data
-    filename = "Data/Ville de Québec 202102.xlsx"
-    odm_instance = Odm()
-    odm_instance.load_from_excel(filename)
-    samples = odm_instance.combine_per_sample()
-    geo = odm_instance.get_geoJSON()
-
-    def get_polygon_name_from_agg_samples(
-        odm_instance: Odm,
-        df: pd.DataFrame
-            ) -> pd.Series:
-        poly_df = odm_instance.polygon
-        df["Polygon.name"] = ""
-        df.reset_index(inplace=True)
-        for i, row in df.iterrows():
-            poly_id = row["Site.polygonID"]
-            poly_name = poly_df.loc[poly_df["polygonID"] == poly_id, "name"]
-            df.iloc[i, df.columns.get_loc("Polygon.name")] = poly_name
-        return df["Polygon.name"]
-
-    poly_names = get_polygon_name_from_agg_samples(
-        odm_instance, samples)
-
-    def get_id_from_name_geojson(geo, name):
-        features = geo["features"]
-        for feature in features:
-            if feature["properties"]["name"] == name:
-                return feature["properties"]["polygonID"]
-
-        return None
-
-    poly_id = get_id_from_name_geojson(geo, "quebec est wwtp sewer catchment")
-    return poly_names, poly_id
-
-
 if __name__ == "__main__":
-
+    pass
     # engine = create_db()
     # destroy_db(test_path)
-    """print("Testing from Excel")
-    start = time.time()
+    # print("Testing from Excel")
+    # start = time.time()
     samples = test_samples_from_excel()
-    print('It took', time.time()-start, 'seconds.')
-    print("testing from db")
-    start = time.time()
-    samples = test_samples_from_db()
-    print('It took', time.time()-start, 'seconds.')
-    print("testing from excel and db")
-    start = time.time()
-    samples = test_from_excel_and_db()
-    print('It took', time.time()-start, 'seconds.')"""
-    print("testing serialization_deserialization")
-    start = time.time()
-    test_serialization_deserialization()
-    print('It took', time.time()-start, 'seconds.')
-
-    # test_visualization_helpers()
-    # test_finding_polygons()
+    # print('It took', time.time()-start, 'seconds.')
+    # print("testing from db")
+    # start = time.time()
+    # samples = test_samples_from_db()
+    # print('It took', time.time()-start, 'seconds.')
+    # print("testing from excel and db")
+    # start = time.time()
+    # samples = test_from_excel_and_db()
+    # print('It took', time.time()-start, 'seconds.')
+    # print("testing serialization_deserialization")
+    # start = time.time()
+    # test_serialization_deserialization()
+    # print('It took', time.time()-start, 'seconds.')

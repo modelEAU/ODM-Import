@@ -157,7 +157,7 @@ class VdQPlantMapper(base_mapper.BaseMapper):
         sheet_names = ["Données station Est", "Données station Ouest"]
         odm_name = self.conversion_dict["site_measure"]["odm_name"]
         xls = pd.read_excel(
-            path,
+            filepath,
             sheet_name=sheet_names,
             header=0,
             skiprows=[1]
@@ -184,4 +184,3 @@ if __name__ == "__main__":
     path = "/workspaces/ODM Import/Data/Site measure/Échantillonnage COVID ULaval.xlsx"  # noqa
     mapper = VdQPlantMapper()
     mapper.read(path)
-

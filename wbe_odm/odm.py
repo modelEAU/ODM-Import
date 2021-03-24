@@ -544,26 +544,72 @@ class Odm:
         merged.drop_duplicates(keep="first", inplace=True)
         return merged
 
-    def save_to_db(
+    def to_sqlite3(
         self,
-        df: pd.DataFrame,
-        table_name: str,
-        engine
+        filepath,
+        attrs_to_save: list = None,
             ) -> None:
+        if attrs_to_save is None:
+            attrs_to_save = []
+            attrs = self.__dict__
+            for name, value in attrs.items():
+                if not value.empty:
+                    attrs_to_save.append(name)
+        conversion_dict = base_mapper.BaseMapper.conversion_dict
+        if not os.path.exists(filepath):
+            create_db(filepath)
+        con = sqlite3.connect(filepath)
+        for attr in attrs_to_save:
+            odm_name = conversion_dict[attr]["odm_name"]
+            df = getattr(self, attr)
+            if df.empty:
+                continue
+            df.to_sql(
+                name='myTempTable',
+                con=con,
+                if_exists='replace',
+                index=False
+            )
+            cols = df.columns
+            cols_str = f"{tuple(cols)}".replace("'", "\"")
 
-        df.to_sql(
-            name='myTempTable',
-            con=engine,
-            if_exists='replace',
-            index=False
-        )
-        cols = df.columns
-        cols_str = f"{tuple(cols)}".replace("'", "\"")
-        with engine.begin() as cn:
-            sql = f"""REPLACE INTO {table_name} {cols_str}
-                SELECT * from myTempTable """
-            cn.execute(sql)
-            cn.execute("drop table if exists myTempTable")
+            sql = f"""REPLACE INTO {odm_name} {cols_str}
+                    SELECT * from myTempTable """
+
+            con.execute(sql)
+            con.execute("drop table if exists myTempTable")
+            con.close()
+        return
+
+    def to_csv(
+        self,
+        path: str,
+        file_prefix: str,
+        attrs_to_save: list = None
+    ) -> None:
+        if attrs_to_save is None:
+            attrs_to_save = []
+            attrs = self.__dict__
+            for name, df in attrs.items():
+                if df is None:
+                    continue
+                elif df.empty:
+                    continue
+                attrs_to_save.append(name)
+
+        conversion_dict = base_mapper.BaseMapper.conversion_dict
+        if not os.path.exists(path):
+            os.mkdir(path)
+        for attr in attrs_to_save:
+            odm_name = conversion_dict[attr]["odm_name"]
+            filename = file_prefix + "_" + odm_name
+            df = getattr(self, attr)
+            if df is None:
+                continue
+            elif df.empty:
+                continue
+            complete_path = os.path.join(path, filename)
+            df.to_csv(complete_path+".csv", sep=",", na_rep="na", index=False)
         return
 
     def append_odm(self, other_odm):
@@ -653,6 +699,8 @@ def test_from_excel_and_db():
     odm2 = Odm()
     odm2.load_from(excel_mapper)
     odm2.append_from(db_mapper)
+    # odm2.to_sqlite3("test.db")
+    odm2.to_csv('csv_test', "test", )
 
     geo = odm_instance.get_geoJSON()
     return geo, odm_instance.combine_per_sample()
@@ -691,7 +739,7 @@ if __name__ == "__main__":
     # print('It took', time.time()-start, 'seconds.')
     # print("testing from excel and db")
     # start = time.time()
-    # samples = test_from_excel_and_db()
+    samples = test_from_excel_and_db()
     # print('It took', time.time()-start, 'seconds.')
     # print("testing serialization_deserialization")
     # start = time.time()

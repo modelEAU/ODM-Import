@@ -46,8 +46,8 @@ default_sample = {
     }
 
 default_measurement = {
-    # "uWwMeasureID": None,
-    "WwMeasureID": None,
+    # "WWMeasureID": None,
+    "WWMeasureID": None,
     "reporterID": "MaryamTohidi",
     "sampleID": None,
     "labID": "ModelEau_lab",
@@ -158,17 +158,72 @@ def create_sample_row(row):
     return pd.Series(new_sample)
 
 
+def reorder_sample_columns(df):
+    ordered_columns = [
+        "sampleID",
+        "siteID",
+        "instrumentID",
+        "reporterID",
+        "dateTime",
+        "dateTimeStart",
+        "dateTimeEnd",
+        "type",
+        "collection",
+        "preTreatment",
+        "pooled",
+        "children",
+        "parent",
+        "sizeL",
+        "index",
+        "fieldSampleTempC",
+        "shippedOnIce",
+        "storageTempC",
+        "qualityFlag",
+        "notes"
+    ]
+    return df[ordered_columns]
+
+
+def reorder_ww_measure_columns(df):
+    ordered_columns = [
+        "WWMeasureID",
+        "reporterID",
+        "sampleID",
+        "labID",
+        "assayMethodID",
+        "analysisDate",
+        "reportDate",
+        "fractionAnalyzed",
+        "type",
+        "value",
+        "unit",
+        "aggregation",
+        "index",
+        "qualityFlag",
+        "accessToPublic",
+        "accessToAllOrg",
+        "accessToPHAC",
+        "accessToLocalHA",
+        "accessToProvHA",
+        "accessToOtherProv",
+        "accessToDetails",
+        "notes"
+    ]
+    return df[ordered_columns]
+
+
 def get_samples_from_lab_sheet(df):
     samples = df.apply(lambda x: create_sample_row(x), axis=1)
     samples = samples.drop_duplicates()
     samples.reset_index(drop=True, inplace=True)
+    samples = reorder_sample_columns(samples)
     return samples
 
 
 def create_measurement_row(row):
     new_measurement = default_measurement.copy()
     new_measurement["sampleID"] = build_sample_id(row)
-    new_measurement["WwMeasureID"] = build_measurement_id(row)
+    new_measurement["WWMeasureID"] = build_measurement_id(row)
     new_measurement["analysisDate"] = row["Analysis Date"]
     new_measurement["type"] = measurement_dico[row["Measurement"]]
     new_measurement["value"] = row["Value"]
@@ -183,17 +238,17 @@ def create_measurement_row(row):
 
 
 def edit_index_in_id(row):
-    current_index = row["uWwMeasureID"]
-    row["uWwMeasureID"] = current_index[:-1] + str(row["index"])
+    current_index = row["WWMeasureID"]
+    row["WWMeasureID"] = current_index[:-1] + str(row["index"])
     return row
 
 
 def build_missing_indices(df):
-    uniques = df["uWwMeasureID"].drop_duplicates()
+    uniques = df["WWMeasureID"].drop_duplicates()
     for _, unique in enumerate(uniques):
-        replicates = df.loc[df["uWwMeasureID"] == unique]
+        replicates = df.loc[df["WWMeasureID"] == unique]
         indices = [x+1 for x in range(len(replicates))]
-        df.loc[df["uWwMeasureID"] == unique, ["index"]] = indices
+        df.loc[df["WWMeasureID"] == unique, ["index"]] = indices
     df = df.apply(lambda x: edit_index_in_id(x), axis=1)
     return df
 
@@ -203,15 +258,16 @@ def get_measurements_from_lab_sheet(df):
     measurements.reset_index(drop=True, inplace=True)
     if len(measurements.loc[measurements["index"] == 0]) > 0:
         measurements = build_missing_indices(measurements)
+    measurements = reorder_ww_measure_columns(measurements)
     return measurements
 
 
 class ModelEauMapper(base_mapper.BaseMapper):
     def read(self, filepath, sheet_name):
-        df = pd.read_excel(path, sheet_name=sheet_name)
+        df = pd.read_excel(filepath, sheet_name=sheet_name)
         df = clean_up(df)
         df.drop_duplicates(keep="first", inplace=True)
-        self.samples = get_samples_from_lab_sheet(df)
+        self.sample = get_samples_from_lab_sheet(df)
         self.ww_measure = get_measurements_from_lab_sheet(df)
         return
 

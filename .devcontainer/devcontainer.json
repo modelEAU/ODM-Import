@@ -13,7 +13,7 @@
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash",
+		"terminal.integrated.shell.linux": "/bin/zsh",
 		"python.pythonPath": "/opt/conda/bin/python",
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": true,
@@ -26,18 +26,19 @@
 		"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+		"python.languageServer": "JediLSP",
 		"jupyter.alwaysTrustNotebooks": true
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"ms-python.vscode-pylance",
 		"ms-toolsai.jupyter",
 		"christian-kohler.path-intellisense",
 		"alexcvzz.vscode-sqlite",
 		"njpwerner.autodocstring",
-		"hediet.vscode-drawio"
+		"hediet.vscode-drawio",
+		"randomfractalsinc.geo-data-viewer"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

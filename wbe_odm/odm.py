@@ -361,18 +361,20 @@ class Odm:
         }
         polygon_df = self.polygon
         for i, row in polygon_df.iterrows():
-            new_feature = {
-                "type": "Feature",
-                "geometry": utilities.convert_wkt_to_geojson(
-                    row["wkt"]
-                ),
-                "properties": {
-                    col:
-                    row[col] for col in polygon_df.columns if "wkt" not in col
-                },
-                "id": i
-            }
-            geo["features"].append(new_feature)
+            if row["wkt"] != "":
+                new_feature = {
+                    "type": "Feature",
+                    "geometry": utilities.convert_wkt_to_geojson(
+                        row["wkt"]
+                    ),
+                    "properties": {
+                        col:
+                        row[col] for col in polygon_df.columns
+                            if "wkt" not in col
+                    },
+                    "id": i
+                }
+                geo["features"].append(new_feature)
         return geo
 
     def combine_per_sample(self) -> pd.DataFrame:
@@ -539,7 +541,7 @@ class Odm:
         merged = combine_cphd_by_geo(merged, cphd)
 
         merged.set_index("Sample.sampleID", inplace=True)
-
+        merged.drop_duplicates(keep="first", inplace=True)
         return merged
 
     def save_to_db(
@@ -614,7 +616,7 @@ def destroy_db(filepath):
 # testing functions
 def test_samples_from_excel():
     # run with example excel data
-    filename = "Data/Ville de Québec 202102.xlsx"
+    filename = "Data/Ville de Quebec - All data.xlsx"
     excel_mapper = excel_template_mapper.ExcelTemplateMapper()
     excel_mapper.read(filename)
     odm_instance = Odm()
@@ -670,7 +672,7 @@ def test_serialization_deserialization():
     j_mapper.read(serialized)
     odm_instance = Odm()
     odm_instance.load_from(j_mapper)
-    print('Derialization took', time.time()-start, 'seconds.')
+    print('Deserialization took', time.time()-start, 'seconds.')
 
     return odm_instance
 
@@ -681,7 +683,7 @@ if __name__ == "__main__":
     # destroy_db(test_path)
     # print("Testing from Excel")
     # start = time.time()
-    samples = test_samples_from_excel()
+    # samples = test_samples_from_excel()
     # print('It took', time.time()-start, 'seconds.')
     # print("testing from db")
     # start = time.time()

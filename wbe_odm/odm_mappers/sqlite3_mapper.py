@@ -38,6 +38,7 @@ class SQLite3Mapper(base_mapper.BaseMapper):
         ):
             df = pd.read_sql(f"select * from {table_name}", engine)
             df = self.type_cast_table(table_name, df)
+            df.drop_duplicates(keep="first", inplace=True)
             setattr(self, attribute, df)
         return
 

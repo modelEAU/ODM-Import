@@ -64,9 +64,9 @@ def get_map_center(geo_json):
     x_s = []
     y_s = []
     if geo_json is None:
-        return None
+        return default_center
     if len(geo_json["features"]) == 0:
-        return None
+        return default_center
     for feat in geo_json["features"]:
         geometry = feat["geometry"]
         if not geometry:
@@ -121,10 +121,12 @@ def get_zoom_level(geo_json, map_height_px):
     default_bounding_box = (
         -71.383618, 46.746301, -71.168241, 46.840914
     )
-
-    bounding_box = get_bounding_box(geo_json)
-    if bounding_box is None:
+    # print(geo_json, type)
+    if geo_json is None:
         bounding_box = default_bounding_box
+    else:
+        bounding_box = get_bounding_box(geo_json)
+
     center_lon = (bounding_box[0] + bounding_box[1]) / 2
     center_lat = (bounding_box[2] + bounding_box[3]) / 2
     point_1 = Point(center_lon, bounding_box[2])

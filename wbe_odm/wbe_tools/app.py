@@ -75,6 +75,8 @@ def poly_name_from_agg(
 
 def draw_map(sample_data, odm_instance, geo):
     map_height = 800
+    if geo is None:
+        return px.choropleth_mapbox()
     map_center = visualization_helpers.get_map_center(geo)
     zoom_level = visualization_helpers.get_zoom_level(geo, map_height)
     sample_data["Polygon.name"] = poly_name_from_agg(
@@ -343,12 +345,15 @@ def time_series_1(x_col, y_col, data, x_names, y_names):
      Input('sample-store', 'data')],
     State("geo-store", "data"))
 def filter_by_clicked_location(click_data, samples_data, geo):
-    if None in [click_data, samples_data, geo]:
+    if None in [samples_data]:
         raise PreventUpdate
     samples = pd.read_json(samples_data)
-    point = click_data["points"][0]
-    # print("point data", point)
-    custom_data = point.get("customdata", None)
+    if click_data is None:
+        custom_data = None
+    else:
+        point = click_data["points"][0]
+        # print("point data", point)
+        custom_data = point.get("customdata", None)
     if custom_data is None:
         filt = True
     else:
@@ -412,7 +417,6 @@ def update_dropdown_y1(plot_data):
     df = pd.read_json(plot_data)
 
     cols_y = get_series(df)
-    print(cols_y)
     labels_y = clean_labels_y(cols_y)
     y_options = [
         {'label': label, 'value': col}

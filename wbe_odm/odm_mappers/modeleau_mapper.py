@@ -209,6 +209,7 @@ class ModelEauMapper(base_mapper.BaseMapper):
     def read(self, filepath, sheet_name):
         df = pd.read_excel(path, sheet_name=sheet_name)
         df = clean_up(df)
+        df.drop_duplicates(keep="first", inplace=True)
         self.samples = get_samples_from_lab_sheet(df)
         self.ww_measure = get_measurements_from_lab_sheet(df)
         return
@@ -223,4 +224,3 @@ if __name__ == "__main__":
     mapper = ModelEauMapper()
     mapper.read(path, sheet_name)
     print(mapper.ww_measure)
-

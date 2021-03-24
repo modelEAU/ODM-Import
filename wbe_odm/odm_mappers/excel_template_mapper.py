@@ -41,7 +41,6 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             xls = pd.read_excel(filepath, sheet_name=sheet_names)
-
         attributes = []
         odm_names = []
         for sheet in sheet_names:
@@ -65,6 +64,7 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
                     inplace=True
                 )
             df = self.type_cast_table(odm_name, df)
+            df.drop_duplicates(keep="first", inplace=True)
             setattr(self, attribute, df)
         return
 

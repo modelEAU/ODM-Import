@@ -25,6 +25,7 @@ def clean_up(df):
 default_sample = {
         "sampleID": None,
         "siteID": None,
+        "instrumentID": None,
         "reporterID": "MaryamTohidi",
         "dateTime": None,
         "dateTimeStart": None,
@@ -36,16 +37,16 @@ default_sample = {
         "children": None,
         "parent": None,
         "sizeL": 1,
+        "index": 1,
         "fieldSampleTempC": 4,
         "shippedOnIce": "Yes",
         "storageTempC": 4,
         "qualityFlag": "NO",
         "notes": "",
-        "index": 1
     }
 
 default_measurement = {
-    "uWwMeasureID": None,
+    # "uWwMeasureID": None,
     "WwMeasureID": None,
     "reporterID": "MaryamTohidi",
     "sampleID": None,
@@ -167,7 +168,7 @@ def get_samples_from_lab_sheet(df):
 def create_measurement_row(row):
     new_measurement = default_measurement.copy()
     new_measurement["sampleID"] = build_sample_id(row)
-    new_measurement["uWwMeasureID"] = build_measurement_id(row)
+    new_measurement["WwMeasureID"] = build_measurement_id(row)
     new_measurement["analysisDate"] = row["Analysis Date"]
     new_measurement["type"] = measurement_dico[row["Measurement"]]
     new_measurement["value"] = row["Value"]

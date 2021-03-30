@@ -5,75 +5,6 @@ import re
 from wbe_odm.odm_mappers import base_mapper
 # from wbe_odm.odm_mappers import excel_template_mapper
 
-
-measurement_dico = {
-    "molecular detection.external control (brsv).ct.1": {
-        "type": "nBrsv",
-        "unit": "Ct"
-    },
-    "molecular detection.external control (brsv).ct.2": {
-        "type": "nBrsv",
-        "unit": "Ct"
-    },
-    "molecular detection.external control (brsv).ct.3": {
-        "type": "nBrsv",
-        "unit": "Ct"
-    },
-    "molecular detection.external control (brsv).% recovery.na": {
-        "type": "nBrsv",
-        "unit": "pctRecovery"
-    },
-    "molecular detection.pmmv.ct.1": {
-        "type": "nPMMoV",
-        "unit": "Ct"
-    },
-    "molecular detection.pmmv.ct.2": {
-        "type": "nPPMoV",
-        "unit": "Ct"
-    },
-    "molecular detection.pmmv.ct.3": {
-        "type": "nPPMov",
-        "unit": "Ct"
-    },
-    "molecular detection.pmmv.gc/ml.na": {
-        "type": "nPPMov",
-        "unit": "gc/ml"
-    },
-    "molecular detection.sars-cov-2.ct.1": {
-        "type": "covN2",
-        "unit": "Ct"
-    },
-    "molecular detection.sars-cov-2.ct.2": {
-        "type": "covN2",
-        "unit": "Ct"
-    },
-    "molecular detection.sars-cov-2.ct.3": {
-        "type": "covN2",
-        "unit": "Ct"
-    },
-    "molecular detection.sars-cov-2.gc/ml.na": {
-        "type": "covN2",
-        "unit": "gc/ml"
-    },
-    'concentration.key parametres.ph.initial': {
-        "type": "wqPh",
-        "unit": "ph"
-    },
-    'concentration.key parametres.turbidity (ntu).na': {
-        "type": "wqTurb",
-        "unit": "NTU"
-    },
-    'concentration.key parametres.conductivity megohm.na': {
-        "type": "wqCond",
-        "unit": "uS/cm"
-    },
-    'concentration.key parametres.tss (mg/l).na': {
-        "type": "wqTss",
-        "unit": "mg/l"
-    },
-}
-
-
 def parse_mcgill_headers(array):
     column_titles = []
     empty_token = "na"
@@ -87,7 +18,10 @@ def parse_mcgill_headers(array):
                 # if we're in the top row, the only option is to get the item
                 # on the left
                 if i == 0:
-                    array[i, j] = array[i, j-1]
+                    if j == 0:
+                        array[i, j] = empty_token
+                    else:
+                        array[i, j] = array[i, j-1]
                 # if we're on another row, we must check tow things:
                 # 1) The value of the row above
                 # 2) The value of the row above the item on the left
@@ -95,6 +29,7 @@ def parse_mcgill_headers(array):
                     # Of course, the first column doesn't have a left neighbor
                     if j == 0:
                         above_left = empty_token
+                        above = empty_token
                         left = empty_token
                     else:
                         above_left = array[i-1, j-1]
@@ -111,7 +46,10 @@ def parse_mcgill_headers(array):
                         array[i, j] = left
             # If the itemisn't empty, we clean it up
             else:
-                array[i, j] = str(array[i, j]).lower().strip()
+                # if it's a number, make sure it appears as an integer
+                if re.match(r".*\.0", item):
+                    item = item[:-2]
+                array[i, j] = str(item).lower().strip()
 
     for i, _ in enumerate(array[0, :]):
         column_name = ".".join(array[:, i])
@@ -150,187 +88,216 @@ def clean_up(df, molecular_cols, meas_cols):
     return df
 
 
-def get_sample_ids_from_lab_sheet(df, site_map):
-    # Sample Ids will be generated using:
-    # 1) Site ID
-    # 2) Sample date
-    date_col = "sampling.general information.date (d/m/y).na"
-    site_col = "sampling.general information.sampling point.na"
-    index_col = "sampling.general information.index.na"
-    df["str_col"] = df[date_col].dt.strftime(r"%Y-%m-%d")
-    df["site_ID"] = df[site_col].map(site_map)
-    # Since ModelEAU sample id's are built the same way, we should end up
-    # with matched id's between the labs
-    df["sampleID"] = df["siteID"] \
-        + "_" + df["str_col"] \
-        + "_" + df[index_col].astype(str)
-    return df["sampleID"]
+def typecast_column(desired_type, series):
+    if desired_type == "bool":
+        series = series.astype(str)
+        series = series.str.strip().str.lower()
+        series = series.str.replace(
+            base_mapper.UNKNOWN_REGEX, "", regex=True)\
+            .str.replace("oui", "true", case=False)\
+            .str.replace("yes", "true", case=False)\
+            .str.startswith("true")
+    elif desired_type == "string" or desired_type == "category":
+        series = series.astype(str)
+        series = series.str.strip()
+        series = series.str.replace(
+            base_mapper.UNKNOWN_REGEX, "", regex=True, case=False)
+    elif desired_type in ["int64", "float64"]:
+        series = pd.to_numeric(series, errors="coerce")
+    series = series.astype(desired_type)
+    return series
 
 
-def get_samples_from_lab_sheet(df):
+def typecast_lab(lab, types):
+    types["type"] = types["type"]\
+        .replace(r"date(time)?", "datetime64[ns]", regex=True) \
+        .replace("boolean", "bool") \
+        .replace("float", "float64") \
+        .replace("integer", "int64") \
+        .replace("blob", "object")
+    for col in lab.columns:
+        try:
+            desired_type = types[types["column"] == col].iloc[0]["type"]
+        except IndexError:
+            desired_type = "string"
+        lab[col] = typecast_column(desired_type, lab[col])
+    return lab
+
+
+def get_labsheet_inputs(map_row, lab_row, lab_id):
+    raw_inputs = map_row["labInputs"].split(";")
+    final_inputs = []
+    for input_ in raw_inputs:
+        if re.match(r"__const__.*:.*", input_):
+            value, type_ = input_[len("__const__")-1:].split(":")
+            if type_ == "str":
+                value = str(value)
+            elif type_ == "int":
+                value = int(value)
+        elif input_ == "__labID__":
+            value = lab_id
+        else:
+            value = lab_row[input_]
+        final_inputs.append(value)
+    return tuple(final_inputs)
+
+
+def pass_raw(*args):
+    if len(args) == 1:
+        return args
+    arguments = [str(arg) for arg in args]
+    return ",".join(arguments)
+
+
+def get_assay_method_id(sample_type, concentration_method, assay_date):
+    formatted_date = str(assay_date.date())
+    return "_".join([sample_type, concentration_method, formatted_date])
+
+
+def write_concentration_method(conc_method, ph_final):
     pass
 
 
-def build_maps(measurement_dico):
-    maps = {
-        "type": {},
-        "unit": {},
-    }
-    for col_header, types_dico in measurement_dico.items():
-        for var_name, props_dico in maps.items():
-            props_dico[col_header] = measurement_dico[col_header][var_name]
-    return maps
+def write_extraction_method(extraction):
+    pass
 
 
-def get_measurements_from_lab_sheet(
-        df,
-        idx_cols,
-        meas_cols,
-        site_map,
-        measurement_dico,
-        default_measurement):
+def write_pcr_method(pcr):
+    pass
 
-    df = pd.melt(
-        df,
-        id_vars=idx_cols,
-        value_vars=meas_cols
-    )
+def write_assay_notes():
+    pass
 
-    df["sampleID"] = get_sample_ids_from_lab_sheet(df, site_map)
-    maps = build_maps(measurement_dico)
-    for var_name, _map in maps.items():
-        df[var_name] = df["variable"].map(_map)
-    for var, default in default_measurement.items():
-        df[var] = default
-    df["siteID"] = site_map[sheet_name]
-    df["str_date"] = df["Date"].dt.strftime('%Y-%m-%d')
+def get_site_id():
+    pass
+
+def sample_is_pooled():
+    pass
+
+def create_children_samples():
+    pass
+
+def get_wwmeasure_id():
+    pass
+
+def get_reporter_id():
+    pass
+
+def get_sample_id():
+    pass
+
+def get_lab_id():
+    pass
+
+def validate_value():
+    pass
+
+def has_quality_flag():
+    pass
+
+def grant_access():
+    pass
+
+processing_functions = {
+    "get_assay_method_id": get_assay_method_id,
+    "write_concentration_method": write_concentration_method,
+    "write_extraction_method": write_extraction_method,
+    "write_pcr_method": write_pcr_method,
+    "write_assay_notes": write_assay_notes,
+    "get_site_id": get_site_id,
+    "sample_is_pooled": sample_is_pooled,
+    "create_children_samples": create_children_samples,
+    "get_wwmeasure_id": get_wwmeasure_id,
+    "get_reporter_id": get_reporter_id,
+    "get_sample_id": get_sample_id,
+    "get_lab_id": get_lab_id,
+    "validate_value": validate_value,
+    "has_quality_flag": has_quality_flag,
+    "grant_access": grant_access,
+}
+
+
+def parse_lab_row(lab_row, mapping, static_dico, lab_id):
+    elements = list(mapping["elementName"].unique())
+    for element in elements:
+        odm_table = mapping.loc[mapping["elementName"] == element].iloc[0]["table"]
+        fields = mapping.loc[mapping["elementName"] == element]
+        for _, field in fields.iterrows():
+            odm_column = field["variableName"]
+            input_sources = field["inputSources"]
+            if "static sheet" in input_sources:
+                static_input = static_dico[odm_table]
+            else:
+                static_input = tuple()
+            lab_inputs = get_labsheet_inputs(field, lab_row, lab_id)
+            inputs = (*static_input, *lab_inputs)
+            if len(inputs) == 0:
+                field["value"] == field["defaultValue"]
+            else:
+                func = field["processingFunction"]
+                field["value"] = processing_functions.get(func, pass_raw)(*inputs)
 
 
 class McGillMapper(base_mapper.BaseMapper):
-    def read(self, filepath, sheet_name,
-             default_sample,
-             default_measures,
-             start=None, end=None, create_samples=True):
-        df = pd.read_excel(path, sheet_name=sheet_name)
-        # df = df.iloc[:, 1:]
-        df.columns = parse_mcgill_headers(df.iloc[0:4].to_numpy(dtype=str))
-        id_vars = [
-            "sampling.general information.date (d/m/y).na",
-            "sampling.general information.sampling point.na",
-            "sampling.general information.type sample.na",
-            "sampling.general information.worker/student.na",
-            'concentration.general.date (d/m/y).na',
-            'concentration.general.concentrated volume (ml).na',
-            'concentration.general.worker/student.na',
-            'molecular detection.date of rna extraction (d/m/y).na.na',
-            'molecular detection.final elution in the extraction (µl).na.na',
-            'molecular detection.worker/student (rna extraction).na.na',
-            'molecular detection.date of pcr (d/m/y).na.na',
-            'molecular detection.final volume in the pcr (µl).na.na',
-            'molecular detection.worker/student (pcr).na.na',
-            'comments.na.na.na',
-            'conclusion.na.na.na'
+    def read(self,
+             labsheet_path,
+             staticdata_path,
+             typesheet_path,
+             mapsheet_path,
+             worksheet_name,
+             lab_id,
+             startdate=None,
+             enddate=None):
+        # get the lab data
+        lab = pd.read_excel(labsheet_path, sheet_name=worksheet_name, header=None, usecols="A:BS")
+        # parse the headers to deal with merged cells and get unique names
+        lab.columns = parse_mcgill_headers(lab.iloc[0:4].to_numpy(dtype=str))
+        lab = lab.iloc[4:]
+        types = pd.read_csv(typesheet_path, header=0)
+        mapping = pd.read_csv(mapsheet_path, header=0)
+        lab = typecast_lab(lab, types)
+        # Get the static data
+        static_sheets = [
+            "Lab",
+            "Reporter",
+            "Site",
+            "AssayMethod",
+            "Instrument",
+            "Polygon",
         ]
-        # remove rowas that don't contain molecular measures
-        molecular_columns = [
-            "molecular detection.external control (brsv).ct.1",
-            "molecular detection.external control (brsv).ct.2",
-            "molecular detection.external control (brsv).ct.3",
-            "molecular detection.external control (brsv).% recovery.na",
-            "molecular detection.pmmv.ct.1",
-            "molecular detection.pmmv.ct.2",
-            "molecular detection.pmmv.ct.3",
-            "molecular detection.pmmv.gc/ml.na",
-            "molecular detection.sars-cov-2.ct.1",
-            "molecular detection.sars-cov-2.ct.2",
-            "molecular detection.sars-cov-2.ct.3",
-            "molecular detection.sars-cov-2.gc/ml.na",
-        ]
-        measure_columns = [
-            # "concentration.general.concentrated volume (ml).na",
-            # 'concentration.key parametres.ph.initial',
-            # 'concentration.key parametres.ph.final',
-            'concentration.key parametres.turbidity (ntu).na',
-            'concentration.key parametres.conductivity megohm.na',  # /cm? m?
-            'concentration.key parametres.tss (mg/l).na',
-            # 'molecular detection.final elution in the extraction (µl).na.na',
-            # 'molecular detection.final volume in the pcr (µl).na.na',
-            # 'molecular detection.external control (brsv).ct.mean',
-            # 'molecular detection.external control (brsv).gc/rxn.na',
-            # 'molecular detection.pmmv.ct.mean',
-            # 'molecular detection.pmmv.gc/rxn.na',
-            # 'molecular detection.sars-cov-2.gc/rx.na',
-            # 'molecular detection.sars-cov-2.gc/normalized to pmmv.na',
-        ]
-        meas_cols = molecular_columns+measure_columns
-        site_map = {
-            "Est": "Quebec_Est_WWTP",
-            "Ouest": "Quebec_Ouest_WWTP",
-            "CHSLD": "Quebec_CHSLD_Charlesbourg",
-        }
-        df = clean_up(df, molecular_columns, measure_columns)
-        self.ww_measure = get_measurements_from_lab_sheet(
-            df, id_vars, meas_cols, site_map, default_measurement)
-        if create_samples:
-            self.samples = get_samples_from_lab_sheet(
-                df, site_map, default_sample)
-        return
+        static_data = {}
+        with pd.ExcelFile(staticdata_path) as xls:
+            for sheet in static_sheets:
+                static_data[sheet] = pd.read_excel(xls, sheet)
+        
+        for i, row in lab.iterrows():
+            parse_lab_row(row, mapping, static_data, lab_id)
+        
+
+        # This mapper should:
+        # 1) create sample rows 
+        # 2) create assay method rows
+        # 3) create ww measurement rows
+
+        
 
     def validates(self):
         return True
 
 
 if __name__ == "__main__":
-    path = "Data/Lab/McGill/20210317(b)_Results Template_filled.xlsx"
-    sheet_name = "Mtl Data Daily Samples (McGill)"
     mapper = McGillMapper()
     start = "2021-03-01"
     end = "2021-03-15"
-    default_sample = {
-        "sampleID": None,
-        "siteID": None,
-        "reporterID": None,
-        "dateTime": None,
-        "dateTimeStart": None,
-        "dateTimeEnd": None,
-        "type": "pstGrit",
-        "collection": "cpTP24h",
-        "preTreatment": None,
-        "pooled": None,
-        "children": None,
-        "parent": None,
-        "sizeL": 1,
-        "fieldSampleTempC": 4,
-        "shippedOnIce": "Yes",
-        "storageTempC": 4,
-        "qualityFlag": "NO",
-        "notes": "",
-        "index": 1
-    }
-    default_measurement = {
-        "WwMeasureID": None,
-        "reporterID": None,
-        "sampleID": None,
-        "labID": "McGill_lab",
-        "assayMethodID": None,
-        "analysisDate": None,
-        "reportDate": None,
-        "fractionAnalyzed": None,
-        "type": None,
-        "value": None,
-        "unit": None,
-        "aggregation": "single",
-        "index": 1,
-        "qualityFlag": "NO",
-        "accessToPublic": "YES",
-        "accessToAllOrg": "YES",
-        "accessToPHAC": "YES",
-        "accessToLocalHA": "YES",
-        "accessToProvHA": "YES",
-        "accessToOtherProv": "YES",
-        "accessToDetails": "YES",
-        "notes": None,
-    }
-    mapper.read(path, sheet_name,
-                start=start, end=end, default_sample=default_sample,
-                default_measures=default_measurement)
+    labsheet_path = "Data/Lab/McGill/mcgill_lab.xlsx"
+    staticdata_path = "Data/Lab/McGill/mcgill_static.xlsx"
+    worksheet_name = "Mtl Data Daily Samples (McGill)"
+    typesheet_path = "Data/Lab/McGill/mcgill_types.csv"
+    mapsheet_path = "Data/Lab/McGill/mcgill_map.csv"
+    mapper.read(labsheet_path,
+                staticdata_path,
+                typesheet_path,
+                mapsheet_path,
+                worksheet_name,
+                "frigon_lab",
+                startdate=start, enddate=end)

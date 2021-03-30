@@ -60,7 +60,7 @@ def parse_types(table_name, series):
             UNKNOWN_REGEX, "", regex=True, case=False)
         if variable_name != "wkt":
             series = series.str.lower()
-    elif desired_type in ["inst64", "float64"]:
+    elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
 
     series = series.astype(desired_type)

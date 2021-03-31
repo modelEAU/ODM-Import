@@ -1,391 +1,391 @@
-﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction,functionOutput
-Assay,AssayMethod,assayMethodID,,lab sheet,na.na.sample type.na;concentration.general.concentration method.na;pcr.date of pcr (yyyy-mm-dd).na.na,get_assay_method_id,field
-Assay,AssayMethod,instrumentID,,static sheet+lab sheet,na.na.sample type.na;concentration.general.concentration method.na,get_assay_instrument,field
-Assay,AssayMethod,name,,static sheet+lab sheet,na.na.sample type.na;concentration.general.concentration method.na,get_assay_name,field
-Assay,AssayMethod,version,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-Assay,AssayMethod,summary,,static sheet,na.na.sample type.na;concentration.general.concentration method.na,,
-Assay,AssayMethod,date,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-Assay,AssayMethod,link,,,,,
-Assay,AssayMethod,extractionVolMl,,lab sheet,concentration.general.concentrated volume (ml).na,,
-Assay,AssayMethod,lod,,lab sheet,pcr.sars-cov-2.lod.na,,field
-Assay,AssayMethod,loq,,lab sheet,pcr.sars-cov-2.loq.na,,field
-Assay,AssayMethod,unit,gc/rx,,,,
-Assay,AssayMethod,methodConc,,lab sheet,concentration.general.concentration method.na;concentration.key parametres.ph.concentration,write_concentration_method,field
-Assay,AssayMethod,methodExtraction,,lab sheet,rna extraction.assaymethod extraction.na.na,write_extraction_method,field
-Assay,AssayMethod,methodPCR,,lab sheet,pcr.sars-cov-2.assaymethodid.na,write_pcr_method,field
-Assay,AssayMethod,qualityAssQC,,,,,
-Assay,AssayMethod,inhibition,,,,,
-Assay,AssayMethod,surrogateRecovery,,lab sheet,concentration.key parametres.spikebatch_id.na,,
-Assay,AssayMethod,notes,,lab sheet,concentration.key parametres.notes concentration.na;rna extraction.notes extraction.na.na,write_assay_notes,field
-single,Sample,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-single,Sample,siteID,,lab sheet,na.na.label_id.na,get_site_id,field
-single,Sample,instrumentID,,,,,
-single,Sample,reporterID,,static sheet+lab sheet,na.na.sampler/worker.na,get_reporter_id,field
-single,Sample,dateTime,,lab sheet,na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,,
-single,Sample,dateTimeStart,,lab sheet,na.na.datetimestart (yyyy-mm-dd hh:mm - 24h).na,,
-single,Sample,dateTimeEnd,,lab sheet,na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,,
-single,Sample,type,,lab sheet,na.na.sample type.na,,
-single,Sample,collection,,lab sheet,na.na.collection type.na,,
-single,Sample,preTreatment,,,,,
-single,Sample,pooled,,lab sheet,na.na.pooled.na,sample_is_pooled,field
-single,Sample,children,,lab sheet,na.na.pooled.na,create_children_samples,field+rows
-single,Sample,parent,,lab sheet,,,
-single,Sample,sizeL,,lab sheet,na.na.sample size (l).na,,
-single,Sample,index,1,,,,
-single,Sample,fieldSampleTempC,,lab sheet,na.na.field sample temp.na,,
-single,Sample,shippedOnIce,,lab sheet,na.na.shipped on ice.na,,
-single,Sample,storageTempC,,lab sheet,na.na.storage temperature.na,,
-single,Sample,qualityFlag,FALSE,lab sheet,na.na.notes sampling.na,has_quality_flag,field
-single,Sample,notes,,lab sheet,na.na.notes sampling.na,,
-TSS,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__wqTSS:str;__const__1:int",get_wwmeasure_id,field
-TSS,WWMeasure,reporterID,,lab sheet,concentration.general.concentrator/worker.na,get_reporter_id,field
-TSS,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-TSS,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-TSS,WWMeasure,assayMethodID,,,,,
-TSS,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-TSS,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-TSS,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-TSS,WWMeasure,type,wqTSS,,,,
-TSS,WWMeasure,value,,lab sheet,concentration.key parametres.tss (mg/l).na,validate_value,field
-TSS,WWMeasure,unit,mg/l,,,,
-TSS,WWMeasure,aggregation,single,,,,
-TSS,WWMeasure,index,1,,,,
-TSS,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field
-TSS,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-TSS,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-TSS,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-TSS,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-TSS,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-TSS,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-TSS,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-TSS,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,
-pH initial,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__pH:str;__const__1:int",get_wwmeasure_id,field
-pH initial,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-pH initial,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-pH initial,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-pH initial,WWMeasure,assayMethodID,,,,,
-pH initial,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-pH initial,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-pH initial,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-pH initial,WWMeasure,type,wqPh,,,,
-pH initial,WWMeasure,value,,lab sheet,concentration.key parametres.ph.initial,validate_value,field
-pH initial,WWMeasure,unit,ph,,,,
-pH initial,WWMeasure,aggregation,single,,,,
-pH initial,WWMeasure,index,1,,,,
-pH initial,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field
-pH initial,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-pH initial,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-pH initial,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-pH initial,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-pH initial,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-pH initial,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-pH initial,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-pH initial,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,
-Conductivity,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__wqCond:str;__const__1:int",get_wwmeasure_id,field
-Conductivity,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-Conductivity,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-Conductivity,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-Conductivity,WWMeasure,assayMethodID,,,,,
-Conductivity,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-Conductivity,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-Conductivity,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-Conductivity,WWMeasure,type,wqCond,,,,
-Conductivity,WWMeasure,value,,lab sheet,concentration.key parametres.conductivity (μs/cm).na,validate_value,field
-Conductivity,WWMeasure,unit,us/cm,,,,
-Conductivity,WWMeasure,aggregation,single,,,,
-Conductivity,WWMeasure,index,1,,,,
-Conductivity,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field
-Conductivity,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-Conductivity,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-Conductivity,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-Conductivity,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-Conductivity,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-Conductivity,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-Conductivity,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-Conductivity,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,
-Turbidity,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__wqTurb:str;__const__1:int",get_wwmeasure_id,field
-Turbidity,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-Turbidity,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-Turbidity,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-Turbidity,WWMeasure,assayMethodID,,,,,
-Turbidity,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-Turbidity,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,
-Turbidity,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-Turbidity,WWMeasure,type,wqTurb,,,,
-Turbidity,WWMeasure,value,,lab sheet,concentration.key parametres.turbidity (ntu).na,validate_value,field
-Turbidity,WWMeasure,unit,ntu,,,,
-Turbidity,WWMeasure,aggregation,single,,,,
-Turbidity,WWMeasure,index,1,,,,
-Turbidity,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field
-Turbidity,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-Turbidity,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-Turbidity,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-Turbidity,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-Turbidity,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-Turbidity,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-Turbidity,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-Turbidity,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,
-BRSV Ct1,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;__const__1:int",get_wwmeasure_id,field
-BRSV Ct1,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-BRSV Ct1,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-BRSV Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-BRSV Ct1,WWMeasure,assayMethodID,,,,,
-BRSV Ct1,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV Ct1,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-BRSV Ct1,WWMeasure,type,nBRSV,,,,
-BRSV Ct1,WWMeasure,value,,lab sheet,pcr.external control (brsv).ct.1,validate_value,field
-BRSV Ct1,WWMeasure,unit,ct,,,,
-BRSV Ct1,WWMeasure,aggregation,single,,,,
-BRSV Ct1,WWMeasure,index,1,,,,
-BRSV Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-BRSV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-BRSV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-BRSV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-BRSV Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-BRSV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-BRSV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-BRSV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-BRSV Ct1,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-BRSV Ct2,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;__const__2:int",get_wwmeasure_id,field
-BRSV Ct2,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-BRSV Ct2,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-BRSV Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-BRSV Ct2,WWMeasure,assayMethodID,,,,,
-BRSV Ct2,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV Ct2,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-BRSV Ct2,WWMeasure,type,nBRSV,,,,
-BRSV Ct2,WWMeasure,value,,lab sheet,pcr.external control (brsv).ct.2,validate_value,field
-BRSV Ct2,WWMeasure,unit,ct,,,,
-BRSV Ct2,WWMeasure,aggregation,single,,,,
-BRSV Ct2,WWMeasure,index,2,,,,
-BRSV Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-BRSV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-BRSV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-BRSV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-BRSV Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-BRSV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-BRSV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-BRSV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-BRSV Ct2,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-BRSV Ct3,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;__const__3:int",get_wwmeasure_id,field
-BRSV Ct3,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-BRSV Ct3,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-BRSV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-BRSV Ct3,WWMeasure,assayMethodID,,,,,
-BRSV Ct3,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV Ct3,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-BRSV Ct3,WWMeasure,type,nBRSV,,,,
-BRSV Ct3,WWMeasure,value,,lab sheet,pcr.external control (brsv).ct.3,validate_value,field
-BRSV Ct3,WWMeasure,unit,ct,,,,
-BRSV Ct3,WWMeasure,aggregation,single,,,,
-BRSV Ct3,WWMeasure,index,3,,,,
-BRSV Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-BRSV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-BRSV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-BRSV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-BRSV Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-BRSV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-BRSV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-BRSV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-BRSV Ct3,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-BRSV % recovery,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;__const__4:int",get_wwmeasure_id,field
-BRSV % recovery,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-BRSV % recovery,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-BRSV % recovery,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-BRSV % recovery,WWMeasure,assayMethodID,,,,,
-BRSV % recovery,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV % recovery,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-BRSV % recovery,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-BRSV % recovery,WWMeasure,type,nBRSV,,,,
-BRSV % recovery,WWMeasure,value,,lab sheet,pcr.external control (brsv).% recovery.na,validate_value,field
-BRSV % recovery,WWMeasure,unit,pctRecovery,,,,
-BRSV % recovery,WWMeasure,aggregation,single,,,,
-BRSV % recovery,WWMeasure,index,4,,,,
-BRSV % recovery,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-BRSV % recovery,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-BRSV % recovery,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-BRSV % recovery,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-BRSV % recovery,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-BRSV % recovery,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-BRSV % recovery,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-BRSV % recovery,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-BRSV % recovery,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-PMMV Ct1,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;__const__1:int",get_wwmeasure_id,field
-PMMV Ct1,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-PMMV Ct1,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-PMMV Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-PMMV Ct1,WWMeasure,assayMethodID,,,,,
-PMMV Ct1,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV Ct1,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-PMMV Ct1,WWMeasure,type,nPMMoV,,,,
-PMMV Ct1,WWMeasure,value,,lab sheet,pcr.pmmv.ct.1,validate_value,field
-PMMV Ct1,WWMeasure,unit,ct,,,,
-PMMV Ct1,WWMeasure,aggregation,single,,,,
-PMMV Ct1,WWMeasure,index,1,,,,
-PMMV Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-PMMV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-PMMV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-PMMV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-PMMV Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-PMMV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-PMMV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-PMMV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-PMMV Ct1,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-PMMV Ct2,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;__const__2:int",get_wwmeasure_id,field
-PMMV Ct2,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-PMMV Ct2,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-PMMV Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-PMMV Ct2,WWMeasure,assayMethodID,,,,,
-PMMV Ct2,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV Ct2,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-PMMV Ct2,WWMeasure,type,nPMMoV,,,,
-PMMV Ct2,WWMeasure,value,,lab sheet,pcr.pmmv.ct.2,validate_value,field
-PMMV Ct2,WWMeasure,unit,ct,,,,
-PMMV Ct2,WWMeasure,aggregation,single,,,,
-PMMV Ct2,WWMeasure,index,2,,,,
-PMMV Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-PMMV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-PMMV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-PMMV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-PMMV Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-PMMV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-PMMV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-PMMV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-PMMV Ct2,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-PMMV Ct3,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;__const__3:int",get_wwmeasure_id,field
-PMMV Ct3,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-PMMV Ct3,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-PMMV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-PMMV Ct3,WWMeasure,assayMethodID,,,,,
-PMMV Ct3,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV Ct3,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-PMMV Ct3,WWMeasure,type,nPMMoV,,,,
-PMMV Ct3,WWMeasure,value,,lab sheet,pcr.pmmv.ct.3,validate_value,field
-PMMV Ct3,WWMeasure,unit,ct,,,,
-PMMV Ct3,WWMeasure,aggregation,single,,,,
-PMMV Ct3,WWMeasure,index,3,,,,
-PMMV Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-PMMV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-PMMV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-PMMV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-PMMV Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-PMMV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-PMMV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-PMMV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-PMMV Ct3,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-PMMV gc/ml,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;__const__4:int",get_wwmeasure_id,field
-PMMV gc/ml,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-PMMV gc/ml,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-PMMV gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-PMMV gc/ml,WWMeasure,assayMethodID,,,,,
-PMMV gc/ml,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV gc/ml,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-PMMV gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-PMMV gc/ml,WWMeasure,type,nPMMoV,,,,
-PMMV gc/ml,WWMeasure,value,,lab sheet,pcr.pmmv.gc/ml.na,validate_value,field
-PMMV gc/ml,WWMeasure,unit,gc/ml,,,,
-PMMV gc/ml,WWMeasure,aggregation,single,,,,
-PMMV gc/ml,WWMeasure,index,4,,,,
-PMMV gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field
-PMMV gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-PMMV gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-PMMV gc/ml,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-PMMV gc/ml,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-PMMV gc/ml,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-PMMV gc/ml,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-PMMV gc/ml,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-PMMV gc/ml,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,
-SARS-CoV-2 Ct1,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;__const__1:int",get_wwmeasure_id,field
-SARS-CoV-2 Ct1,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-SARS-CoV-2 Ct1,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-SARS-CoV-2 Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-SARS-CoV-2 Ct1,WWMeasure,assayMethodID,,,,,
-SARS-CoV-2 Ct1,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 Ct1,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 Ct1,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-SARS-CoV-2 Ct1,WWMeasure,type,covN2,,,,
-SARS-CoV-2 Ct1,WWMeasure,value,,lab sheet,pcr.sars-cov-2.ct.1,validate_value,field
-SARS-CoV-2 Ct1,WWMeasure,unit,ct,,,,
-SARS-CoV-2 Ct1,WWMeasure,aggregation,single,,,,
-SARS-CoV-2 Ct1,WWMeasure,index,1,,,,
-SARS-CoV-2 Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field
-SARS-CoV-2 Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-SARS-CoV-2 Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-SARS-CoV-2 Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-SARS-CoV-2 Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-SARS-CoV-2 Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-SARS-CoV-2 Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-SARS-CoV-2 Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,
-SARS-CoV-2 Ct2,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;__const__2:int",get_wwmeasure_id,field
-SARS-CoV-2 Ct2,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-SARS-CoV-2 Ct2,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-SARS-CoV-2 Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-SARS-CoV-2 Ct2,WWMeasure,assayMethodID,,,,,
-SARS-CoV-2 Ct2,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 Ct2,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 Ct2,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-SARS-CoV-2 Ct2,WWMeasure,type,covN2,,,,
-SARS-CoV-2 Ct2,WWMeasure,value,,lab sheet,pcr.sars-cov-2.ct.2,validate_value,field
-SARS-CoV-2 Ct2,WWMeasure,unit,ct,,,,
-SARS-CoV-2 Ct2,WWMeasure,aggregation,single,,,,
-SARS-CoV-2 Ct2,WWMeasure,index,2,,,,
-SARS-CoV-2 Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field
-SARS-CoV-2 Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-SARS-CoV-2 Ct2,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,
-SARS-CoV-2 Ct3,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;__const__3:int",get_wwmeasure_id,field
-SARS-CoV-2 Ct3,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-SARS-CoV-2 Ct3,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-SARS-CoV-2 Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-SARS-CoV-2 Ct3,WWMeasure,assayMethodID,,,,,
-SARS-CoV-2 Ct3,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 Ct3,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 Ct3,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-SARS-CoV-2 Ct3,WWMeasure,type,covN2,,,,
-SARS-CoV-2 Ct3,WWMeasure,value,,lab sheet,pcr.sars-cov-2.ct.3,validate_value,field
-SARS-CoV-2 Ct3,WWMeasure,unit,ct,,,,
-SARS-CoV-2 Ct3,WWMeasure,aggregation,single,,,,
-SARS-CoV-2 Ct3,WWMeasure,index,3,,,,
-SARS-CoV-2 Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field
-SARS-CoV-2 Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-SARS-CoV-2 Ct3,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,
-SARS-CoV-2 gc/ml,WWMeasure,WWMeasureID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;__const__4:int",get_wwmeasure_id,field
-SARS-CoV-2 gc/ml,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na,get_reporter_id,field
-SARS-CoV-2 gc/ml,WWMeasure,sampleID,,lab sheet,"na.na.label_id.na, row;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na",get_sample_id,field
-SARS-CoV-2 gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field
-SARS-CoV-2 gc/ml,WWMeasure,assayMethodID,,,,,
-SARS-CoV-2 gc/ml,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 gc/ml,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,
-SARS-CoV-2 gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,
-SARS-CoV-2 gc/ml,WWMeasure,type,covN2,,,,
-SARS-CoV-2 gc/ml,WWMeasure,value,,lab sheet,pcr.sars-cov-2.gc/ml.na,validate_value,field
-SARS-CoV-2 gc/ml,WWMeasure,unit,gm/ml,,,,
-SARS-CoV-2 gc/ml,WWMeasure,aggregation,single,,,,
-SARS-CoV-2 gc/ml,WWMeasure,index,1,,,,
-SARS-CoV-2 gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field
-SARS-CoV-2 gc/ml,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,
+﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction,functionOutput,postProcessingFunction,Column1
+Assay,AssayMethod,assayMethodID,,lab sheet,na.na.sample type.na;concentration.general.concentration method.na;pcr.date of pcr (yyyy-mm-dd).na.na,get_assay_method_id,field,,
+Assay,AssayMethod,instrumentID,,static sheet+lab sheet,na.na.sample type.na;concentration.general.concentration method.na,get_assay_instrument,field,,
+Assay,AssayMethod,name,,static sheet+lab sheet,na.na.sample type.na;concentration.general.concentration method.na,get_assay_name,field,,
+Assay,AssayMethod,version,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+Assay,AssayMethod,summary,,lab sheet,na.na.sample type.na;concentration.general.concentration method.na,,,,
+Assay,AssayMethod,date,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+Assay,AssayMethod,link,,,,,,,
+Assay,AssayMethod,extractionVolMl,,lab sheet,concentration.general.concentrated volume (ml).na,,,,
+Assay,AssayMethod,lod,,lab sheet,pcr.sars-cov-2.lod.na,,field,,
+Assay,AssayMethod,loq,,lab sheet,pcr.sars-cov-2.loq.na,,field,,
+Assay,AssayMethod,unit,gc/rx,,,,,,
+Assay,AssayMethod,methodConc,,lab sheet,concentration.general.concentration method.na;concentration.general.concentrated volume (ml).na;concentration.key parametres.ph.concentration,write_concentration_method,field,,
+Assay,AssayMethod,methodExtraction,,lab sheet,rna extraction.assaymethod extraction.na.na,,field,,
+Assay,AssayMethod,methodPCR,,lab sheet,pcr.sars-cov-2.assaymethodid.na,,field,,
+Assay,AssayMethod,qualityAssQC,,,,,,,
+Assay,AssayMethod,inhibition,,,,,,,
+Assay,AssayMethod,surrogateRecovery,,lab sheet,concentration.key parametres.spikebatch_id.na,,,,
+Assay,AssayMethod,notes,,lab sheet,concentration.key parametres.notes concentration.na;rna extraction.notes extraction.na.na,write_assay_notes,field,,
+single,Sample,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__,get_sample_id,field,,
+single,Sample,siteID,,lab sheet,na.na.label_id.na,get_site_id,field,,
+single,Sample,instrumentID,,,,,,,
+single,Sample,reporterID,,lab sheet,na.na.sampler/worker.na;__labID__,get_reporter_id,field,,
+single,Sample,dateTime,,lab sheet,na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,,,,
+single,Sample,dateTimeStart,,lab sheet,na.na.datetimestart (yyyy-mm-dd hh:mm - 24h).na,,,,
+single,Sample,dateTimeEnd,,lab sheet,na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,,,,
+single,Sample,type,,lab sheet,na.na.sample type.na,,,,
+single,Sample,collection,,lab sheet,na.na.collection type.na,,,,
+single,Sample,preTreatment,,,,,,,
+single,Sample,pooled,,lab sheet,na.na.pooled.na,sample_is_pooled,field,,
+single,Sample,children,,lab sheet,na.na.pooled.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_children_samples,field,create_children_samples,
+single,Sample,parent,,lab sheet,,,,,
+single,Sample,sizeL,,lab sheet,na.na.sample size (l).na,,,,
+single,Sample,index,1,,,,,,
+single,Sample,fieldSampleTempC,,lab sheet,na.na.field sample temp.na,,,,
+single,Sample,shippedOnIce,,lab sheet,na.na.shipped on ice.na,,,,
+single,Sample,storageTempC,,lab sheet,na.na.storage temperature.na,,,,
+single,Sample,qualityFlag,FALSE,lab sheet,na.na.notes sampling.na,has_quality_flag,field,,
+single,Sample,notes,,lab sheet,na.na.notes sampling.na,,,,
+TSS,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__wqTSS:str;concentration.general.concentration date (yyyy-mm-dd).na;__const__1:int,get_wwmeasure_id,field,,
+TSS,WWMeasure,reporterID,,lab sheet,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+TSS,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+TSS,WWMeasure,labID,,lab sheet,__labID__,,field,,
+TSS,WWMeasure,assayMethodID,,,,,,,
+TSS,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+TSS,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+TSS,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+TSS,WWMeasure,type,wqTSS,,,,,,
+TSS,WWMeasure,value,,lab sheet,concentration.key parametres.tss (mg/l).na,validate_value,field,,
+TSS,WWMeasure,unit,mg/l,,,,,,
+TSS,WWMeasure,aggregation,single,,,,,,
+TSS,WWMeasure,index,1,,,,,,
+TSS,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field,,
+TSS,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+TSS,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+TSS,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+TSS,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+TSS,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+TSS,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+TSS,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+TSS,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,,,
+pH initial,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__pH:str;concentration.general.concentration date (yyyy-mm-dd).na;__const__1:int,get_wwmeasure_id,field,,
+pH initial,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+pH initial,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+pH initial,WWMeasure,labID,,lab sheet,__labID__,,,,
+pH initial,WWMeasure,assayMethodID,,,,,,,
+pH initial,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+pH initial,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+pH initial,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+pH initial,WWMeasure,type,wqPh,,,,,,
+pH initial,WWMeasure,value,,lab sheet,concentration.key parametres.ph.initial,validate_value,field,,
+pH initial,WWMeasure,unit,ph,,,,,,
+pH initial,WWMeasure,aggregation,single,,,,,,
+pH initial,WWMeasure,index,1,,,,,,
+pH initial,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field,,
+pH initial,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+pH initial,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+pH initial,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+pH initial,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+pH initial,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+pH initial,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+pH initial,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+pH initial,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,,,
+Conductivity,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__wqCond:str;concentration.general.concentration date (yyyy-mm-dd).na;__const__1:int,get_wwmeasure_id,field,,
+Conductivity,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+Conductivity,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+Conductivity,WWMeasure,labID,,lab sheet,__labID__,,,,
+Conductivity,WWMeasure,assayMethodID,,,,,,,
+Conductivity,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+Conductivity,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+Conductivity,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+Conductivity,WWMeasure,type,wqCond,,,,,,
+Conductivity,WWMeasure,value,,lab sheet,concentration.key parametres.conductivity (μs/cm).na,validate_value,field,,
+Conductivity,WWMeasure,unit,us/cm,,,,,,
+Conductivity,WWMeasure,aggregation,single,,,,,,
+Conductivity,WWMeasure,index,1,,,,,,
+Conductivity,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field,,
+Conductivity,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+Conductivity,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+Conductivity,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+Conductivity,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+Conductivity,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+Conductivity,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+Conductivity,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+Conductivity,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,,,
+Turbidity,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__wqTurb:str;concentration.general.concentration date (yyyy-mm-dd).na;__const__1:int,get_wwmeasure_id,field,,
+Turbidity,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+Turbidity,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+Turbidity,WWMeasure,labID,,lab sheet,__labID__,,,,
+Turbidity,WWMeasure,assayMethodID,,,,,,,
+Turbidity,WWMeasure,analysisDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+Turbidity,WWMeasure,reportDate,,lab sheet,concentration.general.concentration date (yyyy-mm-dd).na,,,,
+Turbidity,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+Turbidity,WWMeasure,type,wqTurb,,,,,,
+Turbidity,WWMeasure,value,,lab sheet,concentration.key parametres.turbidity (ntu).na,validate_value,field,,
+Turbidity,WWMeasure,unit,ntu,,,,,,
+Turbidity,WWMeasure,aggregation,single,,,,,,
+Turbidity,WWMeasure,index,1,,,,,,
+Turbidity,WWMeasure,qualityFlag,TRUE,lab sheet,concentration.key parametres.qualityflag concentration.na,has_quality_flag,field,,
+Turbidity,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+Turbidity,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+Turbidity,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+Turbidity,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+Turbidity,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+Turbidity,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+Turbidity,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+Turbidity,WWMeasure,notes,,lab sheet,concentration.key parametres.notes concentration.na,,,,
+BRSV Ct1,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__1:int,get_wwmeasure_id,field,,
+BRSV Ct1,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+BRSV Ct1,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+BRSV Ct1,WWMeasure,labID,,lab sheet,__labID__,,,,
+BRSV Ct1,WWMeasure,assayMethodID,,,,,,,
+BRSV Ct1,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV Ct1,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+BRSV Ct1,WWMeasure,type,nBRSV,,,,,,
+BRSV Ct1,WWMeasure,value,,lab sheet,pcr.external control (brsv).ct.1,validate_value,field,,
+BRSV Ct1,WWMeasure,unit,ct,,,,,,
+BRSV Ct1,WWMeasure,aggregation,single,,,,,,
+BRSV Ct1,WWMeasure,index,1,,,,,,
+BRSV Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+BRSV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+BRSV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+BRSV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+BRSV Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+BRSV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+BRSV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+BRSV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+BRSV Ct1,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+BRSV Ct2,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__2:int,get_wwmeasure_id,field,,
+BRSV Ct2,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+BRSV Ct2,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+BRSV Ct2,WWMeasure,labID,,lab sheet,__labID__,,,,
+BRSV Ct2,WWMeasure,assayMethodID,,,,,,,
+BRSV Ct2,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV Ct2,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+BRSV Ct2,WWMeasure,type,nBRSV,,,,,,
+BRSV Ct2,WWMeasure,value,,lab sheet,pcr.external control (brsv).ct.2,validate_value,field,,
+BRSV Ct2,WWMeasure,unit,ct,,,,,,
+BRSV Ct2,WWMeasure,aggregation,single,,,,,,
+BRSV Ct2,WWMeasure,index,2,,,,,,
+BRSV Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+BRSV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+BRSV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+BRSV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+BRSV Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+BRSV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+BRSV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+BRSV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+BRSV Ct2,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+BRSV Ct3,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__3:int,get_wwmeasure_id,field,,
+BRSV Ct3,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+BRSV Ct3,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+BRSV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+BRSV Ct3,WWMeasure,assayMethodID,,,,,,,
+BRSV Ct3,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV Ct3,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+BRSV Ct3,WWMeasure,type,nBRSV,,,,,,
+BRSV Ct3,WWMeasure,value,,lab sheet,pcr.external control (brsv).ct.3,validate_value,field,,
+BRSV Ct3,WWMeasure,unit,ct,,,,,,
+BRSV Ct3,WWMeasure,aggregation,single,,,,,,
+BRSV Ct3,WWMeasure,index,3,,,,,,
+BRSV Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+BRSV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+BRSV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+BRSV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+BRSV Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+BRSV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+BRSV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+BRSV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+BRSV Ct3,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+BRSV % recovery,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nBRSV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__4:int,get_wwmeasure_id,field,,
+BRSV % recovery,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+BRSV % recovery,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+BRSV % recovery,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+BRSV % recovery,WWMeasure,assayMethodID,,,,,,,
+BRSV % recovery,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV % recovery,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+BRSV % recovery,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+BRSV % recovery,WWMeasure,type,nBRSV,,,,,,
+BRSV % recovery,WWMeasure,value,,lab sheet,pcr.external control (brsv).% recovery.na,validate_value,field,,
+BRSV % recovery,WWMeasure,unit,pctRecovery,,,,,,
+BRSV % recovery,WWMeasure,aggregation,single,,,,,,
+BRSV % recovery,WWMeasure,index,4,,,,,,
+BRSV % recovery,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+BRSV % recovery,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+BRSV % recovery,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+BRSV % recovery,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+BRSV % recovery,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+BRSV % recovery,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+BRSV % recovery,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+BRSV % recovery,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+BRSV % recovery,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+PMMV Ct1,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__1:int,get_wwmeasure_id,field,,
+PMMV Ct1,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+PMMV Ct1,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+PMMV Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+PMMV Ct1,WWMeasure,assayMethodID,,,,,,,
+PMMV Ct1,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV Ct1,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+PMMV Ct1,WWMeasure,type,nPMMoV,,,,,,
+PMMV Ct1,WWMeasure,value,,lab sheet,pcr.pmmv.ct.1,validate_value,field,,
+PMMV Ct1,WWMeasure,unit,ct,,,,,,
+PMMV Ct1,WWMeasure,aggregation,single,,,,,,
+PMMV Ct1,WWMeasure,index,1,,,,,,
+PMMV Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+PMMV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+PMMV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+PMMV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+PMMV Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+PMMV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+PMMV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+PMMV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+PMMV Ct1,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+PMMV Ct2,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__2:int,get_wwmeasure_id,field,,
+PMMV Ct2,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+PMMV Ct2,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+PMMV Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+PMMV Ct2,WWMeasure,assayMethodID,,,,,,,
+PMMV Ct2,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV Ct2,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+PMMV Ct2,WWMeasure,type,nPMMoV,,,,,,
+PMMV Ct2,WWMeasure,value,,lab sheet,pcr.pmmv.ct.2,validate_value,field,,
+PMMV Ct2,WWMeasure,unit,ct,,,,,,
+PMMV Ct2,WWMeasure,aggregation,single,,,,,,
+PMMV Ct2,WWMeasure,index,2,,,,,,
+PMMV Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+PMMV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+PMMV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+PMMV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+PMMV Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+PMMV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+PMMV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+PMMV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+PMMV Ct2,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+PMMV Ct3,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__3:int,get_wwmeasure_id,field,,
+PMMV Ct3,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+PMMV Ct3,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+PMMV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+PMMV Ct3,WWMeasure,assayMethodID,,,,,,,
+PMMV Ct3,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV Ct3,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+PMMV Ct3,WWMeasure,type,nPMMoV,,,,,,
+PMMV Ct3,WWMeasure,value,,lab sheet,pcr.pmmv.ct.3,validate_value,field,,
+PMMV Ct3,WWMeasure,unit,ct,,,,,,
+PMMV Ct3,WWMeasure,aggregation,single,,,,,,
+PMMV Ct3,WWMeasure,index,3,,,,,,
+PMMV Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+PMMV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+PMMV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+PMMV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+PMMV Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+PMMV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+PMMV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+PMMV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+PMMV Ct3,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+PMMV gc/ml,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__nPMMoV:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__4:int,get_wwmeasure_id,field,,
+PMMV gc/ml,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+PMMV gc/ml,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+PMMV gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+PMMV gc/ml,WWMeasure,assayMethodID,,,,,,,
+PMMV gc/ml,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV gc/ml,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+PMMV gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+PMMV gc/ml,WWMeasure,type,nPMMoV,,,,,,
+PMMV gc/ml,WWMeasure,value,,lab sheet,pcr.pmmv.gc/ml.na,validate_value,field,,
+PMMV gc/ml,WWMeasure,unit,gc/ml,,,,,,
+PMMV gc/ml,WWMeasure,aggregation,single,,,,,,
+PMMV gc/ml,WWMeasure,index,4,,,,,,
+PMMV gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,rna extraction.qualityflag extraction.na.na,has_quality_flag,field,,
+PMMV gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+PMMV gc/ml,WWMeasure,notes,,lab sheet,rna extraction.notes extraction.na.na,,,,
+SARS-CoV-2 Ct1,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__1:int,get_wwmeasure_id,field,,
+SARS-CoV-2 Ct1,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+SARS-CoV-2 Ct1,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+SARS-CoV-2 Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+SARS-CoV-2 Ct1,WWMeasure,assayMethodID,,,,,,,
+SARS-CoV-2 Ct1,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 Ct1,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 Ct1,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+SARS-CoV-2 Ct1,WWMeasure,type,covN2,,,,,,
+SARS-CoV-2 Ct1,WWMeasure,value,,lab sheet,pcr.sars-cov-2.ct.1,validate_value,field,,
+SARS-CoV-2 Ct1,WWMeasure,unit,ct,,,,,,
+SARS-CoV-2 Ct1,WWMeasure,aggregation,single,,,,,,
+SARS-CoV-2 Ct1,WWMeasure,index,1,,,,,,
+SARS-CoV-2 Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+SARS-CoV-2 Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,,,
+SARS-CoV-2 Ct2,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__2:int,get_wwmeasure_id,field,,
+SARS-CoV-2 Ct2,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+SARS-CoV-2 Ct2,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+SARS-CoV-2 Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+SARS-CoV-2 Ct2,WWMeasure,assayMethodID,,,,,,,
+SARS-CoV-2 Ct2,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 Ct2,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 Ct2,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+SARS-CoV-2 Ct2,WWMeasure,type,covN2,,,,,,
+SARS-CoV-2 Ct2,WWMeasure,value,,lab sheet,pcr.sars-cov-2.ct.2,validate_value,field,,
+SARS-CoV-2 Ct2,WWMeasure,unit,ct,,,,,,
+SARS-CoV-2 Ct2,WWMeasure,aggregation,single,,,,,,
+SARS-CoV-2 Ct2,WWMeasure,index,2,,,,,,
+SARS-CoV-2 Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+SARS-CoV-2 Ct2,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,,,
+SARS-CoV-2 Ct3,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__3:int,get_wwmeasure_id,field,,
+SARS-CoV-2 Ct3,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+SARS-CoV-2 Ct3,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+SARS-CoV-2 Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+SARS-CoV-2 Ct3,WWMeasure,assayMethodID,,,,,,,
+SARS-CoV-2 Ct3,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 Ct3,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 Ct3,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+SARS-CoV-2 Ct3,WWMeasure,type,covN2,,,,,,
+SARS-CoV-2 Ct3,WWMeasure,value,,lab sheet,pcr.sars-cov-2.ct.3,validate_value,field,,
+SARS-CoV-2 Ct3,WWMeasure,unit,ct,,,,,,
+SARS-CoV-2 Ct3,WWMeasure,aggregation,single,,,,,,
+SARS-CoV-2 Ct3,WWMeasure,index,3,,,,,,
+SARS-CoV-2 Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+SARS-CoV-2 Ct3,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,,,
+SARS-CoV-2 gc/ml,WWMeasure,WWMeasureID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na;__labID__;__const__covN2:str;pcr.date of pcr (yyyy-mm-dd).na.na;__const__4:int,get_wwmeasure_id,field,,
+SARS-CoV-2 gc/ml,WWMeasure,reporterID,,,concentration.general.concentrator/worker.na;__labID__,get_reporter_id,field,,
+SARS-CoV-2 gc/ml,WWMeasure,sampleID,,lab sheet,na.na.label_id.na;na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na,get_sample_id,field,,
+SARS-CoV-2 gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id,field,,
+SARS-CoV-2 gc/ml,WWMeasure,assayMethodID,,,,,,,
+SARS-CoV-2 gc/ml,WWMeasure,analysisDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 gc/ml,WWMeasure,reportDate,,lab sheet,pcr.date of pcr (yyyy-mm-dd).na.na,,,,
+SARS-CoV-2 gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,concentration.general.fraction analyzed.na,,,,
+SARS-CoV-2 gc/ml,WWMeasure,type,covN2,,,,,,
+SARS-CoV-2 gc/ml,WWMeasure,value,,lab sheet,pcr.sars-cov-2.gc/ml.na,validate_value,field,,
+SARS-CoV-2 gc/ml,WWMeasure,unit,gc/ml,,,,,,
+SARS-CoV-2 gc/ml,WWMeasure,aggregation,single,,,,,,
+SARS-CoV-2 gc/ml,WWMeasure,index,1,,,,,,
+SARS-CoV-2 gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,pcr.sars-cov-2.qualityflag pcr.na,has_quality_flag,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,access.na.accesstopublic.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,access.na.accesstoallorg.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToPHAC,TRUE,lab sheet,access.na.accesstophac.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToLocalHA,TRUE,lab sheet,access.na.accesstolocalha.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToProvHA,TRUE,lab sheet,access.na.accesstoprovha.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToOtherProv,TRUE,lab sheet,access.na.accesstootherprov.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,accessToDetails,TRUE,lab sheet,access.na.acesstodetails.na,grant_access,field,,
+SARS-CoV-2 gc/ml,WWMeasure,notes,,lab sheet,pcr notes.na.na.na,,,,

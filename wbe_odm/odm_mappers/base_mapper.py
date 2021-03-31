@@ -62,9 +62,9 @@ def parse_types(table_name, series):
             series = series.str.lower()
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
+        return series
 
-    series = series.astype(desired_type)
-    return series
+    return series.astype(desired_type)
 
 
 class BaseMapper(ABC):

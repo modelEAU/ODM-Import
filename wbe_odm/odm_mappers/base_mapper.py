@@ -82,42 +82,52 @@ class BaseMapper(ABC):
     conversion_dict = {
         "ww_measure": {
             "odm_name": "WWMeasure",
+            "primary_key": "wwMeasureID",
             "source_name": ""
             },
         "site_measure": {
             "odm_name": "SiteMeasure",
+            "primary_key": "siteMeasureID",
             "source_name": ""
             },
         "sample": {
             "odm_name": "Sample",
+            "primary_key": "sampleID",
             "source_name": ""
             },
         "site": {
             "odm_name": "Site",
+            "primary_key": "siteID",
             "source_name": ""
             },
         "polygon": {
             "odm_name": "Polygon",
+            "primary_key": "polygonID",
             "source_name": ""
             },
         "cphd": {
             "odm_name": "CovidPublicHealthData",
+            "primary_key": "cphdID",
             "source_name": ""
             },
         "reporter": {
             "odm_name": "Reporter",
+            "primary_key": "reporterID",
             "source_name": ""
             },
         "lab": {
             "odm_name": "Lab",
+            "primary_key": "labID",
             "source_name": ""
             },
         "assay_method": {
             "odm_name": "AssayMethod",
+            "primary_key": "assayMethodID",
             "source_name": ""
             },
         "instrument": {
             "odm_name": "Instrument",
+            "primary_key": "instrumentID",
             "source_name": ""
             },
     }

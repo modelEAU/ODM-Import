@@ -314,18 +314,23 @@ class Odm:
             return
         self_attrs = self.__dict__
         mapper_attrs = mapper.__dict__
-        for key, value in self_attrs.items():
-            if value is None:
-                setattr(self, key, mapper_attrs[key])
-            elif mapper_attrs[key] is None:
+        for attr, current_value in self_attrs.items():
+            primary_key = base_mapper.BaseMapper\
+                .conversion_dict[attr]["primary_key"]
+            new_value = getattr(mapper, attr)
+            if current_value is None:
+                setattr(self, attr, new_value)
+            elif mapper_attrs[attr] is None:
                 continue
             else:
                 try:
-                    combined = value.append(
-                        mapper_attrs[key]).drop_duplicates()
-                    setattr(self, key, combined)
+                    combined = current_value.append(
+                        new_value).drop_duplicates(
+                            subset=[primary_key]
+                        )
+                    setattr(self, attr, combined)
                 except Exception as e:
-                    setattr(self, key, value)
+                    setattr(self, attr, current_value)
                     raise e
         return
 

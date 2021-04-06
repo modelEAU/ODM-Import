@@ -220,13 +220,13 @@ def get_children_samples(pooled, sample_date):
     return children_ids
 
 
-def get_sample_id(label_id, sample_date, lab_id):
+def get_sample_id(label_id, sample_date, lab_id, index=1):
     clean_date = str_date_from_timestamp(sample_date)
     clean_label = str(label_id).lower()
     if re.match(LABEL_REGEX, clean_label):
-        return "_".join([clean_label, clean_date])
+        return "_".join([clean_label, clean_date, str(index)])
     else:
-        return "_".join([lab_id, clean_label, clean_date])
+        return "_".join([lab_id, clean_label, clean_date, str(index)])
 
 
 def get_wwmeasure_id(label_id,
@@ -241,10 +241,14 @@ def get_wwmeasure_id(label_id,
     return "_".join([sample_id, meas_date, meas_type, index])
 
 
-def get_reporter_id(name, lab_id):
+def get_reporter_id(name):
+    name = name.lower()
     if "/" in name:
         name = name.split("/")[0]
-    return f"{lab_id}_{name}"
+    name = name.strip()
+    name = name.replace(" ", "_")
+    name = "".join(x.title() for x in name.split("_"))
+    return name
 
 
 def has_quality_flag(flag):
@@ -263,6 +267,7 @@ processing_functions = {
     "get_site_id": get_site_id,
     "sample_is_pooled": sample_is_pooled,
     "get_children_samples": get_children_samples,
+    "get_sample_id": get_sample_id,
     "get_wwmeasure_id": get_wwmeasure_id,
     "get_reporter_id": get_reporter_id,
     "has_quality_flag": has_quality_flag,
@@ -283,6 +288,8 @@ def append_new_entry(new_entry, current_table_data):
 def parse_lab_row(lab_row, mapping, static_dico, lab_id, entries_to_store):
     elements = list(mapping["elementName"].unique())
     for i, element in enumerate(elements):
+        if element == "":
+            continue
         filt = mapping["elementName"] == element
         odm_table = mapping.loc[filt].iloc[0]["table"]
         fields = mapping.loc[mapping["elementName"] == element]
@@ -333,7 +340,8 @@ def get_lod(lab):
         lod_source,
     ]
     lod_df = lab.loc[filt][cols_to_keep]
-    lab[new_cols] = np.nan
+    for col in new_cols:
+        lab.loc[:, col] = np.nan
     lod_df[spike_col] = lod_df[spike_col].replace("", np.nan)
     lod_df = lod_df.dropna(subset=[spike_col])
     spike_ids = list(lod_df[spike_col].dropna().unique())
@@ -341,11 +349,30 @@ def get_lod(lab):
         lod_filt = lod_df[spike_col] == spike_id
         lab_filt = lab[spike_col] == spike_id
         lod = lod_df.loc[lod_filt].iloc[0].loc[lod_source]
-        lab_rows = lab.loc[lab_filt]
         for col in new_cols:
-            lab_rows[col] = lod
-        lab.loc[lab_filt] = lab_rows
+            lab.loc[lab_filt, col] = lod
     return lab
+
+
+def filter_by_date(df, date_col, start, end):
+    if start is not None:
+        startdate = pd.to_datetime(start)
+        start_filt = (df[date_col] > startdate)
+    else:
+        start_filt = None
+    if end is not None:
+        enddate = pd.to_datetime(end)
+        end_filt = (df[date_col] < enddate)
+    else:
+        end_filt = None
+    if start_filt is None and end_filt is None:
+        return df
+    elif start_filt is None:
+        return df[end_filt]
+    elif end_filt is None:
+        return df[start_filt]
+    else:
+        return df[start_filt & end_filt]
 
 
 class McGillMapper(base_mapper.BaseMapper):
@@ -368,7 +395,7 @@ class McGillMapper(base_mapper.BaseMapper):
         lab = pd.read_excel(labsheet_path,
                             sheet_name=worksheet_name,
                             header=None,
-                            usecols="A:BS")
+                            usecols="A:BV")
         # parse the headers to deal with merged cells and get unique names
         lab.columns = parse_mcgill_headers(lab.iloc[0:4].to_numpy(dtype=str))
         lab = lab.iloc[4:]
@@ -380,6 +407,8 @@ class McGillMapper(base_mapper.BaseMapper):
 
         lab = typecast_lab(lab, types)
         lab = get_lod(lab)
+        sample_date = "na.na.datetimeend (yyyy-mm-dd hh:mm - 24h).na"
+        lab = filter_by_date(lab, sample_date, startdate, enddate)
         # Get the static data
         static_tables = [
             "Lab",
@@ -398,6 +427,7 @@ class McGillMapper(base_mapper.BaseMapper):
         excel_mapper.read(staticdata_path)
         for table, attr in zip(static_tables, attrs):
             static_data[table] = getattr(excel_mapper, attr)
+            setattr(self, attr, static_data[table])
         entries_to_store = {
             "WWMeasure": None,
             "Sample": None,
@@ -423,18 +453,20 @@ class McGillMapper(base_mapper.BaseMapper):
 
 if __name__ == "__main__":
     mapper = McGillMapper()
-    start = "2021-03-01"
-    end = "2021-03-15"
-    labsheet_path = "Data/Lab/McGill/mcgill_lab.xlsx"
-    staticdata_path = "Data/Lab/McGill/mcgill_static.xlsx"
-    worksheet_name = "Mtl Data Daily Samples (McGill)"
-    typesheet_path = "Data/Lab/McGill/mcgill_types.csv"
-    mapsheet_path = "Data/Lab/McGill/mcgill_map.csv"
-    mapper.read(labsheet_path,
-                staticdata_path,
-                typesheet_path,
-                mapsheet_path,
-                worksheet_name,
-                lab_id="frigon_lab",
-                startdate=start, enddate=end)
-    
+    path_to_folder = "Data/Lab/McGill/March 2021"
+    lab_data = "/Users/jeandavidt/Desktop/latest-data/CentrEau-COVID_Resultats_Montreal_final.xlsx" # noqa
+    static_data = path_to_folder + "mcgill_static.xlsx"
+    types = path_to_folder + "mcgill_types.csv"
+    mapping = path_to_folder + "mcgill_map.csv"
+    sheet_name = "Mtl Data Daily Samples (McGill)"
+    lab_id = "frigon_lab"
+    start_date = "2021-01-01"
+    end_date = None
+    mapper.read(lab_data,
+                static_data,
+                types,
+                mapping,
+                sheet_name,
+                lab_id=lab_id,
+                startdate=start_date, enddate=end_date)
+    print(mapper.site)

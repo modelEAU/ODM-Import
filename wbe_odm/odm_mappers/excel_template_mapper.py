@@ -68,5 +68,5 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
             setattr(self, attribute, df)
         return
 
-    def validates(table):
+    def validates(self):
         return True

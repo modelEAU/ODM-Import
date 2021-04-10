@@ -19,8 +19,8 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
 
     def read(
         self,
-        filepath: str,
-        sheet_names: list[int] = None
+        filepath,
+        sheet_names,
             ) -> bool:
         """Reads an ODM-compatible excel file and validates it
 

@@ -11,6 +11,35 @@ LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 
+def get_sample_type(sample_type):
+    acceptable_types = [
+        "qtips", "filter", "gauze",
+        "swrsed", "pstgrid", "psludge",
+        "pefflu", "ssludge", "sefflu",
+        "water", "faeces"
+    ]
+    sample_type = sample_type.strip()
+    if sample_type.lower() == "raw":
+        return "rawWW"
+    elif sample_type.lower() in acceptable_types:
+        return sample_type
+    else:
+        return ""
+
+
+def get_collection_method(collection_str):
+    collection = collection_str.strip()
+    if re.match(r"cp[TF]P[0-9]+h", collection):
+        return collection
+    elif collection == "grb":
+        return collection
+    elif "grb" in collection:
+        added_bit = collection[3:]
+        return "grb" + "Cp" + added_bit
+    else:
+        return ""
+
+
 def excel_style(col):
     """ Convert given column number to an Excel-style column name. """
     result = []
@@ -26,8 +55,8 @@ def parse_date(item):
     return pd.NaT
 
 
-def str_date_from_timestamp(timestamp_series):
-    return timestamp_series.dt.strftime("%Y-%m-%d").fillna("")
+def str_date_from_timestamp(timestamp):
+    return str(timestamp.date())
 
 
 def clean_up(df, molecular_cols, meas_cols):
@@ -94,104 +123,76 @@ def typecast_lab(lab, types):
     return lab
 
 
-def get_sample_type(sample_type):
-    acceptable_types = [
-        "qtips", "filter", "gauze",
-        "swrsed", "pstgrit", "psludge",
-        "pefflu", "ssludge", "sefflu",
-        "water", "faeces"
-    ]
-    sample_type = sample_type.str.strip().str.lower().str.replace("raw", "rawww")
-    sample_type = sample_type.apply(lambda x: x if x in acceptable_types else "unknown type")
-    return sample_type
-
-
-def get_collection_method(collection):
-    def check_collection_method(x):
-        if re.match(r"cp[TF]P[0-9]+h", x) or x == "grb":
-            return x
-        elif "grb" in collection:
-            added_bit = collection[len("grb"):]
-            return "grb" + "Cp" + added_bit
+def get_labsheet_inputs(map_row, lab_row, lab_id):
+    lab_input = map_row["labInputs"]
+    if lab_input == "":
+        return None
+    var_name = map_row["variableName"]
+    raw_inputs = lab_input.split(";")
+    final_inputs = []
+    for input_ in raw_inputs:
+        if re.match(r"__const__.*:.*", input_):
+            value, type_ = input_[len("__const__"):].split(":")
+            if type_ == "str":
+                value = str(value)
+            elif type_ == "int":
+                value = int(value)
+        elif input_ == "__labID__":
+            value = lab_id
+        elif input_ == "__varName__":
+            value = var_name
         else:
-            return ""
-    collection = collection.str.strip()
-    collection = collection.apply(lambda x: check_collection_method(x))
-    return collection
+            value = lab_row[input_]
+        final_inputs.append(value)
+    return tuple(final_inputs)
 
 
 def pass_raw(*args):
-    if len(args) == 0:
-        return None
-    elif len(args) == 1:
+    if len(args) == 1:
         return args[0]
-    arguments = pd.concat([arg for arg in args], axis=1)
-    return arguments.agg(",".join, axis=1)
+    arguments = [str(arg) for arg in args]
+    return ",".join(arguments)
 
 
 def get_assay_method_id(sample_type, concentration_method, assay_date):
     formatted_date = str_date_from_timestamp(assay_date)
-    clean_series = []
-    for series in [sample_type, concentration_method, formatted_date]:
-        series = series.fillna("").astype(str)
-        clean_series.append(series)
-    df = pd.concat(clean_series, axis=1)
-    return df.agg("_".join, axis=1)
+    return "_".join([sample_type, concentration_method, formatted_date])
 
 
 def get_assay_instrument(static_methods, sample_type, concentration_method):
-    clean_series = []
-    for series in [sample_type, concentration_method]:
-        series = series.fillna("").astype(str)
-        clean_series.append(series)
-    df = pd.concat(clean_series, axis=1)
-    df["general_id"] = df.agg("_".join, axis=1).str.lower()
-    merged = pd.merge(
-        left=static_methods,
-        right=df,
-        left_on="assayMethodID",
-        right_on="general_id")
-    return merged["instrumentID"].fillna("")
+    general_id = str("_".join([sample_type, concentration_method])).lower()
+    filt = static_methods["assayMethodID"] == general_id
+    generic_methods = static_methods.loc[filt]
+    try:
+        generic_method = generic_methods.iloc[0]
+    except IndexError:
+        return ""
+    instrument_id = generic_method["instrumentID"]
+    return instrument_id
 
 
 def get_assay_name(static_methods, sample_type, concentration_method):
-    clean_series = []
-    for series in [sample_type, concentration_method]:
-        series = series.fillna("").astype(str)
-        clean_series.append(series)
-    df = pd.concat(clean_series, axis=1)
-    df["general_id"] = df.agg("_".join, axis=1).str.lower()
-    merged = pd.merge(
-        left=static_methods,
-        right=df,
-        left_on="assayMethodID",
-        right_on="general_id")
-    return merged["name"].fillna("")
+    general_id = str("_".join([sample_type, concentration_method])).lower()
+    filt = static_methods["assayMethodID"] == general_id
+    generic_methods = static_methods.loc[filt]
+    try:
+        generic_method = generic_methods.iloc[0]
+    except IndexError:
+        return ""
+    name = generic_method["name"]
+    return name
 
 
 def write_concentration_method(conc_method, conc_volume, ph_final):
-    clean_series = []
-    names = ["conc", "conc_volume", "ph_final"]
-    for series, name in zip([conc_method, conc_volume, ph_final], names):
-        series = series.fillna("unknown").astype(str)
-        series.name = name
-        clean_series.append(series)
-    df = pd.concat(clean_series, axis=1)
-
-    df["text"] = df.apply(
-        lambda row: f"{row['conc']}, Volume:{row['conc_volume']} mL, Final pH:{row['ph_final']}", # noqa
-        axis=1)
-    return df["text"]
+    return f"{conc_method}, Volume:{conc_volume} mL, Final pH:{ph_final}"
 
 
-def get_site_id(labels):
-    def extract_from_label(label_id):
-        if re.match(LABEL_REGEX, label_id):
-            label_parts = label_id.split("_")
-            return label_parts[0:2]
-        else:
-            return ""
-    return labels.apply(lambda x: extract_from_label(x))
+def get_site_id(label_id):
+    if re.match(LABEL_REGEX, label_id):
+        label_parts = label_id.split("_")
+        return "_".join(label_parts[0:2])
+    else:
+        return ""
 
 
 def sample_is_pooled(pooled):
@@ -202,42 +203,29 @@ def sample_is_pooled(pooled):
 
 
 def get_children_samples(pooled, sample_date):
-    def make_children_ids(row):
-        split_pooled = row["pooled"].split(",")if "," in pooled else ""
-        children_ids = []
-        for item in split_pooled:
-            if re.match(LABEL_REGEX, item):
-                child_id = "_".join([item, row["clean_date"]])
-                children_ids.append(child_id)
-        if len(children_ids) == 0:
-            return ""
-        else:
-            return ",".join(children_ids)
     clean_date = str_date_from_timestamp(sample_date)
-    df = pd.concat([pooled, clean_date], axis=1)
-    df.columns = ["pooled", "clean_date"]
-    df["children_ids"] = df.apply(lambda row: make_children_ids(row))
-    return df["children_ids"]
+    if "," in pooled:
+        pooled = pooled.split(",")
+    children_ids = []
+    for item in pooled:
+        if re.match(LABEL_REGEX, item):
+            child_id = "_".join([item, clean_date])
+            children_ids.append(child_id)
+    if len(children_ids) == 0:
+        return ""
+    else:
+        return ",".join(children_ids)
 
 
 def get_sample_id(label_id, sample_date, lab_id, index=1):
-
     clean_date = str_date_from_timestamp(sample_date)
-    clean_label = label_id.str.lower()
+    clean_label = str(label_id).lower()
     if lab_id == "modeleau_lab":
-        clean_label = clean_label.str.replace("raw", "pstgrit")
-    df = pd.concat([clean_label, clean_date], axis=1)
-    df["lab_id"] = lab_id
-    df["index_no"] = str(index)
-    df.columns = ["clean_label", "clean_date", "lab_id", "index_no"]
-    
-    df["sample_ids"] = ""
-    regex_filt = df["clean_label"].str.match(LABEL_REGEX, case=False)
-    df.loc[regex_filt, "sample_ids"] = df.loc[
-        regex_filt, ["clean_label", "clean_date", "index_no"]].agg("_".join, axis=1)
-    df.loc[~regex_filt, "sample_ids"] = df.loc[
-        ~regex_filt, ["lab_id", "clean_label", "clean_date", "index_no"]].agg("_".join, axis=1)
-    return df["sample_ids"]
+        clean_label = clean_label.replace("raw", "pstgrit")
+    if re.match(LABEL_REGEX, clean_label):
+        return "_".join([clean_label, clean_date, str(index)])
+    else:
+        return "_".join([lab_id, clean_label, clean_date, str(index)])
 
 
 def get_wwmeasure_id(label_id,
@@ -248,26 +236,22 @@ def get_wwmeasure_id(label_id,
                      index):
     sample_id = get_sample_id(label_id, sample_date, lab_id)
     meas_date = str_date_from_timestamp(meas_date)
-    df = pd.concat([sample_id, meas_date], axis=1)
-    df["meas_type"] = meas_type
-    df["index_no"] = str(index)
-    return df.agg("_".join, axis=1)
+    index = str(index)
+    return "_".join([sample_id, meas_date, meas_type, index])
 
 
 def get_reporter_id(static_reporters, name):
-    def get_reporter_name(x):
-        reporters_w_name = static_reporters.loc[
-            static_reporters["reporterID"].str.lower().str.contains(x)]
-        if len(reporters_w_name) > 0:
-            reporterID = reporters_w_name.iloc[0]["reporterID"]
-        else:
-            reporterID = x
-        return reporterID
-
-    name = name.str.lower().apply(lambda x: x.split("/")[0] if "/" in x else x)
-    name = name.str.strip()
-    reporters_ids = name.apply(get_reporter_name)
-    return reporters_ids
+    name = name.lower()
+    if "/" in name:
+        name = name.split("/")[0]
+    name = name.strip()
+    reporters_w_name = static_reporters.loc[
+        static_reporters["reporterID"].str.lower().str.contains(name)]
+    if len(reporters_w_name) > 0:
+        reporterID = reporters_w_name.iloc[0]["reporterID"]
+    else:
+        reporterID = name
+    return reporterID
 
 
 def has_quality_flag(flag):
@@ -275,7 +259,7 @@ def has_quality_flag(flag):
 
 
 def grant_access(access):
-    return access.str.lower().isin(["", "1", "yes", "true"])
+    return str(access).lower() in ["", "1", "yes", "true"]
 
 
 processing_functions = {
@@ -370,94 +354,53 @@ def remove_bad_rows(lab):
     return lab[filt]
 
 
-def get_labsheet_inputs(map_row, lab_data, lab_id):
-    lab_input = map_row["labInputs"]
-    if lab_input == "":
-        return None
-    var_name = map_row["variableName"]
-    raw_inputs = lab_input.split(";")
-    final_inputs = []
-    for input_ in raw_inputs:
-        if re.match(r"__const__.*:.*", input_):
-            value, type_ = input_[len("__const__"):].split(":")
-            if type_ == "str":
-                value = str(value)
-            elif type_ == "int":
-                value = int(value)
-        elif input_ == "__labID__":
-            value = lab_id
-        elif input_ == "__varName__":
-            value = var_name
-        else:
-            value = lab_data[input_]
-        final_inputs.append(value)
-    return tuple(final_inputs)
-
-
-def get_static_inputs(map_row, static_data):
-    input_sources = map_row["inputSources"]
-    if "static" in input_sources:
-        static_table = input_sources.split("+")[0]
-        static_table = static_table[len("static "):]
-        return static_data[static_table]
-    else:
-        return None
-
-
-def get_all_inputs(row):
-    static_input = row["static"]
-    lab_inputs = row["lab_arguments"]
-    if static_input is None and lab_inputs is None:
-        inputs = None
-    elif static_input is None:
-        inputs = lab_inputs
-    else:
-        inputs = (static_input, *lab_inputs)
-    if inputs is None:
-        inputs = tuple([row["defaultValue"]])
-    return inputs
-
-
-def parse_sheet(mapping, static, lab_data):
-    mapping["lab_arguments"] = mapping.apply(
-        lambda row: get_labsheet_inputs(row, lab_data, lab_id), axis=1)
-    mapping["static"] = mapping.apply(
-        lambda row: get_static_inputs(row, static), axis=1)
-    mapping["final_inputs"] = mapping.apply(
-        lambda row: get_all_inputs(row), axis=1)
-    mapping["func"] = mapping["processingFunction"].apply(
-        lambda x: processing_functions.get(x, pass_raw))
-
-    mapping["columnName"] = mapping[
-        ["table", "elementName", "variableName"]].agg("_".join, axis=1)
-    to_apply = mapping.loc[
-        :, ["columnName", "func", "final_inputs"]]
-    for _, apply_row in to_apply.iterrows():
-        col_name = apply_row["columnName"]
-        lab_data[col_name] = apply_row["func"](*apply_row["final_inputs"])
-    
-    tables = {table: None for table in mapping["table"].unique()}
-    for table in tables.keys():
-        elements = mapping.loc[mapping["table"] == table, "elementName"].unique()
-        sub_dfs = []
-        for element in elements:
-            table_element_filt = (mapping["table"] == table) & (mapping["elementName"] == element)
-            col_names = mapping.loc[table_element_filt, "columnName"]
-            var_names = mapping.loc[table_element_filt, "variableName"]
-            sub_df = lab_data[col_names]
-            sub_df.columns = var_names
-            sub_dfs.append(sub_df)
-        table_df = pd.concat(sub_dfs, axis=0, ignore_index=True)
-        tables[table] = table_df
-    return tables
-
-
 class McGillMapper(base_mapper.BaseMapper):
     def get_attr_from_table_name(self, table_name):
         for attr, dico in self.conversion_dict.items():
             odm_name = dico["odm_name"]
             if odm_name == table_name:
                 return attr
+
+    def parse_lab_row(self, lab_row, mapping, lab_id, entries_to_store):
+        elements = list(mapping["elementName"].unique())
+        for _, element in enumerate(elements):
+            if element == "":
+                continue
+            filt = mapping["elementName"] == element
+            odm_table = mapping.loc[filt].iloc[0]["table"]
+            fields = mapping.loc[mapping["elementName"] == element]
+            new_entry = {}
+            for _, field in fields.iterrows():
+                field_name = field["variableName"]
+
+                input_sources = field["inputSources"]
+                if "static" in input_sources:
+                    static_table = input_sources.split("+")[0]
+                    static_table = static_table[len("static "):]
+                    static_attr = self.get_attr_from_table_name(static_table)
+                    static_input = getattr(self, static_attr)
+                else:
+                    static_input = None
+                lab_inputs = get_labsheet_inputs(field, lab_row, lab_id)
+                if static_input is None and lab_inputs is None:
+                    inputs = None
+                elif static_input is None:
+                    inputs = lab_inputs
+                else:
+                    inputs = (static_input, *lab_inputs)
+                if inputs is None:
+                    value = field["defaultValue"]
+                else:
+                    func = field["processingFunction"]
+                    value = processing_functions.get(func, pass_raw)(*inputs)
+                new_entry[field_name] = value
+            current_table_data = entries_to_store[odm_table]
+            updated_table_data = append_new_entry(
+                new_entry,
+                current_table_data
+            )
+            entries_to_store[odm_table] = updated_table_data
+        return entries_to_store
 
     def read(self,
              labsheet_path,
@@ -507,14 +450,29 @@ class McGillMapper(base_mapper.BaseMapper):
             attrs.append(attr)
         static_data = {}
         excel_mapper = excel_template_mapper.ExcelTemplateMapper()
-        excel_mapper.read(staticdata_path, sheet_names=static_tables)
+        excel_mapper.read(staticdata_path)
         for table, attr in zip(static_tables, attrs):
             static_data[table] = getattr(excel_mapper, attr)
             setattr(self, attr, static_data[table])
-        dynamic_tables = parse_sheet(mapping, static_data, lab)
-        
-        for table_name, table in dynamic_tables.items():
-            attr = self.get_attr_from_table_name(table_name)
+        entries_to_store = {
+            "WWMeasure": None,
+            "Sample": None,
+            "AssayMethod": None,
+        }
+        for _, row in lab.iterrows():
+            entries_to_store = self.parse_lab_row(
+                row,
+                mapping,
+                lab_id,
+                entries_to_store
+            )
+
+        for key, table in entries_to_store.items():
+            table = table.drop_duplicates()
+            table = table.dropna(how="all")
+            table = table.loc[table.iloc[:, 0] != ""]
+            table = table.reset_index(drop=True)
+            attr = self.get_attr_from_table_name(key)
             setattr(self, attr, table)
         return
 
@@ -525,10 +483,10 @@ class McGillMapper(base_mapper.BaseMapper):
 if __name__ == "__main__":
     mapper = McGillMapper()
     path_to_static = "Data/Lab/McGill/Final/"
-    lab_data = "/Users/jeandavidt/Desktop/latest-data/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    lab_data = "/Users/jeandavidt/Desktop/latest-data/CentrEau-COVID_Resultats_Montreal_final.xlsx" # noqa
     static_data = path_to_static + "mcgill_static.xlsx"
     mapping = path_to_static + "mcgill_map.csv"
-    sheet_name = "QC Data Daily Samples (McGill)"
+    sheet_name = "Mtl Data Daily Samples (Poly)"
     lab_id = "frigon_lab"
     start_date = "2021-01-01"
     end_date = None

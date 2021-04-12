@@ -21,7 +21,7 @@ def excel_style(col):
 
 
 def parse_date(item):
-    if isinstance(item, str) or isinstance(item, datetime):
+    if isinstance(item, (str, datetime)):
         return pd.to_datetime(item)
     return pd.NaT
 
@@ -58,17 +58,17 @@ def typecast_column(desired_type, series):
     if desired_type == "bool":
         series = series.astype(str)
         series = series.str.strip().str.lower()
-        series = series.str.replace(
-            base_mapper.UNKNOWN_REGEX, "", regex=True)\
-            .str.replace("oui", "true", case=False)\
+        series = series.apply(
+            lambda x: base_mapper.replace_unknown_by_default(x, ""))
+        series = series.str.replace("oui", "true", case=False)\
             .str.replace("yes", "true", case=False)\
             .str.startswith("true")
-    elif desired_type == "string" or desired_type == "category":
+    elif desired_type in ["string", "category"]:
         series = series.astype(str)
         series = series.str.lower()
         series = series.str.strip()
-        series = series.str.replace(
-            base_mapper.UNKNOWN_REGEX, "", regex=True, case=False)
+        series = series.apply(
+            lambda x: base_mapper.replace_unknown_by_default(x, ""))
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
     series = series.astype(desired_type)
@@ -95,24 +95,24 @@ def typecast_lab(lab, types):
 
 
 def get_sample_type(sample_type):
-    acceptable_types = [
+    """acceptable_types = [
         "qtips", "filter", "gauze",
         "swrsed", "pstgrit", "psludge",
         "pefflu", "ssludge", "sefflu",
-        "water", "faeces"
-    ]
-    sample_type = sample_type.str.strip().str.lower().str.replace("raw", "rawww")
-    sample_type = sample_type.apply(lambda x: x if x in acceptable_types else "unknown type")
+        "water", "faeces", "rawww", ""
+    ]"""
+    sample_type = sample_type.str.strip()\
+        .str.lower().str.replace("raw", "rawww")
     return sample_type
 
 
 def get_collection_method(collection):
     def check_collection_method(x):
-        if re.match(r"cp[TF]P[0-9]+h", x) or x == "grb":
+        if re.match(r"cp[tf]p[0-9]+h", x) or x == "grb":
             return x
         elif "grb" in collection:
             added_bit = collection[len("grb"):]
-            return "grb" + "Cp" + added_bit
+            return "grb" + "cp" + added_bit
         else:
             return ""
     collection = collection.str.strip()
@@ -188,7 +188,7 @@ def get_site_id(labels):
     def extract_from_label(label_id):
         if re.match(LABEL_REGEX, label_id):
             label_parts = label_id.split("_")
-            return label_parts[0:2]
+            return "_".join(label_parts[0:2])
         else:
             return ""
     return labels.apply(lambda x: extract_from_label(x))
@@ -209,7 +209,7 @@ def get_children_samples(pooled, sample_date):
             if re.match(LABEL_REGEX, item):
                 child_id = "_".join([item, row["clean_date"]])
                 children_ids.append(child_id)
-        if len(children_ids) == 0:
+        if not children_ids:
             return ""
         else:
             return ",".join(children_ids)
@@ -221,7 +221,6 @@ def get_children_samples(pooled, sample_date):
 
 
 def get_sample_id(label_id, sample_date, lab_id, index=1):
-
     clean_date = str_date_from_timestamp(sample_date)
     clean_label = label_id.str.lower()
     if lab_id == "modeleau_lab":
@@ -230,13 +229,18 @@ def get_sample_id(label_id, sample_date, lab_id, index=1):
     df["lab_id"] = lab_id
     df["index_no"] = str(index)
     df.columns = ["clean_label", "clean_date", "lab_id", "index_no"]
-    
     df["sample_ids"] = ""
     regex_filt = df["clean_label"].str.match(LABEL_REGEX, case=False)
+
     df.loc[regex_filt, "sample_ids"] = df.loc[
-        regex_filt, ["clean_label", "clean_date", "index_no"]].agg("_".join, axis=1)
+        regex_filt,
+        ["clean_label", "clean_date", "index_no"]
+    ].agg("_".join, axis=1)
+
     df.loc[~regex_filt, "sample_ids"] = df.loc[
-        ~regex_filt, ["lab_id", "clean_label", "clean_date", "index_no"]].agg("_".join, axis=1)
+        ~regex_filt,
+        ["lab_id", "clean_label", "clean_date", "index_no"]
+    ].agg("_".join, axis=1)
     return df["sample_ids"]
 
 
@@ -259,11 +263,11 @@ def get_reporter_id(static_reporters, name):
         reporters_w_name = static_reporters.loc[
             static_reporters["reporterID"].str.lower().str.contains(x)]
         if len(reporters_w_name) > 0:
-            reporterID = reporters_w_name.iloc[0]["reporterID"]
+            return reporters_w_name.iloc[0]["reporterID"]
         else:
-            reporterID = x
-        return reporterID
+            return x
 
+    name = name.str.replace(", ", "/").str.replace(",", "/")
     name = name.str.lower().apply(lambda x: x.split("/")[0] if "/" in x else x)
     name = name.str.strip()
     reporters_ids = name.apply(get_reporter_name)
@@ -274,8 +278,43 @@ def has_quality_flag(flag):
     return flag != ""
 
 
+def get_sample_volume(vols, default):
+    vols = vols.apply(lambda x: x if not pd.isna(x) else default)
+    return vols
+
+
+def get_field_sample_temp(series):
+    temp_map = {
+        "refrigerated": 4.0,
+        "ice": 0.0,
+        "norefrigaration": 20.0,
+        "norefrigeration": np.nan
+    }
+    series = series.str.lower().map(temp_map)
+    return series
+
+
+def get_shipped_on_ice(series):
+    series = series.str.lower()
+    map_to = {
+        "yes": True,
+        "no": False
+    }
+    return series.map(map_to)
+
+
 def grant_access(access):
     return access.str.lower().isin(["", "1", "yes", "true"])
+
+
+def validate_fraction_analyzed(series):
+    filt = (
+        series.str.contains("mixed") |
+        series.str.contains("liquid") |
+        series.str.contains("solids")
+    )
+    series.loc[~filt] = ""
+    return series
 
 
 processing_functions = {
@@ -293,14 +332,17 @@ processing_functions = {
     "get_reporter_id": get_reporter_id,
     "has_quality_flag": has_quality_flag,
     "grant_access": grant_access,
+    "get_sample_volume": get_sample_volume,
+    "get_field_sample_temp": get_field_sample_temp,
+    "get_shipped_on_ice": get_shipped_on_ice,
+    "validate_fraction_analyzed": validate_fraction_analyzed,
 }
 
 
 def append_new_entry(new_entry, current_table_data):
     if current_table_data is None:
         new_entry = {0: new_entry}
-        new_table_data = pd.DataFrame.from_dict(new_entry, orient='index')
-        return new_table_data
+        return pd.DataFrame.from_dict(new_entry, orient='index')
     new_index = current_table_data.index.max() + 1
     current_table_data.loc[new_index] = new_entry
     return current_table_data
@@ -362,12 +404,12 @@ def validate_date_text(date_text):
 
 
 def remove_bad_rows(lab):
-    """First column should contain datetime. If it's something
-    else than an empty value and that this empty value
-    doesn't cast to datetime."""
-    filt = (pd.isnull(lab["A"])) | (
-        lab["A"].apply(validate_date_text))
-    return lab[filt]
+    """"LabelID column should contain something for all valid rows.
+    If it's something else than an empty value and that this empty value
+    doesn't cast to datetime, the row should be deleted"""
+    LABEL_ID_COL = "D"
+    filt = (~pd.isnull(lab[LABEL_ID_COL]))
+    return lab.loc[filt]
 
 
 def get_labsheet_inputs(map_row, lab_data, lab_id):
@@ -388,6 +430,8 @@ def get_labsheet_inputs(map_row, lab_data, lab_id):
             value = lab_id
         elif input_ == "__varName__":
             value = var_name
+        elif input_ == "__default__":
+            value = map_row["defaultValue"]
         else:
             value = lab_data[input_]
         final_inputs.append(value)
@@ -435,19 +479,23 @@ def parse_sheet(mapping, static, lab_data):
     for _, apply_row in to_apply.iterrows():
         col_name = apply_row["columnName"]
         lab_data[col_name] = apply_row["func"](*apply_row["final_inputs"])
-    
     tables = {table: None for table in mapping["table"].unique()}
-    for table in tables.keys():
-        elements = mapping.loc[mapping["table"] == table, "elementName"].unique()
+    for table in tables:
+        elements = mapping.loc[
+            mapping["table"] == table, "elementName"
+        ].unique()
         sub_dfs = []
         for element in elements:
-            table_element_filt = (mapping["table"] == table) & (mapping["elementName"] == element)
+            table_element_filt = (mapping["table"] == table)\
+                 & (mapping["elementName"] == element)
             col_names = mapping.loc[table_element_filt, "columnName"]
             var_names = mapping.loc[table_element_filt, "variableName"]
             sub_df = lab_data[col_names]
             sub_df.columns = var_names
             sub_dfs.append(sub_df)
         table_df = pd.concat(sub_dfs, axis=0, ignore_index=True)
+        if table == "WWMeasure":
+            table_df = table_df.dropna(subset=["value"])
         tables[table] = table_df
     return tables
 
@@ -512,7 +560,6 @@ class McGillMapper(base_mapper.BaseMapper):
             static_data[table] = getattr(excel_mapper, attr)
             setattr(self, attr, static_data[table])
         dynamic_tables = parse_sheet(mapping, static_data, lab)
-        
         for table_name, table in dynamic_tables.items():
             attr = self.get_attr_from_table_name(table_name)
             setattr(self, attr, table)

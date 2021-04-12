@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import pandas as pd
+import re
 
 
 UNKNOWN_TOKENS = [
@@ -38,6 +39,12 @@ def get_data_types():
 DATA_TYPES = get_data_types()
 
 
+def replace_unknown_by_default(string, default):
+    if re.fullmatch(UNKNOWN_REGEX, string, re.IGNORECASE):
+        return default
+    return string
+
+
 def parse_types(table_name, series):
     variable_name = series.name.lower()
     types = DATA_TYPES
@@ -48,16 +55,15 @@ def parse_types(table_name, series):
         series = series.astype(str)
         default_bool = "false" if "qualityFlag" in variable_name else "true"
         series = series.str.strip().str.lower()
-        series = series.str.replace(
-            UNKNOWN_REGEX, default_bool, regex=True)\
-            .str.replace("oui", "true", case=False)\
-            .str.replace("yes", "true", case=False)\
-            .str.startswith("true")
-    elif desired_type == "string" or desired_type == "category":
+        series = series.apply(
+            lambda x: replace_unknown_by_default(x, default_bool))
+        series = series.str.replace("oui", "true", case=False)
+        series = series.str.replace("yes", "true", case=False)
+        series = series.str.startswith("true")
+    elif desired_type in ["string", "category"]:
         series = series.astype(str)
         series = series.str.strip()
-        series = series.str.replace(
-            UNKNOWN_REGEX, "", regex=True, case=False)
+        series = series.apply(lambda x: replace_unknown_by_default(x, ""))
         if variable_name != "wkt":
             series = series.str.lower()
     elif desired_type in ["int64", "float64"]:

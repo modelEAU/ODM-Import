@@ -76,7 +76,7 @@ ___
 
 ## How to use this package
 
-To do
+*This section is still being written - please come back soon*
 
 ### Odm Class
 

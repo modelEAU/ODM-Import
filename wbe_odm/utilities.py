@@ -67,4 +67,3 @@ def convert_wkt_to_geojson(s):
     geojson_feature = json.loads(json.dumps(wkt.loads(s)))
     geojson_feature = rewind(geojson_feature, rfc7946=False)
     return geojson_feature
-

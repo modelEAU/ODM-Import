@@ -7,6 +7,7 @@ from wbe_odm.odm_mappers import excel_template_mapper
 
 LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 
+MCGILL_MAP_NAME = "wbe_odm/odm_mappers/mcgill_map.csv"
 
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -220,14 +221,17 @@ def get_children_samples(pooled, sample_date):
     return df["children_ids"]
 
 
-def get_sample_id(label_id, sample_date, spike_batch, lab_id, index=1):
+def get_sample_id(label_id, sample_date, spike_batch, lab_id, sample_index):
+    # TODO: Deal with index once it's been implemented in McGill sheet
     clean_date = str_date_from_timestamp(sample_date)
     clean_label = label_id.str.lower()
     if lab_id == "modeleau_lab":
         clean_label = clean_label.str.replace("raw", "pstgrit")
     df = pd.concat([clean_label, clean_date, spike_batch], axis=1)
     df["lab_id"] = lab_id
-    df["index_no"] = str(index)
+    df["index_no"] = str(sample_index) \
+        if not isinstance(sample_index, pd.Series) \
+        else sample_index.astype(str)
     df.columns = [
         "clean_label", "clean_date", "spike_batch",
         "lab_id", "index_no"
@@ -247,16 +251,28 @@ def get_sample_id(label_id, sample_date, spike_batch, lab_id, index=1):
     return df["sample_ids"]
 
 
-def get_wwmeasure_id(label_id,
-                     sample_date,
-                     lab_id,
-                     meas_type,
-                     meas_date,
-                     index):
-    sample_id = get_sample_id(label_id, sample_date, lab_id)
+def get_wwmeasure_id(
+        label_id,
+        sample_date,
+        spike_batch,
+        lab_id,
+        sample_index,
+        meas_type,
+        meas_date,
+        index):
+    # TODO: Deal with index once it's been implemented in McGill sheet
+    sample_id = get_sample_id(
+        label_id,
+        sample_date,
+        spike_batch,
+        lab_id,
+        sample_index
+    )
     meas_date = str_date_from_timestamp(meas_date)
     df = pd.concat([sample_id, meas_date], axis=1)
     df["meas_type"] = meas_type
+    df["index_no"] = str(index) if not isinstance(index, pd.Series) \
+        else index.astype(str)
     df["index_no"] = str(index)
     return df.agg("_".join, axis=1)
 
@@ -513,7 +529,6 @@ class McGillMapper(base_mapper.BaseMapper):
     def read(self,
              labsheet_path,
              staticdata_path,
-             mapsheet_path,
              worksheet_name,
              lab_id,
              startdate=None,
@@ -533,7 +548,7 @@ class McGillMapper(base_mapper.BaseMapper):
         lab = remove_bad_rows(lab)
         lab = typecast_lab(lab, lab_datatypes)
         lab = lab.dropna(how="all")
-        mapping = pd.read_csv(mapsheet_path, header=0)
+        mapping = pd.read_csv(MCGILL_MAP_NAME, header=0)
         mapping.fillna("", inplace=True)
         mapping = mapping.astype(str)
         label_col_name = "D"  # sampleID column
@@ -574,17 +589,15 @@ class McGillMapper(base_mapper.BaseMapper):
 
 if __name__ == "__main__":
     mapper = McGillMapper()
-    path_to_static = "Data/Lab/McGill/Final/"
+    path_to_static = "Data/Lab/McGill/"
     lab_data = "/Users/jeandavidt/Desktop/latest-data/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
     static_data = path_to_static + "mcgill_static.xlsx"
-    mapping = path_to_static + "mcgill_map.csv"
     sheet_name = "QC Data Daily Samples (McGill)"
     lab_id = "frigon_lab"
     start_date = "2021-01-01"
     end_date = None
     mapper.read(lab_data,
                 static_data,
-                mapping,
                 sheet_name,
                 lab_id=lab_id,
                 startdate=None, enddate=None)

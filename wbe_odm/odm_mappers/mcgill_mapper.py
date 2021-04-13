@@ -220,15 +220,18 @@ def get_children_samples(pooled, sample_date):
     return df["children_ids"]
 
 
-def get_sample_id(label_id, sample_date, lab_id, index=1):
+def get_sample_id(label_id, sample_date, spike_batch, lab_id, index=1):
     clean_date = str_date_from_timestamp(sample_date)
     clean_label = label_id.str.lower()
     if lab_id == "modeleau_lab":
         clean_label = clean_label.str.replace("raw", "pstgrit")
-    df = pd.concat([clean_label, clean_date], axis=1)
+    df = pd.concat([clean_label, clean_date, spike_batch], axis=1)
     df["lab_id"] = lab_id
     df["index_no"] = str(index)
-    df.columns = ["clean_label", "clean_date", "lab_id", "index_no"]
+    df.columns = [
+        "clean_label", "clean_date", "spike_batch",
+        "lab_id", "index_no"
+    ]
     df["sample_ids"] = ""
     regex_filt = df["clean_label"].str.match(LABEL_REGEX, case=False)
 
@@ -239,7 +242,7 @@ def get_sample_id(label_id, sample_date, lab_id, index=1):
 
     df.loc[~regex_filt, "sample_ids"] = df.loc[
         ~regex_filt,
-        ["lab_id", "clean_label", "clean_date", "index_no"]
+        ["lab_id", "spike_batch", "clean_label", "index_no"]
     ].agg("_".join, axis=1)
     return df["sample_ids"]
 
@@ -462,7 +465,7 @@ def get_all_inputs(row):
     return inputs
 
 
-def parse_sheet(mapping, static, lab_data):
+def parse_sheet(mapping, static, lab_data, lab_id):
     mapping["lab_arguments"] = mapping.apply(
         lambda row: get_labsheet_inputs(row, lab_data, lab_id), axis=1)
     mapping["static"] = mapping.apply(
@@ -559,7 +562,7 @@ class McGillMapper(base_mapper.BaseMapper):
         for table, attr in zip(static_tables, attrs):
             static_data[table] = getattr(excel_mapper, attr)
             setattr(self, attr, static_data[table])
-        dynamic_tables = parse_sheet(mapping, static_data, lab)
+        dynamic_tables = parse_sheet(mapping, static_data, lab, lab_id)
         for table_name, table in dynamic_tables.items():
             attr = self.get_attr_from_table_name(table_name)
             setattr(self, attr, table)

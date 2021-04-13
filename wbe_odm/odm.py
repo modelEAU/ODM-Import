@@ -306,23 +306,20 @@ class Odm:
             A mapper class implementing BaseMapper and adapted to one's
             specific use case
         """
-        if isinstance(mapper, Odm):
-            validates = True
-        else:
-            validates = mapper.validates()
+        validates = True if isinstance(mapper, Odm) else mapper.validates()
         if not validates:
             return
         self_attrs = self.__dict__
         mapper_attrs = mapper.__dict__
         for attr, current_value in self_attrs.items():
-            primary_key = base_mapper.BaseMapper\
-                .conversion_dict[attr]["primary_key"]
             new_value = getattr(mapper, attr)
             if current_value is None:
                 setattr(self, attr, new_value)
             elif mapper_attrs[attr] is None:
                 continue
             else:
+                primary_key = base_mapper.BaseMapper\
+                    .conversion_dict[attr]["primary_key"]
                 try:
                     combined = current_value.append(
                         new_value).drop_duplicates(
@@ -555,11 +552,11 @@ class Odm:
         attrs_to_save: list = None,
             ) -> None:
         if attrs_to_save is None:
-            attrs_to_save = []
             attrs = self.__dict__
-            for name, value in attrs.items():
-                if not value.empty:
-                    attrs_to_save.append(name)
+            attrs_to_save = [
+                name for name, value in attrs.items()
+                if not value.empty
+            ]
         conversion_dict = base_mapper.BaseMapper.conversion_dict
         if not os.path.exists(filepath):
             create_db(filepath)
@@ -596,9 +593,7 @@ class Odm:
             attrs_to_save = []
             attrs = self.__dict__
             for name, df in attrs.items():
-                if df is None:
-                    continue
-                elif df.empty:
+                if df is None or df.empty:
                     continue
                 attrs_to_save.append(name)
 
@@ -609,9 +604,7 @@ class Odm:
             odm_name = conversion_dict[attr]["odm_name"]
             filename = file_prefix + "_" + odm_name
             df = getattr(self, attr)
-            if df is None:
-                continue
-            elif df.empty:
+            if df is None or df.empty:
                 continue
             complete_path = os.path.join(path, filename)
             df.to_csv(complete_path+".csv", sep=",", na_rep="na", index=False)
@@ -731,7 +724,6 @@ def test_serialization_deserialization():
 
 
 if __name__ == "__main__":
-    pass
     # engine = create_db()
     # destroy_db(test_path)
     # print("Testing from Excel")

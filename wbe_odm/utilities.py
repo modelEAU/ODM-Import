@@ -68,22 +68,3 @@ def convert_wkt_to_geojson(s):
     geojson_feature = rewind(geojson_feature, rfc7946=False)
     return geojson_feature
 
-
-
-
-def keep_only_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Creates a DataFrame that only contains features information
-    about a sample that can be used for machine learning.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame of joined ODM tables with each row representing a
-        sample.
-
-    Returns
-    -------
-    pd.DataFrame
-        A DataFrame without id's notes, or data access columns.
-    """
-    return df

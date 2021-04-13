@@ -62,7 +62,7 @@ The data needed to do Wastewater-based surveillance come in many shapes and form
 In addition to these general-purpose mappers, the subpackage contains mappers that are designed for specific, local data sources. These can be used as inspiration for the development of more mappers for other locales.
 
 * `modelEauMapper` reads in data from the [Model*EAU*](https://github.com/modelEAU) lab for wastewater sample characterization.
-* `VdQPlantMapper` reads data from the internal site measurement data sheet for the Violle de Québec wastewater treatment plants.
+* `VdQPlantMapper` reads data from the internal site measurement data sheet for the Ville de Québec wastewater treatment plants.
 * Finally, `McGillMapper` reads the laboratory data sheet developped at McGill University to track the processing and analysis of wastewater samples for viral detection. This mapper is further explained in `mcgill_mapper.md`
 
 ### `utilities.py` module

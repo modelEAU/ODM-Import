@@ -68,8 +68,8 @@ def poly_name_from_agg(
     df.reset_index(inplace=True)
     for i, row in df.iterrows():
         poly_id = row["Site.polygonID"]
-        poly_name = poly_df.loc[poly_df["polygonID"] == poly_id, "name"]
-        df.iloc[i, df.columns.get_loc("Polygon.name")] = poly_name
+        poly_name = poly_df.loc[poly_df["polygonID"] == poly_id, "name"].values
+        df.iloc[i, df.columns.get_loc("Polygon.name")] = poly_name or ""
     return df["Polygon.name"]
 
 
@@ -106,9 +106,7 @@ def draw_map(sample_data, odm_instance, geo):
         opacity=0.5,
         mapbox_style="open-street-map",
         zoom=zoom_level,
-
     )
-
     fig.add_scattermapbox(
         below="",
         name="Sampling Sites",
@@ -125,7 +123,6 @@ def draw_map(sample_data, odm_instance, geo):
         hoverinfo="text",
         text=site_data["Site.name"],
         showlegend=True,
-
     )
     fig.update_layout(
         clickmode="event+select",
@@ -349,13 +346,17 @@ def filter_by_clicked_location(click_data, samples_data, geo):
         raise PreventUpdate
     samples = pd.read_json(samples_data)
     if click_data is None:
+        "are we here?"
         custom_data = None
     else:
+        "or here?"
         point = click_data["points"][0]
+        print("do we have points?")
         # print("point data", point)
         custom_data = point.get("customdata", None)
+        print("custom data?")
     if custom_data is None:
-        filt = True
+        filt = None
     else:
         if isinstance(custom_data, list):
             place_name = point["customdata"][0]
@@ -364,8 +365,8 @@ def filter_by_clicked_location(click_data, samples_data, geo):
         elif isinstance(custom_data, str):
             place_name = custom_data
             filt = samples["Site.name"] == place_name
-    return samples.loc[filt] \
-        .to_json(date_format='iso')
+    samples = samples.loc[filt] if filt is not None else samples
+    return samples.to_json(date_format='iso')
 
 
 def get_series(df):
@@ -402,9 +403,8 @@ def clean_labels_x(cols):
     for col in cols:
         fields = col.split(".")
         for field in fields:
-            if "date" in field:
-                if field not in clean_labels:
-                    clean_labels.append(field)
+            if "date" in field and field not in clean_labels:
+                clean_labels.append(field)
     return clean_labels
 
 
@@ -418,10 +418,9 @@ def update_dropdown_y1(plot_data):
 
     cols_y = get_series(df)
     labels_y = clean_labels_y(cols_y)
-    y_options = [
+    return [
         {'label': label, 'value': col}
         for label, col in zip(labels_y, cols_y)]
-    return y_options
 
 
 @app.callback(
@@ -435,10 +434,9 @@ def update_dropdown_x1(plot_data, y_col):
 
     cols_x = get_times(df)
     labels_x = clean_labels_x(cols_x)
-    x_options = [
+    return [
         {'label': label, 'value': col}
         for label, col in zip(labels_x, cols_x)]
-    return x_options
 
 
 if __name__ == "__main__":

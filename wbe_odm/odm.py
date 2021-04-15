@@ -359,6 +359,10 @@ class Odm:
             "features": []
         }
         polygon_df = self.polygon
+        for col in polygon_df.columns:
+            is_cat = polygon_df[col].dtype.name == "category"
+            polygon_df[col] = polygon_df[col] if is_cat \
+                else polygon_df[col].fillna("null")
         for i, row in polygon_df.iterrows():
             if row["wkt"] != "":
                 new_feature = {

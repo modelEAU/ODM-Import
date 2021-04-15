@@ -20,7 +20,7 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
     def read(
         self,
         filepath,
-        sheet_names,
+        sheet_names=None,
             ) -> bool:
         """Reads an ODM-compatible excel file and validates it
 

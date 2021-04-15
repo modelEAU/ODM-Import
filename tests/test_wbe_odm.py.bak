@@ -1,0 +1,73 @@
+from wbe_odm.odm import Odm, OdmEncoder
+from wbe_odm.odm_mappers.excel_template_mapper import ExcelTemplateMapper
+from wbe_odm.odm_mappers.sqlite3_mapper import SQLite3Mapper
+
+
+TEST_EXCEL_FILE = "tests/test_data/Ville de Quebec - All data - v1.1.xlsx"
+
+TEST_DB = "tests/test_data/test_wbe.db"
+
+
+def test_samples_from_excel():
+    # run with example excel data
+    filename = TEST_EXCEL_FILE
+    excel_mapper = ExcelTemplateMapper()
+    excel_mapper.read(filename)
+    odm_instance = Odm()
+    odm_instance.load_from(excel_mapper)
+    geo = odm_instance.get_geoJSON()
+    samples = odm_instance.combine_per_sample()
+    return geo, samples, odm_instance
+
+
+def test_samples_from_db():
+    # run with example db data
+    path = "Data/WBE.db"
+    connection_string = f"sqlite:///{path}"
+    db_mapper = SQLite3Mapper()
+    db_mapper.read(connection_string)
+    odm_instance = Odm()
+    odm_instance.load_from(db_mapper)
+    geo = odm_instance.get_geoJSON()
+    return geo, odm_instance.combine_per_sample()
+
+
+def test_from_excel_and_db():
+    # run with example db data
+    path = "Data/WBE.db"
+    connection_string = f"sqlite:///{path}"
+    filename = "Data/Ville de Québec 202102.xlsx"
+    excel_mapper = ExcelTemplateMapper()
+    excel_mapper.read(filename)
+    odm_instance = Odm()
+    odm_instance.load_from(excel_mapper)
+    db_mapper = SQLite3Mapper()
+    db_mapper.read(connection_string)
+    odm_instance.append_from(db_mapper)
+    odm2 = Odm()
+    odm2.load_from(excel_mapper)
+    odm2.append_from(db_mapper)
+    # odm2.to_sqlite3("test.db")
+    odm2.to_csv('csv_test', "test", )
+
+    geo = odm_instance.get_geoJSON()
+    return geo, odm_instance.combine_per_sample()
+
+
+def test_serialization_deserialization():
+    # run with example db data
+    _, _, odm_instance = test_samples_from_excel()
+    start = time.time()
+    print("serializing")
+    serialized = json.dumps(odm_instance, indent=4, cls=OdmEncoder)
+    print('Serialization took', time.time()-start, 'seconds.')
+
+    start = time.time()
+    print("deserializing")
+    j_mapper = serialized_mapper.SerializedMapper()
+    j_mapper.read(serialized)
+    odm_instance = Odm()
+    odm_instance.load_from(j_mapper)
+    print('Deserialization took', time.time()-start, 'seconds.')
+
+    return odm_instance

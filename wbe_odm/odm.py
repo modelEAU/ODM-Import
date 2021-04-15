@@ -1,7 +1,6 @@
 import json
 import os
 import sqlite3
-import time
 
 import numpy as np
 import pandas as pd
@@ -9,9 +8,7 @@ import requests
 
 from wbe_odm import utilities
 from wbe_odm.odm_mappers import base_mapper
-from wbe_odm.odm_mappers import excel_template_mapper
-from wbe_odm.odm_mappers import serialized_mapper
-from wbe_odm.odm_mappers import sqlite3_mapper
+
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -362,6 +359,10 @@ class Odm:
             "features": []
         }
         polygon_df = self.polygon
+        for col in polygon_df.columns:
+            is_cat = polygon_df[col].dtype.name == "category"
+            polygon_df[col] = polygon_df[col] if is_cat \
+                else polygon_df[col].fillna("null")
         for i, row in polygon_df.iterrows():
             if row["wkt"] != "":
                 new_feature = {
@@ -655,90 +656,3 @@ def create_db(filepath=None):
 def destroy_db(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
-
-
-# testing functions
-def test_samples_from_excel():
-    # run with example excel data
-    filename = "Data/Ville de Quebec - All data.xlsx"
-    excel_mapper = excel_template_mapper.ExcelTemplateMapper()
-    excel_mapper.read(filename)
-    odm_instance = Odm()
-    odm_instance.load_from(excel_mapper)
-    geo = odm_instance.get_geoJSON()
-    samples = odm_instance.combine_per_sample()
-    return geo, samples, odm_instance
-
-
-def test_samples_from_db():
-    # run with example db data
-    path = "Data/WBE.db"
-    connection_string = f"sqlite:///{path}"
-    db_mapper = sqlite3_mapper.SQLite3Mapper()
-    db_mapper.read(connection_string)
-    odm_instance = Odm()
-    odm_instance.load_from(db_mapper)
-    geo = odm_instance.get_geoJSON()
-    return geo, odm_instance.combine_per_sample()
-
-
-def test_from_excel_and_db():
-    # run with example db data
-    path = "Data/WBE.db"
-    connection_string = f"sqlite:///{path}"
-    filename = "Data/Ville de Québec 202102.xlsx"
-    excel_mapper = excel_template_mapper.ExcelTemplateMapper()
-    excel_mapper.read(filename)
-    odm_instance = Odm()
-    odm_instance.load_from(excel_mapper)
-    db_mapper = sqlite3_mapper.SQLite3Mapper()
-    db_mapper.read(connection_string)
-    odm_instance.append_from(db_mapper)
-    odm2 = Odm()
-    odm2.load_from(excel_mapper)
-    odm2.append_from(db_mapper)
-    # odm2.to_sqlite3("test.db")
-    odm2.to_csv('csv_test', "test", )
-
-    geo = odm_instance.get_geoJSON()
-    return geo, odm_instance.combine_per_sample()
-
-
-def test_serialization_deserialization():
-    # run with example db data
-    _, _, odm_instance = test_samples_from_excel()
-    start = time.time()
-    print("serializing")
-    serialized = json.dumps(odm_instance, indent=4, cls=OdmEncoder)
-    print('Serialization took', time.time()-start, 'seconds.')
-
-    start = time.time()
-    print("deserializing")
-    j_mapper = serialized_mapper.SerializedMapper()
-    j_mapper.read(serialized)
-    odm_instance = Odm()
-    odm_instance.load_from(j_mapper)
-    print('Deserialization took', time.time()-start, 'seconds.')
-
-    return odm_instance
-
-
-if __name__ == "__main__":
-    # engine = create_db()
-    # destroy_db(test_path)
-    # print("Testing from Excel")
-    # start = time.time()
-    # samples = test_samples_from_excel()
-    # print('It took', time.time()-start, 'seconds.')
-    # print("testing from db")
-    # start = time.time()
-    # samples = test_samples_from_db()
-    # print('It took', time.time()-start, 'seconds.')
-    # print("testing from excel and db")
-    # start = time.time()
-    samples = test_from_excel_and_db()
-    # print('It took', time.time()-start, 'seconds.')
-    # print("testing serialization_deserialization")
-    # start = time.time()
-    # test_serialization_deserialization()
-    # print('It took', time.time()-start, 'seconds.')

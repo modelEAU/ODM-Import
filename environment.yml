@@ -22,6 +22,7 @@ dependencies:
   - shapely
   - sqlalchemy
   - pytest
+  - python-kaleido
   - pip:
     - geojson-rewind
     - geomet

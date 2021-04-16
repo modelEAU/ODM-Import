@@ -80,7 +80,7 @@ ___
 
 1. Get to the root of the repo using your terminal.
 2. Activate your python environment of choice.
-3. Enter the command `pip install -e .`
+3. Enter the command `pip install -e .` (the dot is important)
 4. The package should now be installed. You can therefore import it just like any other package using the statement `import wbe_odm`
 
 ### Odm Class

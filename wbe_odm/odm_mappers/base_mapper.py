@@ -36,6 +36,12 @@ def get_data_types():
         .to_dict()
 
 
+def get_table_fields(table_name):
+    url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
+    variables = pd.read_csv(url)
+    return variables.loc[variables["tableName"] == table_name, "variableName"] 
+
+
 DATA_TYPES = get_data_types()
 
 

@@ -72,6 +72,8 @@ def typecast_column(desired_type, series):
             lambda x: base_mapper.replace_unknown_by_default(x, ""))
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
+    elif desired_type == "datetime64[ns]":
+        series = pd.to_datetime(series, errors="coerce")
     series = series.astype(desired_type)
     return series
 
@@ -83,6 +85,7 @@ def typecast_lab(lab, types):
             datatype = "string"
         datatype = str(datatype)\
             .replace("date", "datetime64[ns]") \
+            .replace("mixed", "object") \
             .replace("boolean", "bool") \
             .replace("float", "float64") \
             .replace("integer", "int64") \
@@ -481,7 +484,7 @@ def get_all_inputs(row):
     return inputs
 
 
-def parse_sheet(mapping, static, lab_data, lab_id):
+def parse_sheet(mapping, static, lab_data, processing_functions, lab_id,):
     mapping["lab_arguments"] = mapping.apply(
         lambda row: get_labsheet_inputs(row, lab_data, lab_id), axis=1)
     mapping["static"] = mapping.apply(
@@ -513,7 +516,7 @@ def parse_sheet(mapping, static, lab_data, lab_id):
             sub_df.columns = var_names
             sub_dfs.append(sub_df)
         table_df = pd.concat(sub_dfs, axis=0, ignore_index=True)
-        if table == "WWMeasure":
+        if table in ["WWMeasure", "SiteMeasure"]:
             table_df = table_df.dropna(subset=["value"])
         tables[table] = table_df
     return tables
@@ -526,38 +529,7 @@ class McGillMapper(base_mapper.BaseMapper):
             if odm_name == table_name:
                 return attr
 
-    def read(self,
-             labsheet_path,
-             staticdata_path,
-             worksheet_name,
-             lab_id,
-             startdate=None,
-             enddate=None):
-        # get the lab data
-        lab = pd.read_excel(labsheet_path,
-                            sheet_name=worksheet_name,
-                            header=None,
-                            usecols="A:BV")
-        # parse the headers to deal with merged cells and get unique names
-        lab.columns = [
-            excel_style(i+1)
-            for i, _ in enumerate(lab.columns.to_list())
-        ]
-        lab_datatypes = lab.iloc[4].values
-        lab = lab.iloc[5:]
-        lab = remove_bad_rows(lab)
-        lab = typecast_lab(lab, lab_datatypes)
-        lab = lab.dropna(how="all")
-        mapping = pd.read_csv(MCGILL_MAP_NAME, header=0)
-        mapping.fillna("", inplace=True)
-        mapping = mapping.astype(str)
-        label_col_name = "D"  # sampleID column
-        spike_col_name = "AB"  # spikeID
-        lod_value_col = "BI"  # sars-cov-2 gc/rxn
-        sample_date_col = "B"  # end date
-        lab = get_lod(lab, label_col_name, spike_col_name, lod_value_col)
-        lab = filter_by_date(lab, sample_date_col, startdate, enddate)
-
+    def read_static_data(self, staticdata_path):
         # Get the static data
         static_tables = [
             "Lab",
@@ -577,7 +549,48 @@ class McGillMapper(base_mapper.BaseMapper):
         for table, attr in zip(static_tables, attrs):
             static_data[table] = getattr(excel_mapper, attr)
             setattr(self, attr, static_data[table])
-        dynamic_tables = parse_sheet(mapping, static_data, lab, lab_id)
+        return static_data
+
+    def read(self,
+             labsheet_path,
+             staticdata_path,
+             worksheet_name,
+             map_path,
+             lab_id,
+             startdate=None,
+             enddate=None):
+        # get the lab data
+        lab = pd.read_excel(labsheet_path,
+                            sheet_name=worksheet_name,
+                            header=None,
+                            usecols="A:BV")
+        # parse the headers to deal with merged cells and get unique names
+        lab.columns = [
+            excel_style(i+1)
+            for i, _ in enumerate(lab.columns.to_list())
+        ]
+        lab_datatypes = lab.iloc[5].values
+        lab = lab.iloc[6:]
+        lab = remove_bad_rows(lab)
+        lab = typecast_lab(lab, lab_datatypes)
+        lab = lab.dropna(how="all")
+        mapping = pd.read_csv(map_path, header=0)
+        mapping.fillna("", inplace=True)
+        mapping = mapping.astype(str)
+        label_col_name = "D"  # sampleID column
+        spike_col_name = "AB"  # spikeID
+        lod_value_col = "BI"  # sars-cov-2 gc/rxn
+        sample_date_col = "B"  # end date
+        lab = get_lod(lab, label_col_name, spike_col_name, lod_value_col)
+        lab = filter_by_date(lab, sample_date_col, startdate, enddate)
+        static_data = self.read_static_data(staticdata_path)
+        dynamic_tables = parse_sheet(
+            mapping,
+            static_data,
+            lab,
+            processing_functions,
+            lab_id
+        )
         for table_name, table in dynamic_tables.items():
             attr = self.get_attr_from_table_name(table_name)
             setattr(self, attr, table)
@@ -599,6 +612,7 @@ if __name__ == "__main__":
     mapper.read(lab_data,
                 static_data,
                 sheet_name,
+                map_path=MCGILL_MAP_NAME,
                 lab_id=lab_id,
                 startdate=None, enddate=None)
     print(mapper.site)

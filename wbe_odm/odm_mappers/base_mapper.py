@@ -1,52 +1,14 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 import re
+from wbe_odm import utilities
 
 
-UNKNOWN_TOKENS = [
-    "nan",
-    "na",
-    "nd"
-    "n.d",
-    "none",
-    "-",
-    "unknown",
-    "n/a",
-    "n/d",
-    ""
-]
-
-UNKNOWN_REGEX = r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none"
-
-
-def get_data_types():
-    url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
-    variables = pd.read_csv(url)
-    variables["variableName"] = variables["variableName"].str.lower()
-    variables["variableType"] = variables["variableType"]\
-        .replace(r"date(time)?", "datetime64[ns]", regex=True) \
-        .replace("boolean", "bool") \
-        .replace("float", "float64") \
-        .replace("integer", "int64") \
-        .replace("blob", "object")
-
-    return variables\
-        .groupby("tableName")[['variableName', 'variableType']] \
-        .apply(lambda x: x.set_index('variableName').to_dict(orient='index')) \
-        .to_dict()
-
-
-def get_table_fields(table_name):
-    url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
-    variables = pd.read_csv(url)
-    return variables.loc[variables["tableName"] == table_name, "variableName"]
-
-
-DATA_TYPES = get_data_types()
+DATA_TYPES = utilities.get_data_types()
 
 
 def replace_unknown_by_default(string, default):
-    if re.fullmatch(UNKNOWN_REGEX, string, re.IGNORECASE):
+    if re.fullmatch(utilities.UNKNOWN_REGEX, string, re.IGNORECASE):
         return default
     return string
 
@@ -72,6 +34,9 @@ def parse_types(table_name, series):
         series = series.apply(lambda x: replace_unknown_by_default(x, ""))
         if variable_name != "wkt":
             series = series.str.lower()
+    elif desired_type == "datetime64[ns]":
+        series = series.astype(str)
+        series = series.apply(lambda x: replace_unknown_by_default(x, ""))
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
         return series
@@ -80,16 +45,26 @@ def parse_types(table_name, series):
 
 
 class BaseMapper(ABC):
-    sample = None
-    ww_measure = None
-    site = None
-    site_measure = None
-    reporter = None
-    lab = None
-    assay_method = None
-    instrument = None
-    polygon = None
-    cphd = None
+    sample = pd.DataFrame(
+        columns=utilities.get_table_fields("Sample"))
+    ww_measure = pd.DataFrame(
+        columns=utilities.get_table_fields("WWMeasure"))
+    site = pd.DataFrame(
+        columns=utilities.get_table_fields("Site"))
+    site_measure = pd.DataFrame(
+        columns=utilities.get_table_fields("SiteMeasure"))
+    reporter = pd.DataFrame(
+        columns=utilities.get_table_fields("Reporter"))
+    lab = pd.DataFrame(
+        columns=utilities.get_table_fields("Lab"))
+    assay_method = pd.DataFrame(
+        columns=utilities.get_table_fields("AssayMethod"))
+    instrument = pd.DataFrame(
+        columns=utilities.get_table_fields("Instrument"))
+    polygon = pd.DataFrame(
+        columns=utilities.get_table_fields("Polygon"))
+    cphd = pd.DataFrame(
+        columns=utilities.get_table_fields("CPHD"))
     # Attribute name to source name
     conversion_dict = {
         "ww_measure": {
@@ -156,3 +131,15 @@ class BaseMapper(ABC):
         return df.apply(
                 lambda x: parse_types(odm_name, x),
                 axis=0)
+
+    def get_odm_names(self):
+        return [
+            self.conversion_dict[x]["odm_name"]
+            for x in self.conversion_dict.keys()]
+
+    def get_attribute_from_odm_name(self, odm_name):
+        for attribute, dico in self.conversion_dict.items():
+            table_name = dico["odm_name"]
+            if table_name == odm_name:
+                return attribute
+        raise NameError("Could not find attribute for table %s", odm_name)

@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime
 import os
 import re
+import warnings
 from wbe_odm.odm_mappers import base_mapper
 from wbe_odm.odm_mappers import excel_template_mapper
 
@@ -564,10 +565,12 @@ class McGillMapper(base_mapper.BaseMapper):
              startdate=None,
              enddate=None):
         # get the lab data
-        lab = pd.read_excel(labsheet_path,
-                            sheet_name=worksheet_name,
-                            header=None,
-                            usecols="A:BV")
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            lab = pd.read_excel(labsheet_path,
+                                sheet_name=worksheet_name,
+                                header=None,
+                                usecols="A:BV")
         # parse the headers to deal with merged cells and get unique names
         lab.columns = [
             excel_style(i+1)

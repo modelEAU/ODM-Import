@@ -24,17 +24,26 @@ class Odm:
     """
     def __init__(
         self,
-        sample: pd.DataFrame = None,
-        ww_measure: pd.DataFrame = None,
-        site: pd.DataFrame = None,
-        site_measure: pd.DataFrame = None,
-        reporter: pd.DataFrame = None,
-        lab: pd.DataFrame = None,
-        assay_method: pd.DataFrame = None,
-        instrument: pd.DataFrame = None,
-        polygon: pd.DataFrame = None,
-        cphd: pd.DataFrame = None,
-        lookup: pd.DataFrame = None
+        sample=pd.DataFrame(
+            columns=utilities.get_table_fields("Sample")),
+        ww_measure=pd.DataFrame(
+            columns=utilities.get_table_fields("WWMeasure")),
+        site=pd.DataFrame(
+            columns=utilities.get_table_fields("Site")),
+        site_measure=pd.DataFrame(
+            columns=utilities.get_table_fields("SiteMeasure")),
+        reporter=pd.DataFrame(
+            columns=utilities.get_table_fields("Reporter")),
+        lab=pd.DataFrame(
+            columns=utilities.get_table_fields("Lab")),
+        assay_method=pd.DataFrame(
+            columns=utilities.get_table_fields("AssayMethod")),
+        instrument=pd.DataFrame(
+            columns=utilities.get_table_fields("Instrument")),
+        polygon=pd.DataFrame(
+            columns=utilities.get_table_fields("Polygon")),
+        cphd=pd.DataFrame(
+            columns=utilities.get_table_fields("CPHD")),
             ) -> None:
 
         self.sample = sample
@@ -98,6 +107,8 @@ class Odm:
             and the features spread out over new columns named after the values
             of the qualifier columns.
         """
+        if df.empty:
+            return df
         df_copy = df.copy(deep=True)
 
         for feature in features:
@@ -158,6 +169,8 @@ class Odm:
         pd.DataFrame
             The same table with the access rights columns removed.
         """
+        if df.empty:
+            return df
         to_remove = [col for col in df.columns if "access" in col.lower()]
         return df.drop(columns=to_remove)
 
@@ -175,7 +188,8 @@ class Odm:
             - Boolean column's values are declared in the column title.
         """
         df = self.ww_measure
-
+        if df.empty:
+            return df
         # Breaking change in ODM. This line find the correct name
         # for the assayMethod ID column.
         assay_col = "assayID" if "assayID" in df.columns.to_list() \
@@ -205,7 +219,8 @@ class Odm:
 
     def __parse_site_measure(self) -> pd.DataFrame:
         df = self.site_measure
-
+        if df.empty:
+            return df
         df = self.__remove_access(df)
         df = self.__widen(
             df,
@@ -230,6 +245,8 @@ class Odm:
 
     def __parse_sample(self) -> pd.DataFrame:
         df = self.sample
+        if df.empty:
+            return df
         df_copy = df.copy(deep=True)
 
         # we want the sample to show up in any site where it is relevant.
@@ -263,17 +280,22 @@ class Odm:
 
     def __parse_site(self) -> pd.DataFrame:
         df = self.site
+        if df.empty:
+            return df
         df = df.add_prefix("Site.")
         return df
 
     def __parse_polygon(self) -> pd.DataFrame:
         df = self.polygon
+        if df.empty:
+            return df
         df = df.add_prefix("Polygon.")
         return df
 
     def __parse_cphd(self) -> pd.DataFrame:
         df = self.cphd
-
+        if df.empty:
+            return df
         df = self.__remove_access(df)
         df = self.__widen(
             df,
@@ -308,23 +330,23 @@ class Odm:
             return
         self_attrs = self.__dict__
         mapper_attrs = mapper.__dict__
-        for attr, current_value in self_attrs.items():
-            new_value = getattr(mapper, attr)
-            if current_value is None:
-                setattr(self, attr, new_value)
-            elif mapper_attrs[attr] is None:
+        for attr, current_df in self_attrs.items():
+            new_df = getattr(mapper, attr)
+            if current_df.empty:
+                setattr(self, attr, new_df)
+            elif mapper_attrs[attr] is None or mapper_attrs[attr].empty:
                 continue
             else:
                 primary_key = base_mapper.BaseMapper\
                     .conversion_dict[attr]["primary_key"]
                 try:
-                    combined = current_value.append(
-                        new_value).drop_duplicates(
+                    combined = current_df.append(
+                        new_df).drop_duplicates(
                             subset=[primary_key]
                         )
                     setattr(self, attr, combined)
                 except Exception as e:
-                    setattr(self, attr, current_value)
+                    setattr(self, attr, current_df)
                     raise e
         return
 
@@ -342,7 +364,9 @@ class Odm:
             self_attrs = self.__dict__
             mapper_attrs = mapper.__dict__
             for key in self_attrs.keys():
-                self_attrs[key] = mapper_attrs.get(key, None)
+                if key not in mapper_attrs:
+                    continue
+                self_attrs[key] = mapper_attrs[key]
 
     def get_geoJSON(self) -> dict:
         """Transforms the polygon Table into a geoJSON-like Python dictionary
@@ -410,6 +434,8 @@ class Odm:
                 DataFrame containing the data from the WWMeasure table,
                 re-ordered so that each row represents a sample.
             """
+            if ww.empty:
+                return ww
             return ww\
                 .groupby("WWMeasure.sampleID")\
                 .agg(utilities.reduce_by_type)
@@ -432,6 +458,13 @@ class Odm:
             pd.DataFrame
                 A combined table containing the data from both DataFrames
             """
+            if ww.empty and sample.empty:
+                return pd.DataFrame()
+            elif sample.empty:
+                return ww
+            elif ww.empty:
+                return sample
+
             return pd.merge(
                 sample, ww,
                 how="left",
@@ -456,11 +489,15 @@ class Odm:
             pd.DataFrame
                 A combined DataFrame joined on sampling date
             """
+            if sample.empty and site_measure.empty:
+                return sample
+            elif sample.empty:
+                return site_measure
+            elif site_measure.empty:
+                return sample
             # Pandas doesn't provide good joining capability using dates, so we
             # go through SQLite to perform the join and come back to pandas
             # afterwards.
-            if site_measure.empty:
-                return sample
             # Make the db in memory
             conn = sqlite3.connect(':memory:')
             # write the tables
@@ -494,6 +531,12 @@ class Odm:
             pd.DataFrame
                 A combined DataFrame joined on siteID
             """
+            if sample.empty and site.empty:
+                return sample
+            elif sample.empty:
+                return site
+            elif site.empty:
+                return sample
             return pd.merge(
                 sample,
                 site,
@@ -524,7 +567,9 @@ class Odm:
                 factor representing the percentage of the health region
                 contained in the sewershed.
             """
-            return merged
+            # right now this merge hasn't been developped
+            # we have to cphd data just yet
+            return sample
 
         # __________
         # Actual logic of the funciton

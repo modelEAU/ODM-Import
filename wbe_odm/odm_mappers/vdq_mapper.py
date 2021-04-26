@@ -1,186 +1,153 @@
 import pandas as pd
-from wbe_odm.odm_mappers import base_mapper
+import numpy as np
+from wbe_odm.odm_mappers import mcgill_mapper as mcm
 
-default_site_measurement = {
-    "sampleID": None,
-    "reporterID": "NielsNicolai",
-    "accessToPublic": "YES",
-    "accessToAllOrg": "YES",
-    "accessToPHAC": "YES",
-    "accessToLocalHA": "YES",
-    "accessToProvHA": "YES",
-    "accessToOtherProv": "YES",
-    "accessToDetails": "YES",
-}
-
-
-types = {
-    "Précipitation": {
-        "type": "envRnF",
-        "aggregation": "single",
-        "aggregationDesc": "Cumulative rainfall in one day.",
-        "unit": "mm",
-        "instrumentID": "Pluvio_VilledeQuebec"
-    },
-    "T° moyenne de l'eau": {
-        "type": "wwTemp",
-        "aggregation": "dailyAvg",
-        "aggregationDesc": None,
-        "unit": "°C",
-        "instrumentID": None,
-    },
-    "pH": {
-        "type": "wwPh",
-        "aggregation": None,
-        "aggregationDesc": None,
-        "unit": "ph",
-        "instrumentID": None,
-    },
-    "Débit affluent": {
-        "type": "wwFlow",
-        "aggregation": "single",
-        "aggregationDesc": "Cumulative influent flow for one day.",
-        "unit": "m3/d",
-        "instrumentID": None,
-    },
-    "DCO affluent": {
-        "type": "wwCOD",
-        "aggregation": None,
-        "aggregationDesc": None,
-        "unit": "mg/L",
-        "instrumentID": None,
-    },
-    "DBO5C affluent": {
-        "type": "wwBOD5c",
-        "aggregation": None,
-        "aggregationDesc": None,
-        "unit": "mg/L",
-        "instrumentID": None,
-    },
-    "MES affluent": {
-        "type": "wwTSS",
-        "aggregation": None,
-        "aggregationDesc": None,
-        "unit": "mg/L",
-        "instrumentID": None,
-    },
-    "Ptotal affluent": {
-        "type": "wwPtot",
-        "aggregation": None,
-        "aggregationDesc": None,
-        "unit": "mg/L",
-        "instrumentID": None,
-    },
-    "N-NH4 effluent": {
-        "type": "wwNH4N",
-        "aggregation": None,
-        "aggregationDesc": None,
-        "unit": "mg/L",
-        "instrumentID": None,
-    },
-}
-
-
-def build_maps():
-    maps = {
-        "type": {},
-        "aggregation": {},
-        "aggregationDesc": {},
-        "unit": {},
-        "instrumentID": {},
-    }
-    for col_header, types_dico in types.items():
-        for var_name, props_dico in maps.items():
-            props_dico[col_header] = types[col_header][var_name]
-    return maps
+ST_PASCAL_CURVE = pd.DataFrame.from_dict({
+    "flowrate": [
+        15.029, 39.306, 76.301,
+        117.919, 159.538, 198.844,
+        231.214, 277.457, 319.075,
+        358.382, 409.249, 446.243,
+        483.237, 524.855, 550.289,
+        587.283, 608.092, 638.15,
+        656.647, 668.208, 672.832, 678.613],
+    "height(m)": [
+        0.046, 0.098, 0.173,
+        0.225, 0.276, 0.317,
+        0.351, 0.397, 0.432,
+        0.455, 0.495, 0.518,
+        0.553, 0.599, 0.651,
+        0.697, 0.76, 0.864,
+        0.95, 1.025, 1.612, 2.965]
+    }, orient="columns"
+)
 
 
 site_map = {
-    "Données station Est": "Quebec_Est_WWTP",
-    "Données station Ouest": "Quebec_Ouest_WWTP"
+    "Données station Est": "QC_01",
+    "Données station Ouest": "QC_02"
 }
 
 
-def reorder_columns(df):
-    ordered_cols = [
-        "siteMeasureID",
-        "siteID",
-        "instrumentID",
-        "sampleID",
-        "reporterID",
-        "dateTime",
-        "type",
-        "aggregation",
-        "aggregationDesc",
-        "value",
-        "unit",
-        "accessToPublic",
-        "accessToAllOrg",
-        "accessToPHAC",
-        "accessToLocalHA",
-        "accessToProvHA",
-        "accessToOtherProv",
-        "accessToDetails",
-        "notes",
-    ]
-    return df[ordered_cols]
+def get_qc_lab_site_measure_id(site_id, date, type_):
+    df = pd.DataFrame(pd.to_datetime(date))
+    df["type"] = type_
+    df["site_id"] = site_id
+    df.columns = ["dates", "type", "site_id"]
+    df["formattedDates"] = df["dates"]\
+        .dt.strftime("%Y-%m-%dT%H:%M:%S")\
+        .fillna('').str.replace("T00:00:00", "")
+    df = df[["site_id", "type", "formattedDates"]]
+    return df.agg("_".join, axis=1)
 
 
-def parse_plant_sheet(df, sheet_name):
-    df = pd.melt(
-        df,
-        id_vars=["Date", "Conditions d'opération"],
-        value_vars=types.keys())
-    maps = build_maps()
-    for var_name, _map in maps.items():
-        df[var_name] = df["variable"].map(_map)
-    for var, default in default_site_measurement.items():
-        df[var] = default
-    df["siteID"] = site_map[sheet_name]
-    df["str_date"] = df["Date"].dt.strftime('%Y-%m-%d')
+lab_funcs = {
+    "get_qc_lab_site_measure_id": get_qc_lab_site_measure_id,
+    "get_date": lambda x: pd.to_datetime(x)
+}
 
-    df["siteMeasureID"] = \
-        df["siteID"]\
-        + "_" + df["type"] \
-        + "_" + df["str_date"]
-    del df["str_date"]
-    df.rename(
-        columns={"Conditions d'opération": "notes", "Date": "dateTime"},
-        inplace=True
+
+def maizerets_from_height(height, is_open):
+    calib = ST_PASCAL_CURVE
+    df = pd.concat([height, is_open], axis=1)
+    df.columns = ["height", "is_open"]
+    # convert to mm
+    df["height"] = df["height"] / 1000
+    df["maizerets"] = df["height"].apply(
+        lambda x: np.interp(x, calib["height(m)"], calib["flowrate"])
     )
-    df = reorder_columns(df)
-    return df
+    df["maizerets"] = pd.to_numeric(df["maizerets"], errors="coerce")
+    df["is_open"] = pd.to_numeric(df["is_open"], errors="coerce")
+    df.loc[df["is_open"].isna(), "maizerets"] = 0
+    df["m3/h"] = df["maizerets"] * 3600 / 1000
+    return df["m3/h"]
 
 
-class VdQPlantMapper(base_mapper.BaseMapper):
-    def read(self, filepath):
+def charlesbourg_flow(tot_flow, height, is_open):
+    maizerets = pd.to_numeric(
+        maizerets_from_height(height, is_open),
+        errors="coerce")
+    return pd.to_numeric(tot_flow, errors="coerce") - maizerets
+
+
+def limoilou_n_flow(flow):
+    return pd.to_numeric(flow, errors="coerce")/3
+
+
+def limoilou_s_flow(flow):
+    return pd.to_numeric(flow, errors="coerce") * 2/3
+
+
+sensor_funcs = {
+    "get_qc_sensor_site_measure_id": get_qc_lab_site_measure_id,
+    "maizerets_from_height": maizerets_from_height,
+    "charlesbourg_flow": charlesbourg_flow,
+    "limoilou_n_flow": limoilou_n_flow,
+    "limoilou_s_flow": limoilou_s_flow,
+}
+
+
+class VdQPlantMapper(mcm.McGillMapper):
+    def read(self, lab_path, lab_map):
         sheet_names = ["Données station Est", "Données station Ouest"]
-        odm_name = self.conversion_dict["site_measure"]["odm_name"]
+        static_data = self.read_static_data(None)
         xls = pd.read_excel(
-            filepath,
-            sheet_name=sheet_names,
-            header=0,
-            skiprows=[1]
-        )
-        dfs = []
+            lab_path, sheet_name=sheet_names,
+            header=0, skiprows=[1])
+        mapping = pd.read_csv(lab_map)
+        mapping.fillna("", inplace=True)
+        mapping = mapping.astype(str)
+        lab_id = None
+        site_measure_dfs = []
         for sheet_name, df in xls.items():
-            if "pH moyen affluent" in df.columns:
-                df.rename(columns={"pH moyen affluent": "pH"}, inplace=True)
-            df = parse_plant_sheet(df, sheet_name)
-            dfs.append(df)
-        site_measure = pd.concat(dfs)
+            df.columns = [
+                mcm.excel_style(i+1)
+                for i, _ in enumerate(df.columns.to_list())
+            ]
+            df["location"] = site_map[sheet_name]
+            dynamic_tables = mcm.parse_sheet(
+                mapping, static_data, df, lab_funcs, lab_id
+            )
+            site_measure_dfs.append(dynamic_tables["SiteMeasure"])
 
+        site_measure = pd.concat(site_measure_dfs)
         site_measure.drop_duplicates(keep="first", inplace=True)
-        site_measure.dropna(subset=["value"])
-        site_measure = self.type_cast_table(odm_name, df)
+        site_measure.dropna(subset=["value"], inplace=True)
+        site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
         return
 
-    def validates(self):
-        return True
+
+class VdQSensorsMapper(mcm.McGillMapper):
+    def read(self, sensors_path, sensors_map):
+        static_data = self.read_static_data(None)
+        df = pd.read_excel(sensors_path, header=8, usecols="A:N")
+        mapping = pd.read_csv(sensors_map)
+        mapping.fillna("", inplace=True)
+        mapping = mapping.astype(str)
+        lab_id = None
+        df.columns = [
+            mcm.excel_style(i+1)
+            for i, _ in enumerate(df.columns.to_list())
+        ]
+        df = df.loc[~df["D"].str.lower().isin(["moyen", "max", "min"])]
+        df = df.dropna(how="all")
+        dynamic_tables = mcm.parse_sheet(
+            mapping, static_data, df, sensor_funcs, lab_id
+        )
+        site_measure = dynamic_tables["SiteMeasure"]
+        site_measure.drop_duplicates(keep="first", inplace=True)
+        site_measure = site_measure.dropna(subset=["value"])
+        site_measure = self.type_cast_table("SiteMeasure", site_measure)
+        self.site_measure = site_measure
+        return
 
 
 if __name__ == "__main__":
-    path = "/workspaces/ODM Import/Data/Site measure/Échantillonnage COVID ULaval.xlsx"  # noqa
-    mapper = VdQPlantMapper()
-    mapper.read(path)
+    lab_path = "Data/VdQ/Échantillonnage COVID ULaval.xlsx"
+    lab_map = "wbe_odm/odm_mappers/vdqlab_map.csv"
+    sensors_map = "wbe_odm/odm_mappers/vdqsensors_map.csv"
+    sensors_path = "Data/VdQ/DonneesULaval.xlsx"
+    mapper = VdQSensorsMapper()
+    mapper.read(sensors_path, sensors_map)
+    print("ok")

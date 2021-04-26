@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import os
 import re
 from wbe_odm.odm_mappers import base_mapper
 from wbe_odm.odm_mappers import excel_template_mapper
 
 LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 
-MCGILL_MAP_NAME = "wbe_odm/odm_mappers/mcgill_map.csv"
+directory = os.path.dirname(__file__)
+
+MCGILL_MAP_NAME = directory + "/" + "mcgill_map.csv"
 
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -545,7 +548,8 @@ class McGillMapper(base_mapper.BaseMapper):
             attrs.append(attr)
         static_data = {}
         excel_mapper = excel_template_mapper.ExcelTemplateMapper()
-        excel_mapper.read(staticdata_path, sheet_names=static_tables)
+        if staticdata_path is not None:
+            excel_mapper.read(staticdata_path, sheet_names=static_tables)
         for table, attr in zip(static_tables, attrs):
             static_data[table] = getattr(excel_mapper, attr)
             setattr(self, attr, static_data[table])
@@ -555,8 +559,8 @@ class McGillMapper(base_mapper.BaseMapper):
              labsheet_path,
              staticdata_path,
              worksheet_name,
-             map_path,
              lab_id,
+             map_path=MCGILL_MAP_NAME,
              startdate=None,
              enddate=None):
         # get the lab data
@@ -612,7 +616,8 @@ if __name__ == "__main__":
     mapper.read(lab_data,
                 static_data,
                 sheet_name,
+                lab_id,
                 map_path=MCGILL_MAP_NAME,
-                lab_id=lab_id,
-                startdate=None, enddate=None)
+                startdate=None,
+                enddate=None)
     print(mapper.site)

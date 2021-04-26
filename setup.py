@@ -19,5 +19,6 @@ setup(
     ],
     packages=find_packages(),
     setup_requires=['pytest-runner', 'flake8'],
+    include_package_data=True,
     tests_require=['pytest'],
 )

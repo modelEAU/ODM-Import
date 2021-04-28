@@ -55,7 +55,7 @@ def reduce_by_type(series):
     if "object" in data_type:
         return reduce(reduce_text, series)
 
-    if "float64" in data_type or "int" in data_type:
+    if data_type in ["float64", "int"]:
         return reduce(reduce_nums, series)
     else:
         raise TypeError(f"could not parse series of dtype {name}")
@@ -68,19 +68,6 @@ def convert_wkt_to_geojson(s):
     geojson_feature = rewind(geojson_feature, rfc7946=False)
     return geojson_feature
 
-
-UNKNOWN_TOKENS = [
-    "nan",
-    "na",
-    "nd"
-    "n.d",
-    "none",
-    "-",
-    "unknown",
-    "n/a",
-    "n/d",
-    ""
-]
 
 UNKNOWN_REGEX = r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none"
 

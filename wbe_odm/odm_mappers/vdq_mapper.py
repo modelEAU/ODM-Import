@@ -1,6 +1,14 @@
+import os
 import pandas as pd
 import numpy as np
 from wbe_odm.odm_mappers import mcgill_mapper as mcm
+
+
+directory = os.path.dirname(__file__)
+VDQ_LAB_MAP_NAME = directory + "/" + "vdqlab_map.csv"
+VDQ_PLUVIO_MAP_NAME = directory + "/" + "vdqpluvio_map.csv"
+VDQ_SENSOR_MAP_NAME = directory + "/" + "vdqsensors_map.csv"
+
 
 ST_PASCAL_CURVE = pd.DataFrame.from_dict({
     "flowrate": [
@@ -88,7 +96,7 @@ sensor_funcs = {
 
 
 class VdQPlantMapper(mcm.McGillMapper):
-    def read(self, lab_path, lab_map):
+    def read(self, lab_path, lab_map=VDQ_LAB_MAP_NAME):
         sheet_names = ["Données station Est", "Données station Ouest"]
         static_data = self.read_static_data(None)
         xls = pd.read_excel(
@@ -119,7 +127,7 @@ class VdQPlantMapper(mcm.McGillMapper):
 
 
 class VdQSensorsMapper(mcm.McGillMapper):
-    def read(self, sensors_path, sensors_map):
+    def read(self, sensors_path, sensors_map=VDQ_SENSOR_MAP_NAME):
         static_data = self.read_static_data(None)
         df = pd.read_excel(sensors_path, header=8, usecols="A:N")
         mapping = pd.read_csv(sensors_map)
@@ -145,9 +153,7 @@ class VdQSensorsMapper(mcm.McGillMapper):
 
 if __name__ == "__main__":
     lab_path = "Data/VdQ/Échantillonnage COVID ULaval.xlsx"
-    lab_map = "wbe_odm/odm_mappers/vdqlab_map.csv"
-    sensors_map = "wbe_odm/odm_mappers/vdqsensors_map.csv"
     sensors_path = "Data/VdQ/DonneesULaval.xlsx"
     mapper = VdQSensorsMapper()
-    mapper.read(sensors_path, sensors_map)
+    mapper.read(sensors_path)
     print("ok")

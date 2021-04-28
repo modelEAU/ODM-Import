@@ -21,8 +21,8 @@ single,Sample,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 single,Sample,siteID,,lab sheet,D,get_site_id
 single,Sample,instrumentID,,,,
 single,Sample,reporterID,,static Reporter+lab sheet,N,get_reporter_id
-single,Sample,dateTime,,lab sheet,B,
-single,Sample,dateTimeStart,,lab sheet,A,
+single,Sample,dateTime,,lab sheet,B;E,get_grab_date
+single,Sample,dateTimeStart,,lab sheet,A;B;E,get_start_date
 single,Sample,dateTimeEnd,,lab sheet,B,
 single,Sample,type,,lab sheet,H,get_sample_type
 single,Sample,collection,,lab sheet,E,get_collection_method

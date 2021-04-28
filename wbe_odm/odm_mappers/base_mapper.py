@@ -5,6 +5,18 @@ from wbe_odm import utilities
 
 
 DATA_TYPES = utilities.get_data_types()
+UNKNOWN_TOKENS = [
+    "nan",
+    "na",
+    "nd"
+    "n.d",
+    "none",
+    "-",
+    "unknown",
+    "n/a",
+    "n/d",
+    ""
+]
 
 
 def replace_unknown_by_default(string, default):

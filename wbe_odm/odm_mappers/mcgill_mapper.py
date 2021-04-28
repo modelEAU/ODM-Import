@@ -109,9 +109,39 @@ def get_sample_type(sample_type):
         "pefflu", "ssludge", "sefflu",
         "water", "faeces", "rawww", ""
     ]"""
-    sample_type = sample_type.str.strip()\
-        .str.lower().str.replace("raw", "rawww")
+    sample_type = sample_type.str.strip()
+        # .str.lower()
     return sample_type
+
+
+def get_cp_start_date(start_col, end_col, sample_type):
+    def calc_start_date(row):
+        if pd.isna(row["end"]) or pd.isna(row["type"]):
+            return pd.NaT
+        x = row["type"]
+        hours = None
+        if re.match(r"cp[tf]p[0-9]+h", x):
+            hours = int(x[4:-1])
+        elif re.match(r"ps[0-9]+h", x):
+            hours = int(x[2:-1])
+        if hours is not None:
+            interval = pd.to_timedelta(f"{hours}h")
+            return row["end"] - interval
+        return pd.NaT
+
+    df = pd.concat([start_col, end_col, sample_type], axis=1)
+    df.columns = ["start", "end", "type"]
+    df["s"] = df.apply(lambda row: calc_start_date(row), axis=1)
+    return df["s"]
+
+
+def get_grab_date(end_series, type_series):
+    df = pd.concat([end_series, type_series], axis=1)
+    df.columns = ["end", "type"]
+    df["date_grab"] = pd.NaT
+    filt = df["type"].str.contains("grb")
+    df.loc[filt, "date_grab"] = df.loc[filt, "end"]
+    return df["date_grab"]
 
 
 def get_collection_method(collection):
@@ -344,6 +374,8 @@ def validate_fraction_analyzed(series):
 
 
 processing_functions = {
+    "get_grab_date": get_grab_date,
+    "get_start_date": get_cp_start_date,
     "get_collection_method": get_collection_method,
     "get_sample_type": get_sample_type,
     "get_assay_method_id": get_assay_method_id,
@@ -609,13 +641,10 @@ class McGillMapper(base_mapper.BaseMapper):
 
 if __name__ == "__main__":
     mapper = McGillMapper()
-    path_to_static = "Data/Lab/McGill/"
-    lab_data = "/Users/jeandavidt/Desktop/latest-data/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    static_data = path_to_static + "mcgill_static.xlsx"
+    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/mcgill_static.xlsx"
     sheet_name = "QC Data Daily Samples (McGill)"
     lab_id = "frigon_lab"
-    start_date = "2021-01-01"
-    end_date = None
     mapper.read(lab_data,
                 static_data,
                 sheet_name,

@@ -1,0 +1,17 @@
+﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+dc,CovidPublicHealthData,cphdID,,lab sheet,__const__INSPQ:str;region;__const__conf:str;__const__report:str;date,get_cphd_id
+dc,CovidPublicHealthData,reporterID,INSPQ,,,
+dc,CovidPublicHealthData,polygonID,,lab sheet,region,get_polygon_id
+dc,CovidPublicHealthData,dateTime,,,date,get_date
+dc,CovidPublicHealthData,type,conf,,,
+dc,CovidPublicHealthData,dateType,report,,,
+dc,CovidPublicHealthData,value,,lab sheet,dc,
+dc,CovidPublicHealthData,notes,,,,
+dd,CovidPublicHealthData,cphdID,,,__const__INSPQ:str;region;__const__deaths:str;__const__report:str;date,get_cphd_id
+dd,CovidPublicHealthData,reporterID,INSPQ,,,
+dd,CovidPublicHealthData,polygonID,,lab sheet,region,get_polygon_id
+dd,CovidPublicHealthData,dateTime,,lab sheet,date,get_date
+dd,CovidPublicHealthData,type,death,,,
+dd,CovidPublicHealthData,dateType,report,,,
+dd,CovidPublicHealthData,value,,lab sheet,dd,
+dd,CovidPublicHealthData,notes,,,,

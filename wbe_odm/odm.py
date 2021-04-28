@@ -5,10 +5,11 @@ import sqlite3
 import numpy as np
 import pandas as pd
 import requests
+from shapely import wkt
+from shapely.geometry import Point
 
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper
-
+from wbe_odm.odm_mappers import base_mapper, csv_mapper, ledevoir_mapper
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -128,7 +129,8 @@ class Odm:
                         qualifier_value = qualifier_value\
                             .replace("True", "quality_issue")\
                             .replace("False", "no_issue")
-
+                    if qualifier_value == "":
+                        qualifier_value = f"unknown-{qualifier}"
                     qualifying_values.append(qualifier_value)
                 # Create a single qualifying string to append to the column
                 # name
@@ -143,10 +145,10 @@ class Odm:
                 # Save the dtype of the original feature
                 feature_dtype = df[feature].dtype
 
-                # if the column hasn't been created ytet, initialize it
+                # if the column hasn't been created yet, initialize it
                 if feature_name not in df.columns:
                     df[feature_name] = None
-                    df[feature_name] = df[feature_name].astype(feature_dtype)
+                    # df[feature_name] = df[feature_name].astype(feature_dtype)
 
                 # Set the value in the new column
                 df.loc[i, feature_name] = feature_value
@@ -235,7 +237,7 @@ class Odm:
             ]
         )
 
-        # Re-arrange the table so that it is arranges by dateTime, as this is
+        # Re-arrange the table so that it is arranged by dateTime, as this is
         # how site measures will be joined to samples
         df = df.groupby("dateTime").agg(utilities.reduce_by_type)
         df.reset_index(inplace=True)
@@ -301,10 +303,11 @@ class Odm:
             df,
             features=[
                 "value",
-                "date",
+                "dateTime",
                 "notes"
             ],
             qualifiers=[
+                "polygonID",
                 "type",
                 "dateType",
             ]
@@ -329,12 +332,11 @@ class Odm:
         if not validates:
             return
         self_attrs = self.__dict__
-        mapper_attrs = mapper.__dict__
         for attr, current_df in self_attrs.items():
             new_df = getattr(mapper, attr)
             if current_df.empty:
                 setattr(self, attr, new_df)
-            elif mapper_attrs[attr] is None or mapper_attrs[attr].empty:
+            elif new_df is None or new_df.empty:
                 continue
             else:
                 primary_key = base_mapper.BaseMapper\
@@ -370,7 +372,7 @@ class Odm:
 
     def get_geoJSON(self) -> dict:
         """Transforms the polygon Table into a geoJSON-like Python dictionary
-        to ease mapping.
+        to facilitate mapping with Ploty and Dash.
 
         Returns
         -------
@@ -436,8 +438,7 @@ class Odm:
             """
             if ww.empty:
                 return ww
-            return ww\
-                .groupby("WWMeasure.sampleID")\
+            return ww.groupby("WWMeasure.sampleID")\
                 .agg(utilities.reduce_by_type)
 
         def combine_ww_measure_and_sample(
@@ -544,7 +545,37 @@ class Odm:
                 left_on="Sample.siteID",
                 right_on="Site.siteID")
 
-        def combine_cphd_by_geo(
+        def combine_polygons_per_sample(merged, polygons):
+            """
+                Adds a column called 'polygonIDs' containing a list
+                of polygons that pertain to a site
+            """
+            def convert_wkt(x):
+                try:
+                    return wkt.loads(x)
+                except Exception:
+                    return None
+
+            def get_encompassing_polygons(row, poly):
+                poly["contains"] = poly["shape"].apply(
+                    lambda x: x.contains(row["temp_point"]) if x is not None else False)
+                poly_ids = poly[
+                    "Polygon.polygonID"].loc[poly["contains"]].to_list()
+                return ";".join(poly_ids)
+
+            merged["temp_point"] = merged.apply(
+                lambda row: Point(
+                    row["Site.geoLat"], row["Site.geoLong"]
+                ), axis=1)
+
+            polygons["shape"] = polygons["Polygon.wkt"].apply(
+                lambda x: convert_wkt(x))
+            merged["polygonIDs"] = merged.apply(
+                lambda row: get_encompassing_polygons(row, polygons), axis=1)
+            merged.drop(["temp_point"], axis=1, inplace=True)
+            return merged
+
+        def combine_cphd_by_polygon(
             sample: pd.DataFrame,
             cphd: pd.DataFrame
                 ) -> pd.DataFrame:
@@ -555,7 +586,7 @@ class Odm:
             Parameters
             ----------
             sample : pd.DataFrame
-                Table containg sample inform,ation as well as a site polygonID
+                Table containg sample information as well as a site polygonID
             cphd : pd.DataFrame
                 Table containing public health data and a polygonID.
 
@@ -563,13 +594,23 @@ class Odm:
             -------
             pd.DataFrame
                 Combined DataFrame containing bnoth sample data and public
-                health data. The public health values are multiplied by a
-                factor representing the percentage of the health region
-                contained in the sewershed.
+                health data.
             """
             # right now this merge hasn't been developped
             # we have to cphd data just yet
-            return sample
+            if sample.empty and cphd.empty:
+                return sample
+            elif sample.empty:
+                return cphd
+            elif cphd.empty:
+                return sample
+
+            return pd.merge(
+                sample,
+                site,
+                how="left",
+                left_on="Sample.siteID",
+                right_on="Site.siteID")
 
         # __________
         # Actual logic of the funciton
@@ -585,8 +626,11 @@ class Odm:
         site = self.__parse_site()
         merged = combine_site_sample(merged, site)
 
-        cphd = self.__parse_cphd()
-        merged = combine_cphd_by_geo(merged, cphd)
+        polygons = self.__parse_polygon()
+        merged = combine_polygons_per_sample(merged, polygons)
+
+        # cphd = self.__parse_cphd()
+        # merged = combine_cphd_by_polygon(merged, cphd)
 
         merged.set_index("Sample.sampleID", inplace=True)
         merged.drop_duplicates(keep="first", inplace=True)
@@ -701,3 +745,16 @@ def create_db(filepath=None):
 def destroy_db(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
+
+
+if __name__ == "__main__":
+    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"
+    mapper = csv_mapper.CsvMapper()
+    mapper.read(CSV_FOLDER)
+    ldm = ledevoir_mapper.LeDevoirMapper()
+    ldm.read()
+    o = Odm()
+    o.load_from(mapper)
+    o.append_from(ldm)
+    test = o.combine_per_sample()
+    test.to_csv("test_data.csv")

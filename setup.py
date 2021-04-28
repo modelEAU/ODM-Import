@@ -5,6 +5,7 @@ setup(
     version="0.5.0",
     install_requires=[
         "pandas>=1.2",
+        "unidecode",
         "numpy",
         "sqlalchemy",
         "shapely",

@@ -102,6 +102,12 @@ def typecast_lab(lab, types):
     return lab
 
 
+def clean_labels(label):
+    parts = str(label).lower().split("_")
+    parts = [part.strip() for part in parts]
+    return "_".join(parts)
+
+
 def get_sample_type(sample_type):
     """acceptable_types = [
         "qtips", "filter", "gauze",
@@ -228,7 +234,8 @@ def get_site_id(labels):
             return "_".join(label_parts[0:2])
         else:
             return ""
-    return labels.apply(lambda x: extract_from_label(x))
+    clean_label_series = labels.apply(lambda x: clean_labels(x))
+    return clean_label_series.apply(lambda x: extract_from_label(x))
 
 
 def sample_is_pooled(pooled):
@@ -255,12 +262,6 @@ def get_children_samples(pooled, sample_date):
     df.columns = ["pooled", "clean_date"]
     df["children_ids"] = df.apply(lambda row: make_children_ids(row))
     return df["children_ids"]
-
-
-def clean_labels(label):
-    parts = str(label).lower().split("_")
-    parts = [part.strip() for part in parts]
-    return "_".join(parts)
 
 
 def get_sample_id(label_id, sample_date, spike_batch, lab_id, sample_index):
@@ -328,7 +329,9 @@ def get_reporter_id(static_reporters, name):
         else:
             return x
 
-    name = name.str.replace(", ", "/").str.replace(",", "/")
+    name = name.str.replace(", ", "/")\
+        .str.replace(",", "/")\
+        .str.replace(";", "/")
     name = name.str.lower().apply(lambda x: x.split("/")[0] if "/" in x else x)
     name = name.str.strip()
     reporters_ids = name.apply(get_reporter_name)

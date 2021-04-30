@@ -2,7 +2,8 @@
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
 import os
-# os.chdir("../")
+import argparse
+import shutil
 
 from wbe_odm import odm
 from wbe_odm.odm_mappers import mcgill_mapper, csv_mapper, ledevoir_mapper
@@ -11,91 +12,19 @@ import json
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import plotly.express as px
-
-# %% [markdown]
-# cases, mortality, recovered, testing, active, avaccine, dvaccine or cvaccine
-
-# %%
-PLOTLY_COLORS = px.colors.qualitative.Plotly
-
-COLORS = {
-    0: {
-        "french": "Pas de données",
-        "english": "No Data",
-        "color": None},
-    1: {
-        "french": "Très faible",
-        "english": "Very Low",
-        "color": "#6da06f"},
-    2: {
-        "french": "Faible",
-        "english": "Low",
-        "color": "#b6e9d1"},
-    3: {
-        "french": "Moyennement élevé",
-        "english": "Somewhat high",
-        "color": "#ffbb43"},
-    4: {
-        "french": "Élevé",
-        "english": "High",
-        "color": "#ff8652"},
-    5: {
-        "french": "Très élevé",
-        "english": "Very high",
-        "color": "#c13525"},
-}
-
-DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
-CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
-QC_STATIC_DATA = os.path.join(DATA_FOLDER,
-"Ville de Quebec - All data - v1.1.xlsx")  # noqa
-QC_LAB_DATA = os.path.join(DATA_FOLDER,
-"CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
-QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
-
-MTL_STATIC_DATA = os.path.join(DATA_FOLDER,
-"mcgill_static.xlsx")  # noqa
-MTL_LAB_DATA = os.path.join(DATA_FOLDER,
-"CentrEau-COVID_Resultats_Montreal_final.xlsx")  # noqa
-MTL_POLY_SHEET_NAME = "Mtl Data Daily Samples (Poly)"
-MTL_MCGILL_SHEET_NAME = "Mtl Data Daily Samples (McGill)"
+from config import *
 
 
-# %%
-RELOAD = False
-
-if RELOAD:
-    qc_lab = mcgill_mapper.McGillMapper()
-    mcgill_lab = mcgill_mapper.McGillMapper()
-    poly_lab = mcgill_mapper.McGillMapper()
-    ledevoir = ledevoir_mapper.LeDevoirMapper()
-
-    qc_lab.read(QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, "frigon_lab")
-
-    mcgill_lab.read(MTL_LAB_DATA, MTL_STATIC_DATA, MTL_MCGILL_SHEET_NAME, "frigon_lab")  # noqa
-
-    poly_lab.read(MTL_LAB_DATA, MTL_STATIC_DATA, MTL_POLY_SHEET_NAME, "dorner_lab")  # noqa
-
-    ledevoir.read()
-
-    store = odm.Odm()
-    store.append_from(qc_lab)
-    store.append_from(mcgill_lab)
-    store.append_from(poly_lab)
-    store.append_from(ledevoir)
-
-    prefix = datetime.now().strftime("%Y-%m-%d")
-    store.to_csv(CSV_FOLDER, prefix)
-    print(f"Saved to folder {CSV_FOLDER} with prefix \"{prefix}\"")
-
-store = odm.Odm()
-from_csv = csv_mapper.CsvMapper()
-from_csv.read(CSV_FOLDER)
-store.append_from(from_csv)
+def str2bool(arg):
+    value = arg.lower()
+    if value in STR_YES:
+        return True
+    elif value in STR_NO:
+        return False
+    else:
+        raise argparse.ArgumentError('Unrecognized boolean value.')
 
 
-# %%
 def make_point_feature(row, props_to_add):
     return {
         "type": "Feature",
@@ -437,24 +366,6 @@ def get_site_geoJSON(
     return
 
 
-combined = store.combine_per_sample()
-combined = combined[~combined.index.duplicated(keep='first')]
-sites = store.site
-sites["siteID"] = sites["siteID"].str.lower()
-sites = sites.drop_duplicates(subset=["siteID"], keep="first").copy()
-
-SITE_OUTPUT_DIR = ""
-SITE_NAME = "sites.geojson"
-js = get_site_geoJSON(
-        sites,
-        combined,
-        SITE_OUTPUT_DIR,
-        SITE_NAME,
-        dateStart=None,
-        dateEnd=None)
-
-
-# %%
 def build_polygon_geoJSON(polygons, output_dir, name, types=None):
     for col in ["pop", "link"]:
         if col in polygons.columns:
@@ -462,15 +373,98 @@ def build_polygon_geoJSON(polygons, output_dir, name, types=None):
     polys = store.get_geoJSON(types=types)
     path = os.path.join(output_dir, name)
     with open(path, "w") as f:
-        f.write(json.dumps(polys))
+        f.write(json.dumps(polys, indent=4))
 
 
-polygons = store.polygon
-polygons["polygonID"] = polygons["polygonID"].str.lower()
-polygons = polygons.drop_duplicates(subset=["polygonID"], keep="first").copy()
+if __name__ == "__main__":
+    # Arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-cty', '--cities', nargs="+", default=None, help='Cities to load data from')  # noqa
+    parser.add_argument('-st', '--sitetypes', nargs="+", default=["wwtp"], help='Types of sites to parse')  # noqa
+    parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
+    parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
+    parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
+    parser.add_argument('-web', '--website', type=str2bool, default=False, help='build geojson files for website (default=False)')  # noqa
 
-POLYGON_OUTPUT_DIR = ""
-POLY_NAME = "polygons.geojson"
-POLYS_TO_EXTRACT = ["swrCat"]
-build_polygon_geoJSON(
-    polygons, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
+    args = parser.parse_args()
+
+    cities = args.cities
+    sitetypes = args.sitetypes
+    publichealth = args.publichealth
+    generate = args.generate
+    website = args.website
+    reload = args.reload
+    generate = args.generate
+
+    if not os.path.exists(CSV_FOLDER):
+        raise ValueError(
+            "CSV folder does not exist. Please modify config file.")
+
+    store = odm.Odm()
+
+    if reload:
+        if "qc" in cities:
+            qc_lab = mcgill_mapper.McGillMapper()
+            qc_lab.read(QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, QC_VIRUS_LAB)  # noqa
+            store.append_from(qc_lab)
+
+        if "mtl" in cities:
+            mcgill_lab = mcgill_mapper.McGillMapper()
+            poly_lab = mcgill_mapper.McGillMapper()
+            mcgill_lab.read(MTL_LAB_DATA, MTL_STATIC_DATA, MTL_MCGILL_SHEET_NAME, MCGILL_VIRUS_LAB)  # noqa
+            poly_lab.read(MTL_LAB_DATA, MTL_STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
+            store.append_from(mcgill_lab)
+            store.append_from(poly_lab)
+
+        if publichealth:
+            ledevoir = ledevoir_mapper.LeDevoirMapper()
+            ledevoir.read()
+            store.append_from(ledevoir)
+
+        for root, dirs, files in os.walk(CSV_FOLDER):
+            for f in files:
+                os.unlink(os.path.join(root, f))
+            for d in dirs:
+                shutil.rmtree(os.path.join(root, d))
+
+        prefix = datetime.now().strftime("%Y-%m-%d")
+        store.to_csv(CSV_FOLDER, prefix)
+        print(f"Saved to folder {CSV_FOLDER} with prefix \"{prefix}\"")
+
+    store = odm.Odm()
+    from_csv = csv_mapper.CsvMapper()
+    from_csv.read(CSV_FOLDER)
+    store.append_from(from_csv)
+    combined = store.combine_per_sample()
+    combined = combined[~combined.index.duplicated(keep='first')]
+
+    if website:
+        sites = store.site
+        sites["siteID"] = sites["siteID"].str.lower()
+        sites = sites.drop_duplicates(subset=["siteID"], keep="first").copy()
+
+        site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
+        sites = sites.loc[site_type_filt]
+
+        city_filt = sites["siteID"].str.contains('|'.join(cities))
+        sites = sites.loc[city_filt]
+
+        js = get_site_geoJSON(
+            sites,
+            combined,
+            SITE_OUTPUT_DIR,
+            SITE_NAME,
+            dateStart=None,
+            dateEnd=None)
+
+        polygons = store.polygon
+        polygons["polygonID"] = polygons["polygonID"].str.lower()
+        polygons = polygons.drop_duplicates(
+            subset=["polygonID"], keep="first").copy()
+
+        build_polygon_geoJSON(
+            polygons, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
+
+    if generate:
+
+        cols_to_keep = []

@@ -9,7 +9,7 @@ from shapely import wkt
 from shapely.geometry import Point
 
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, csv_mapper, ledevoir_mapper, mcgill_mapper
+from wbe_odm.odm_mappers import base_mapper, mcgill_mapper, ledevoir_mapper
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -133,7 +133,6 @@ class Odm:
         df.drop(columns=features+qualifiers, inplace=True)
         df.drop(columns=["col_qualifiers"], inplace=True)
         return df
-
 
     def __remove_access(self, df: pd.DataFrame) -> pd.DataFrame:
         """removes all columns that set access rights
@@ -722,27 +721,20 @@ def destroy_db(filepath):
 
 
 if __name__ == "__main__":
-    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
-    mapper = csv_mapper.CsvMapper()
-    mapper.read(CSV_FOLDER)
+    # CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
+    # mapper = csv_mapper.CsvMapper()
+    # mapper.read(CSV_FOLDER)
+    store = Odm()
     # ldm = ledevoir_mapper.LeDevoirMapper()
     # ldm.read()
-    # DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
-    # mapper = mcgill_mapper.McGillMapper()
-    # QC_STATIC_DATA = os.path.join(DATA_FOLDER, "Ville de Quebec - All data - v1.1.xlsx")  # noqa
-    # QC_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
-    # QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
-    # mapper.read(
-    #     QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, "frigon_lab"
-    # )
-    o = Odm()
-    o.load_from(mapper)
-    a = o.ww_measure.copy()
-    print(len(o.ww_measure))
-    o.append_from(mapper)
-    b = o.ww_measure.copy()
-    print(len(o.ww_measure))
-    print(a==b)
-    # o.append_from(ldm)
-    # test = o.combine_per_sample()
-    # test.to_csv("test_data.csv")
+    DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
+    mapper = mcgill_mapper.McGillMapper()
+    QC_STATIC_DATA = os.path.join(DATA_FOLDER, "Ville de Quebec - All data - v1.1.xlsx")  # noqa
+    QC_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
+    QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
+    mapper.read(
+        QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, "frigon_lab"
+    )
+    store.load_from(mapper)
+    samples = store.combine_per_sample()
+    print("?")

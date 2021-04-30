@@ -10,6 +10,15 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "pipelines module",
+            "type": "python",
+            "request": "launch",
+            "module": "pipelines",
+            "args": [
+                "--website", "true", "--generate", "true"
+            ]
         }
     ]
 }

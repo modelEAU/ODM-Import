@@ -7,6 +7,33 @@ from geojson_rewind import rewind
 from geomet import wkt
 
 
+def get_midpoint_time(date1, date2):
+    if pd.isna(date1) or pd.isna(date2):
+        return pd.NaT
+    return date1 + (date2 - date1)/2
+
+
+def get_plot_datetime(df):
+    # grb -> "dateTime"
+    # ps and cp -> if start and end are present: midpoint
+    # ps and cp -> if only end is present: end
+    df["Sample.plotDate"] = pd.NaT
+    grb_filt = df["Sample.collection"].str.contains("grb")
+    s_filt = ~df["Sample.dateTimeStart"].isna()
+    e_filt = ~df["Sample.dateTimeEnd"].isna()
+
+    df.loc[grb_filt, "Sample.plotDate"] = df.loc[grb_filt, "Sample.dateTime"]
+    df.loc[s_filt & e_filt, "Sample.plotDate"] = df.apply(
+        lambda row: get_midpoint_time(
+            row["Sample.dateTimeStart"], row["Sample.dateTimeEnd"]
+        ),
+        axis=1
+    )
+    df.loc[
+        e_filt & ~s_filt, "Sample.plotDate"] = df.loc[
+            e_filt & ~s_filt, "Sample.dateTimeEnd"]
+    return df["Sample.plotDate"]
+
 def reduce_dt(x, y):
     if pd.isna(x) and pd.isna(y):
         return pd.NaT

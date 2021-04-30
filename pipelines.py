@@ -6,6 +6,7 @@ import argparse
 import shutil
 
 from wbe_odm import odm
+from wbe_odm import utilities
 from wbe_odm.odm_mappers import mcgill_mapper, csv_mapper, ledevoir_mapper
 
 import json
@@ -41,7 +42,7 @@ def make_point_feature(row, props_to_add):
 def get_latest_sample_date(df):
     if len(df) == 0:
         return pd.NaT
-    df["plotDate"] = get_plot_datetime(df)
+    df["plotDate"] = utilities.get_plot_datetime(df)
     df = df.sort_values(by="plotDate")
     return df.iloc[-1, df.columns.get_loc("plotDate")]
 
@@ -92,34 +93,6 @@ def get_viral_measures(df):
         cols_to_remove.append(col)
     df.drop(columns=cols_to_remove, inplace=True)
     return df
-
-
-def get_midpoint_time(date1, date2):
-    if pd.isna(date1) or pd.isna(date2):
-        return pd.NaT
-    return date1 + (date2 - date1)/2
-
-
-def get_plot_datetime(df):
-    # grb -> "dateTime"
-    # ps and cp -> if start and end are present: midpoint
-    # ps and cp -> if only end is present: end
-    df["Sample.plotDate"] = pd.NaT
-    grb_filt = df["Sample.collection"].str.contains("grb")
-    s_filt = ~df["Sample.dateTimeStart"].isna()
-    e_filt = ~df["Sample.dateTimeEnd"].isna()
-
-    df.loc[grb_filt, "Sample.plotDate"] = df.loc[grb_filt, "Sample.dateTime"]
-    df.loc[s_filt & e_filt, "Sample.plotDate"] = df.apply(
-        lambda row: get_midpoint_time(
-            row["Sample.dateTimeStart"], row["Sample.dateTimeEnd"]
-        ),
-        axis=1
-    )
-    df.loc[
-        e_filt & ~s_filt, "Sample.plotDate"] = df.loc[
-            e_filt & ~s_filt, "Sample.dateTimeEnd"]
-    return df["Sample.plotDate"]
 
 
 def get_site_list(sites):
@@ -318,7 +291,7 @@ def get_site_geoJSON(
         site_name,
         dateStart=None,
         dateEnd=None,):
-    combined["Sample.plotDate"] = get_plot_datetime(combined)
+    combined["Sample.plotDate"] = utilities.get_plot_datetime(combined)
     sites["samples_for_site"] = sites.apply(
         lambda row: get_samples_for_site(row["siteID"], combined),
         axis=1)
@@ -379,7 +352,7 @@ def build_polygon_geoJSON(polygons, output_dir, name, types=None):
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-cty', '--cities', nargs="+", default=None, help='Cities to load data from')  # noqa
+    parser.add_argument('-cty', '--cities', nargs="+", default=["qc", "mtl"], help='Cities to load data from')  # noqa
     parser.add_argument('-st', '--sitetypes', nargs="+", default=["wwtp"], help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
@@ -405,14 +378,14 @@ if __name__ == "__main__":
     if reload:
         if "qc" in cities:
             qc_lab = mcgill_mapper.McGillMapper()
-            qc_lab.read(QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, QC_VIRUS_LAB)  # noqa
+            qc_lab.read(QC_LAB_DATA, STATIC_DATA, QC_SHEET_NAME, QC_VIRUS_LAB)  # noqa
             store.append_from(qc_lab)
 
         if "mtl" in cities:
             mcgill_lab = mcgill_mapper.McGillMapper()
             poly_lab = mcgill_mapper.McGillMapper()
-            mcgill_lab.read(MTL_LAB_DATA, MTL_STATIC_DATA, MTL_MCGILL_SHEET_NAME, MCGILL_VIRUS_LAB)  # noqa
-            poly_lab.read(MTL_LAB_DATA, MTL_STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
+            mcgill_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_MCGILL_SHEET_NAME, MCGILL_VIRUS_LAB)  # noqa
+            poly_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
 

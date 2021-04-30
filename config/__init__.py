@@ -44,12 +44,12 @@ STR_NO = [
 
 DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
 CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
-QC_STATIC_DATA = os.path.join(DATA_FOLDER, "CentrEAU-COVID_Static_Data")  # noqa
+STATIC_DATA = os.path.join(DATA_FOLDER, "CentrEAU-COVID_Static_Data.xlsx")  # noqa
+
 QC_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
 QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
 QC_VIRUS_LAB = "frigon_lab"
 
-MTL_STATIC_DATA = os.path.join(DATA_FOLDER, "CentrEAU-COVID_Static_Data")  # noqa
 MTL_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Montreal_final.xlsx")  # noqa
 MTL_POLY_SHEET_NAME = "Mtl Data Daily Samples (Poly)"
 MTL_MCGILL_SHEET_NAME = "Mtl Data Daily Samples (McGill)"

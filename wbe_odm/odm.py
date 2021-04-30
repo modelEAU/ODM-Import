@@ -9,8 +9,7 @@ from shapely import wkt
 from shapely.geometry import Point
 
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, mcgill_mapper, ledevoir_mapper
-
+from wbe_odm.odm_mappers import base_mapper, csv_mapper
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
 # instead of on the data itself.
@@ -279,7 +278,7 @@ class Odm:
             ]
         )
 
-        df = df.groupby("cphdID").agg(utilities.reduce_by_type)
+        df = df.groupby("dateTime").agg(utilities.reduce_by_type)
         df.reset_index(inplace=True)
         df = df.add_prefix("CPHD.")
         return df
@@ -377,6 +376,7 @@ class Odm:
                 }
                 geo["features"].append(new_feature)
         return geo
+
 
     def combine_per_sample(self) -> pd.DataFrame:
         """Combines data from all tables containing sample-related information
@@ -538,7 +538,7 @@ class Odm:
 
             merged["temp_point"] = merged.apply(
                 lambda row: Point(
-                    row["Site.geoLat"], row["Site.geoLong"]
+                    row["Site.geoLong"], row["Site.geoLat"]
                 ), axis=1)
 
             polygons["shape"] = polygons["Polygon.wkt"].apply(
@@ -548,7 +548,7 @@ class Odm:
             merged.drop(["temp_point"], axis=1, inplace=True)
             return merged
 
-        def combine_cphd_by_polygon(
+        def combine_cphd_with_samples(
             sample: pd.DataFrame,
             cphd: pd.DataFrame
                 ) -> pd.DataFrame:
@@ -569,6 +569,17 @@ class Odm:
                 Combined DataFrame containing bnoth sample data and public
                 health data.
             """
+            def remove_irrelevant_cphd(row, cphd_val_cols):
+                relevant_polys = str(row["polygonIDs"]).split(";")
+                for col in cphd_val_cols:
+                    cols_to_clean = cphd_val_cols.copy()
+                    for poly_name in relevant_polys:
+                        if poly_name in col:
+                            continue
+                        cols_to_clean.append(col)
+                    row[cols_to_clean] = np.nan
+                return row
+
             # right now this merge hasn't been developped
             # we have to cphd data just yet
             if sample.empty and cphd.empty:
@@ -578,13 +589,21 @@ class Odm:
             elif cphd.empty:
                 return sample
 
-            return pd.merge(
+            sample["Sample.plotDate"] = utilities.get_plot_datetime(sample)
+            sample.dropna(subset=["Sample.plotDate"], inplace=True)
+            sample.sort_values("Sample.plotDate", inplace=True)
+            cphd["CPHD.dateTime"] = pd.to_datetime(cphd["CPHD.dateTime"])
+            cphd.sort_values("CPHD.dateTime", inplace=True)
+            max_delta = pd.to_timedelta("24 hours")
+            merged = pd.merge_asof(
                 sample,
-                site,
-                how="left",
-                left_on="Sample.siteID",
-                right_on="Site.siteID")
-
+                cphd,
+                left_on="Sample.plotDate",
+                right_on="CPHD.dateTime",
+                tolerance=max_delta)
+            cphd_value_cols = [col for col in merged if "cphd" in col.lower() and "value" in col]
+            # merged = merged.apply(lambda row: remove_irrelevant_cphd(row, cphd_value_cols), axis=1)
+            return merged
         # __________
         # Actual logic of the funciton
         ww_measure = self._parse_ww_measure()
@@ -602,8 +621,8 @@ class Odm:
         polygons = self._parse_polygon()
         merged = combine_polygons_per_sample(merged, polygons)
 
-        # cphd = self._parse_cphd()
-        # merged = combine_cphd_by_polygon(merged, cphd)
+        cphd = self._parse_cphd()
+        merged = combine_cphd_with_samples(merged, cphd)
 
         merged.set_index("Sample.sampleID", inplace=True)
         merged.drop_duplicates(keep="first", inplace=True)
@@ -721,20 +740,10 @@ def destroy_db(filepath):
 
 
 if __name__ == "__main__":
-    # CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
-    # mapper = csv_mapper.CsvMapper()
-    # mapper.read(CSV_FOLDER)
+    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
+    mapper = csv_mapper.CsvMapper()
+    mapper.read(CSV_FOLDER)
     store = Odm()
-    # ldm = ledevoir_mapper.LeDevoirMapper()
-    # ldm.read()
-    DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
-    mapper = mcgill_mapper.McGillMapper()
-    QC_STATIC_DATA = os.path.join(DATA_FOLDER, "Ville de Quebec - All data - v1.1.xlsx")  # noqa
-    QC_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
-    QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
-    mapper.read(
-        QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, "frigon_lab"
-    )
     store.load_from(mapper)
     samples = store.combine_per_sample()
     print("?")

@@ -109,8 +109,7 @@ def get_sample_type(sample_type):
         "pefflu", "ssludge", "sefflu",
         "water", "faeces", "rawww", ""
     ]"""
-    sample_type = sample_type.str.strip()
-        # .str.lower()
+    sample_type = sample_type.str.strip().str.lower()
     return sample_type
 
 
@@ -258,10 +257,16 @@ def get_children_samples(pooled, sample_date):
     return df["children_ids"]
 
 
+def clean_labels(label):
+    parts = str(label).lower().split("_")
+    parts = [part.strip() for part in parts]
+    return "_".join(parts)
+
+
 def get_sample_id(label_id, sample_date, spike_batch, lab_id, sample_index):
     # TODO: Deal with index once it's been implemented in McGill sheet
     clean_date = str_date_from_timestamp(sample_date)
-    clean_label = label_id.str.lower()
+    clean_label = label_id.apply(lambda x: clean_labels(x))
     if lab_id == "modeleau_lab":
         clean_label = clean_label.str.replace("raw", "pstgrit")
     df = pd.concat([clean_label, clean_date, spike_batch], axis=1)
@@ -373,6 +378,10 @@ def validate_fraction_analyzed(series):
     return series
 
 
+def validate_value(values):
+    return pd.to_numeric(values, errors="coerce")
+
+
 processing_functions = {
     "get_grab_date": get_grab_date,
     "get_start_date": get_cp_start_date,
@@ -394,6 +403,8 @@ processing_functions = {
     "get_field_sample_temp": get_field_sample_temp,
     "get_shipped_on_ice": get_shipped_on_ice,
     "validate_fraction_analyzed": validate_fraction_analyzed,
+    "validate_value": validate_value,
+
 }
 
 
@@ -642,7 +653,7 @@ class McGillMapper(base_mapper.BaseMapper):
 if __name__ == "__main__":
     mapper = McGillMapper()
     lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/mcgill_static.xlsx"
+    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/mcgill_static.xlsx"  # noqa
     sheet_name = "QC Data Daily Samples (McGill)"
     lab_id = "frigon_lab"
     mapper.read(lab_data,

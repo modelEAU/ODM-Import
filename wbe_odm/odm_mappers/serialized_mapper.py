@@ -33,6 +33,7 @@ class SerializedMapper(base_mapper.BaseMapper):
             odm_table_name = self.conversion_dict[key]['odm_name']
             df = self.type_cast_table(odm_table_name, df)
             setattr(self, key, df)
+        self.remove_duplicates()
         return
 
     def decode_object(self, o):
@@ -42,8 +43,8 @@ class SerializedMapper(base_mapper.BaseMapper):
             return None
 
         elif '__DataFrame__' in o:
-            a = pd.read_json(o['__DataFrame__'], orient='split')
-            return(a)
+            return pd.read_json(o['__DataFrame__'], orient='split')
+
         elif '__Timestamp__' in o:
             return pd.to_datetime(o['__Timestamp__'], utc=None)
         else:

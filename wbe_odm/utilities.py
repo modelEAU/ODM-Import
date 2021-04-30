@@ -10,21 +10,21 @@ from geomet import wkt
 def reduce_dt(x, y):
     if pd.isna(x) and pd.isna(y):
         return pd.NaT
-    elif pd.isna(x) and not pd.isna(y):
+    elif pd.isna(x):
         return y
-    elif not pd.isna(x) and pd.isna(y):
+    elif not pd.isna(y):
         return x
-    else:
-        return pd.NaT
+    return pd.NaT
 
 
 def reduce_text(x, y):
     if x is None and y is None:
         return ""
-    if x is None:
+    elif x is None:
         return y
-    if y is None:
+    elif y is None:
         return x
+
     if x == "" and y == "":
         return ""
     elif x == "":
@@ -38,12 +38,11 @@ def reduce_text(x, y):
 def reduce_nums(x, y):
     if pd.isna(x) and pd.isna(y):
         return np.nan
-    elif pd.isna(x) and not pd.isna(y):
+    elif pd.isna(x):
         return y
-    elif not pd.isna(x) and pd.isna(y):
+    elif pd.isna(y):
         return x
-    else:
-        return x+y/2
+    return x+y/2
 
 
 def reduce_by_type(series):
@@ -81,7 +80,8 @@ def get_data_types():
         .replace("boolean", "bool") \
         .replace("float", "float64") \
         .replace("integer", "int64") \
-        .replace("blob", "object")
+        .replace("blob", "object") \
+        .replace("category", "string")
 
     return variables\
         .groupby("tableName")[['variableName', 'variableType']] \

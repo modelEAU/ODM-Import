@@ -66,6 +66,7 @@ class ExcelTemplateMapper(base_mapper.BaseMapper):
             df = self.type_cast_table(odm_name, df)
             df.drop_duplicates(keep="first", inplace=True)
             setattr(self, attribute, df)
+        self.remove_duplicates()
         return
 
     def validates(self):

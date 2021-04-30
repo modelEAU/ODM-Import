@@ -123,6 +123,7 @@ class VdQPlantMapper(mcm.McGillMapper):
         site_measure.dropna(subset=["value"], inplace=True)
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
+        self.remove_duplicates()
         return
 
 
@@ -148,6 +149,7 @@ class VdQSensorsMapper(mcm.McGillMapper):
         site_measure = site_measure.dropna(subset=["value"])
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
+        self.remove_duplicates()
         return
 
 

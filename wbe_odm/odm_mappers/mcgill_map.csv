@@ -376,7 +376,7 @@ SARS-CoV-2 gc/ml,WWMeasure,analysisDate,,lab sheet,AI,
 SARS-CoV-2 gc/ml,WWMeasure,reportDate,,,,
 SARS-CoV-2 gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
 SARS-CoV-2 gc/ml,WWMeasure,type,covN2,,,
-SARS-CoV-2 gc/ml,WWMeasure,value,,lab sheet,BK,validate_value
+SARS-CoV-2 gc/ml,WWMeasure,value,,lab sheet,BJ,validate_value
 SARS-CoV-2 gc/ml,WWMeasure,unit,gc/ml,,,
 SARS-CoV-2 gc/ml,WWMeasure,aggregation,single,,,
 SARS-CoV-2 gc/ml,WWMeasure,index,1,,,

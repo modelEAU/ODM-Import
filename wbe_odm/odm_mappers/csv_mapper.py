@@ -12,12 +12,12 @@ class CsvMapper(base_mapper.BaseMapper):
         name = file_name.partition(".")[0]
         acceptable_names = self.get_odm_names()
         return name in acceptable_names
-    
+
     def get_odm_name_from_file_name(self, file_name):
         if "_" in file_name:
             file_name = file_name.partition("_")[-1]
         return file_name.partition(".")[0]
-        
+
     def read(
         self,
         directory,
@@ -49,6 +49,7 @@ class CsvMapper(base_mapper.BaseMapper):
                 if dico["odm_name"] == odm_name:
                     setattr(self, attribute, df)
                     break
+        self.remove_duplicates()
         return
 
     def validates(self):

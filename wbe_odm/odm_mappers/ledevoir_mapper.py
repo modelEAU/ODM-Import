@@ -131,3 +131,5 @@ class LeDevoirMapper(mcm.McGillMapper):
         cphd.drop_duplicates(keep="first", inplace=True)
         cphd = self.type_cast_table("CovidPublicHealthData", cphd)
         self.cphd = cphd
+        self.remove_duplicates()
+        return

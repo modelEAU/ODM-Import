@@ -139,6 +139,20 @@ class BaseMapper(ABC):
     def validates(self):
         pass
 
+    def remove_duplicates(self):
+        for attribute, dico in self.conversion_dict.items():
+            value = self.conversion_dict[attribute]
+            table_name = dico["odm_name"]
+            if not isinstance(value, pd.DataFrame):
+                return pd.DataFrame(
+                    columns=utilities.get_table_fields(table_name))
+            if value.empty:
+                return pd.DataFrame(
+                    columns=utilities.get_table_fields(table_name))
+            return value.drop_duplicates(
+                keep="first", ignore_index=True
+            )
+
     def type_cast_table(self, odm_name, df):
         return df.apply(
                 lambda x: parse_types(odm_name, x),

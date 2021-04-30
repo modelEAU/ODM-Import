@@ -269,6 +269,7 @@ class ModelEauMapper(base_mapper.BaseMapper):
         df.drop_duplicates(keep="first", inplace=True)
         self.sample = get_samples_from_lab_sheet(df)
         self.ww_measure = get_measurements_from_lab_sheet(df)
+        self.remove_duplicates()
         return
 
     def validates(self):

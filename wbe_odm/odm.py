@@ -9,7 +9,7 @@ from shapely import wkt
 from shapely.geometry import Point
 
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, csv_mapper, ledevoir_mapper
+from wbe_odm.odm_mappers import base_mapper, csv_mapper, ledevoir_mapper, mcgill_mapper
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -58,7 +58,7 @@ class Odm:
         self.polygon = polygon
         self.cphd = cphd
 
-    def __default_value_by_dtype(
+    def _default_value_by_dtype(
         self, dtype: str
             ):
         """gets you a default value of the correct data type to create new
@@ -82,12 +82,21 @@ class Odm:
         }
         return null_values.get(dtype, np.nan)
 
-    def __widen(
-        self,
-        df: pd.DataFrame,
-        features: list[str],
-        qualifiers: list[str]
-            ) -> pd.DataFrame:
+    def clean_qualifier_columns(self, df, qualifiers):
+        if df.empty:
+            return df
+        for qualifier in qualifiers:
+            filt1 = df[qualifier].isna()
+            filt2 = df[qualifier] == ""
+            df.loc[filt1 | filt2, qualifier] = f"unknown-{qualifier}"
+            df[qualifier] = df[qualifier].str.replace("/", "-")
+            if qualifier == "qualityFlag":
+                df[qualifier] = df[qualifier].str\
+                    .replace("True", "quality-issue")\
+                    .replace("False", "no-quality-issue")
+        return df
+
+    def widen(self, df, features, qualifiers):
         """Takes important characteristics inside a table (features) and
         creates new columns to store them based on the value of other columns
         (qualifiers).
@@ -110,53 +119,21 @@ class Odm:
         """
         if df.empty:
             return df
-        df_copy = df.copy(deep=True)
-
-        for feature in features:
-            for i, row in df_copy.iterrows():
-                qualifying_values = []
-                for qualifier in qualifiers:
-                    qualifier_value = row[qualifier]
-                    # First, we need to replace some characters that can't be
-                    #  present in pandas column names
-                    qualifier_value = str(qualifier_value).replace("/", "-")
-
-                    # qualityFlag is boolean, but it's value can be confusing
-                    # if read without context, so "True" is replaced by
-                    # "quality issue"
-                    # and "False" by "no quality issue"
-                    if qualifier == "qualityFlag":
-                        qualifier_value = qualifier_value\
-                            .replace("True", "quality_issue")\
-                            .replace("False", "no_issue")
-                    if qualifier_value == "":
-                        qualifier_value = f"unknown-{qualifier}"
-                    qualifying_values.append(qualifier_value)
-                # Create a single qualifying string to append to the column
-                # name
-                qualifying_text = ".".join(qualifying_values)
-
-                # get the actual value we want to place in a column
-                feature_value = row[feature]
-
-                # Get the full feature name
-                feature_name = ".".join([qualifying_text, feature])
-
-                # Save the dtype of the original feature
-                feature_dtype = df[feature].dtype
-
-                # if the column hasn't been created yet, initialize it
-                if feature_name not in df.columns:
-                    df[feature_name] = None
-                    # df[feature_name] = df[feature_name].astype(feature_dtype)
-
-                # Set the value in the new column
-                df.loc[i, feature_name] = feature_value
-        # Now that the information has been laid out in columns, the original
-        # columns are redundant so they are deleted.
-        columns_to_delete = features + qualifiers
-        df.drop(columns=columns_to_delete, inplace=True)
+        df = self.clean_qualifier_columns(df, qualifiers)
+        for qualifier in qualifiers:
+            df[qualifier] = df[qualifier].astype(str)
+        df["col_qualifiers"] = df[qualifiers].agg("_".join, axis=1)
+        unique_col_qualifiers = df["col_qualifiers"].unique()
+        for col_qualifier in unique_col_qualifiers:
+            for feature in features:
+                col_name = "_".join([col_qualifier, feature])
+                df[col_name] = np.nan
+                filt = df["col_qualifiers"] == col_qualifier
+                df.loc[filt, col_name] = df.loc[filt, feature]
+        df.drop(columns=features+qualifiers, inplace=True)
+        df.drop(columns=["col_qualifiers"], inplace=True)
         return df
+
 
     def __remove_access(self, df: pd.DataFrame) -> pd.DataFrame:
         """removes all columns that set access rights
@@ -177,7 +154,7 @@ class Odm:
         return df.drop(columns=to_remove)
 
     # Parsers to go from the standard ODM tables to a unified samples table
-    def __parse_ww_measure(self) -> pd.DataFrame:
+    def _parse_ww_measure(self) -> pd.DataFrame:
         """Prepares the WWMeasure Table for merging with
         the samples table to analyzer the data on a per-sample basis
 
@@ -192,21 +169,17 @@ class Odm:
         df = self.ww_measure
         if df.empty:
             return df
-        # Breaking change in ODM. This line find the correct name
-        # for the assayMethod ID column.
-        assay_col = "assayID" if "assayID" in df.columns.to_list() \
-            else "assayMethodID"
 
         df = self.__remove_access(df)
-        df = self.__widen(
+        df = self.widen(
             df,
             features=[
                 "value",
-                "analysisDate",
-                "reportDate",
-                "notes",
-                "qualityFlag",
-                assay_col
+                # "analysisDate",
+                # "reportDate",
+                # "notes",
+                # "qualityFlag",
+                # assay_col
             ],
             qualifiers=[
                 "fractionAnalyzed",
@@ -219,16 +192,16 @@ class Odm:
         df = df.add_prefix("WWMeasure.")
         return df
 
-    def __parse_site_measure(self) -> pd.DataFrame:
+    def _parse_site_measure(self) -> pd.DataFrame:
         df = self.site_measure
         if df.empty:
             return df
         df = self.__remove_access(df)
-        df = self.__widen(
+        df = self.widen(
             df,
             features=[
                 "value",
-                "notes",
+                # "notes",
             ],
             qualifiers=[
                 "type",
@@ -245,7 +218,7 @@ class Odm:
         df = df.add_prefix("SiteMeasure.")
         return df
 
-    def __parse_sample(self) -> pd.DataFrame:
+    def _parse_sample(self) -> pd.DataFrame:
         df = self.sample
         if df.empty:
             return df
@@ -270,41 +243,35 @@ class Odm:
                     new_row = df.iloc[i].copy()
                     new_row["siteID"] = site_id
                     df = df.append(new_row, ignore_index=True)
-        # I will be copying sample.dateTime over to sample.dateTimeStart and
-        #  sample.dateTimeEnd so that grab samples are seen in visualizations
-        df["dateTimeStart"] = df["dateTimeStart"].fillna(df["dateTime"])
-        df["dateTimeEnd"] = df["dateTimeEnd"].fillna(df["dateTime"])
-
-        df.drop(columns=["dateTime"], inplace=True)
 
         df = df.add_prefix("Sample.")
         return df
 
-    def __parse_site(self) -> pd.DataFrame:
+    def _parse_site(self) -> pd.DataFrame:
         df = self.site
         if df.empty:
             return df
         df = df.add_prefix("Site.")
         return df
 
-    def __parse_polygon(self) -> pd.DataFrame:
+    def _parse_polygon(self) -> pd.DataFrame:
         df = self.polygon
         if df.empty:
             return df
         df = df.add_prefix("Polygon.")
         return df
 
-    def __parse_cphd(self) -> pd.DataFrame:
+    def _parse_cphd(self) -> pd.DataFrame:
         df = self.cphd
         if df.empty:
             return df
         df = self.__remove_access(df)
-        df = self.__widen(
+        df = self.widen(
             df,
             features=[
                 "value",
-                "dateTime",
-                "notes"
+                # "dateTime",
+                # "notes"
             ],
             qualifiers=[
                 "polygonID",
@@ -330,7 +297,8 @@ class Odm:
         """
         validates = True if isinstance(mapper, Odm) else mapper.validates()
         if not validates:
-            return
+            raise ValueError("mapper object contains invalid data")
+
         self_attrs = self.__dict__
         for attr, current_df in self_attrs.items():
             new_df = getattr(mapper, attr)
@@ -339,13 +307,9 @@ class Odm:
             elif new_df is None or new_df.empty:
                 continue
             else:
-                primary_key = base_mapper.BaseMapper\
-                    .conversion_dict[attr]["primary_key"]
                 try:
-                    combined = current_df.append(
-                        new_df).drop_duplicates(
-                            subset=[primary_key]
-                        )
+                    combined = current_df.append(new_df)\
+                        .drop_duplicates(keep="first", ignore_index=True)
                     setattr(self, attr, combined)
                 except Exception as e:
                     setattr(self, attr, current_df)
@@ -368,23 +332,32 @@ class Odm:
             for key in self_attrs.keys():
                 if key not in mapper_attrs:
                     continue
-                self_attrs[key] = mapper_attrs[key]
+                new_df = mapper_attrs[key]
+                self_attrs[key] = new_df.drop_duplicates(
+                    keep="first", ignore_index=True)
 
-    def get_geoJSON(self) -> dict:
-        """Transforms the polygon Table into a geoJSON-like Python dictionary
-        to facilitate mapping with Ploty and Dash.
+    def get_geoJSON(self, types=None) -> dict:
+        """[summary]
 
-        Returns
-        -------
-        dict
-            FeatureCollection dict with every defined polygon in the polygon
-            table.
+        Args:
+            types ([type], optional): The types of polygons we want to plot.
+            Defaults to None, which actually takes everything.
+
+        Returns:
+            dict: [description]
         """
         geo = {
             "type": "FeatureCollection",
             "features": []
         }
         polygon_df = self.polygon
+        if types is not None:
+            if isinstance(types, str):
+                types = [types]
+            types = [type_.lower() for type_ in types]
+            polygon_df = polygon_df.loc[
+                polygon_df["type"].str.lower().isin(types)
+            ].copy()
         for col in polygon_df.columns:
             is_cat = polygon_df[col].dtype.name == "category"
             polygon_df[col] = polygon_df[col] if is_cat \
@@ -426,7 +399,7 @@ class Odm:
             ----------
             ww : pd.DataFrame
                 The dataframe to rearrange. This dataframe should have gone
-                through the __parse_ww_measure funciton before being passed in
+                through the _parse_ww_measure funciton before being passed in
                 here. This is to ensure that categorical columns have been
                 spread out.
 
@@ -558,7 +531,8 @@ class Odm:
 
             def get_encompassing_polygons(row, poly):
                 poly["contains"] = poly["shape"].apply(
-                    lambda x: x.contains(row["temp_point"]) if x is not None else False)
+                    lambda x: x.contains(row["temp_point"])
+                    if x is not None else False)
                 poly_ids = poly[
                     "Polygon.polygonID"].loc[poly["contains"]].to_list()
                 return ";".join(poly_ids)
@@ -614,22 +588,22 @@ class Odm:
 
         # __________
         # Actual logic of the funciton
-        ww_measure = self.__parse_ww_measure()
+        ww_measure = self._parse_ww_measure()
         ww_measure = agg_ww_measure_per_sample(ww_measure)
 
-        sample = self.__parse_sample()
+        sample = self._parse_sample()
         merged = combine_ww_measure_and_sample(ww_measure, sample)
 
-        site_measure = self.__parse_site_measure()
+        site_measure = self._parse_site_measure()
         merged = combine_sample_site_measure(merged, site_measure)
 
-        site = self.__parse_site()
+        site = self._parse_site()
         merged = combine_site_sample(merged, site)
 
-        polygons = self.__parse_polygon()
+        polygons = self._parse_polygon()
         merged = combine_polygons_per_sample(merged, polygons)
 
-        # cphd = self.__parse_cphd()
+        # cphd = self._parse_cphd()
         # merged = combine_cphd_by_polygon(merged, cphd)
 
         merged.set_index("Sample.sampleID", inplace=True)
@@ -748,13 +722,27 @@ def destroy_db(filepath):
 
 
 if __name__ == "__main__":
-    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"
+    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
     mapper = csv_mapper.CsvMapper()
     mapper.read(CSV_FOLDER)
-    ldm = ledevoir_mapper.LeDevoirMapper()
-    ldm.read()
+    # ldm = ledevoir_mapper.LeDevoirMapper()
+    # ldm.read()
+    # DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
+    # mapper = mcgill_mapper.McGillMapper()
+    # QC_STATIC_DATA = os.path.join(DATA_FOLDER, "Ville de Quebec - All data - v1.1.xlsx")  # noqa
+    # QC_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
+    # QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
+    # mapper.read(
+    #     QC_LAB_DATA, QC_STATIC_DATA, QC_SHEET_NAME, "frigon_lab"
+    # )
     o = Odm()
     o.load_from(mapper)
-    o.append_from(ldm)
-    test = o.combine_per_sample()
-    test.to_csv("test_data.csv")
+    a = o.ww_measure.copy()
+    print(len(o.ww_measure))
+    o.append_from(mapper)
+    b = o.ww_measure.copy()
+    print(len(o.ww_measure))
+    print(a==b)
+    # o.append_from(ldm)
+    # test = o.combine_per_sample()
+    # test.to_csv("test_data.csv")

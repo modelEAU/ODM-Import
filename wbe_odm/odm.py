@@ -377,7 +377,6 @@ class Odm:
                 geo["features"].append(new_feature)
         return geo
 
-
     def combine_per_sample(self) -> pd.DataFrame:
         """Combines data from all tables containing sample-related information
         into a single DataFrame.
@@ -620,7 +619,6 @@ class Odm:
 
         polygons = self._parse_polygon()
         merged = combine_polygons_per_sample(merged, polygons)
-
         cphd = self._parse_cphd()
         merged = combine_cphd_with_samples(merged, cphd)
 

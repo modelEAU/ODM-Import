@@ -120,10 +120,10 @@ def get_sample_type(sample_type):
 
 
 def get_cp_start_date(start_col, end_col, sample_type):
-    def calc_start_date(row):
-        if pd.isna(row["end"]) or pd.isna(row["type"]):
+    def calc_start_date(end_date, type_):
+        if pd.isna(end_date) or pd.isna(type_):
             return pd.NaT
-        x = row["type"]
+        x = type_
         hours = None
         if re.match(r"cp[tf]p[0-9]+h", x):
             hours = int(x[4:-1])
@@ -131,12 +131,13 @@ def get_cp_start_date(start_col, end_col, sample_type):
             hours = int(x[2:-1])
         if hours is not None:
             interval = pd.to_timedelta(f"{hours}h")
-            return row["end"] - interval
+            return end_date - interval
         return pd.NaT
 
     df = pd.concat([start_col, end_col, sample_type], axis=1)
     df.columns = ["start", "end", "type"]
-    df["s"] = df.apply(lambda row: calc_start_date(row), axis=1)
+    df["s"] = df.apply(
+        lambda row: calc_start_date(row["end"], row["type"]), axis=1)
     return df["s"]
 
 
@@ -268,8 +269,7 @@ def get_sample_id(label_id, sample_date, spike_batch, lab_id, sample_index):
     # TODO: Deal with index once it's been implemented in McGill sheet
     clean_date = str_date_from_timestamp(sample_date)
     clean_label = label_id.apply(lambda x: clean_labels(x))
-    if lab_id == "modeleau_lab":
-        clean_label = clean_label.str.replace("raw", "pstgrit")
+
     df = pd.concat([clean_label, clean_date, spike_batch], axis=1)
     df["lab_id"] = lab_id
     df["index_no"] = str(sample_index) \
@@ -316,7 +316,6 @@ def get_wwmeasure_id(
     df["meas_type"] = meas_type
     df["index_no"] = str(index) if not isinstance(index, pd.Series) \
         else index.astype(str)
-    df["index_no"] = str(index)
     return df.agg("_".join, axis=1)
 
 

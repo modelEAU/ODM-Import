@@ -1,13 +1,12 @@
+import os
+import re
 import pandas as pd
 import datetime as dt
-from wbe_odm.odm_mappers import base_mapper
+from wbe_odm.odm_mappers import mcgill_mapper as mcm
 
 
-def replace_excel_dates(series):
-    return series.apply(
-        lambda x: pd.to_timedelta(x, unit='d') +
-        dt.datetime(1899, 12, 30) if isinstance(x, float) else x
-    )
+directory = os.path.dirname(__file__)
+MODELEAU_MAP_NAME = directory + "/" + "modeleau_map.csv"
 
 
 def clean_up(df):
@@ -19,222 +18,15 @@ def clean_up(df):
             df[col] = df[col].apply(lambda x: x.replace("*", "").strip())
         if "Unnamed" in col:
             del df[col]
+    df.drop_duplicates(keep="first", inplace=True)
     return df
 
 
-default_sample = {
-        "sampleID": None,
-        "siteID": None,
-        "instrumentID": None,
-        "reporterID": "MaryamTohidi",
-        "dateTime": None,
-        "dateTimeStart": None,
-        "dateTimeEnd": None,
-        "type": "pstGrit",
-        "collection": "cpTP24h",
-        "preTreatment": None,
-        "pooled": None,
-        "children": None,
-        "parent": None,
-        "sizeL": 1,
-        "index": 1,
-        "fieldSampleTempC": 4,
-        "shippedOnIce": "Yes",
-        "storageTempC": 4,
-        "qualityFlag": "NO",
-        "notes": "",
-    }
-
-default_measurement = {
-    # "WWMeasureID": None,
-    "WWMeasureID": None,
-    "reporterID": "MaryamTohidi",
-    "sampleID": None,
-    "labID": "ModelEau_lab",
-    "assayMethodID": None,
-    "analysisDate": None,
-    "reportDate": None,
-    "fractionAnalyzed": None,
-    "type": None,
-    "value": None,
-    "unit": None,
-    "aggregation": "single",
-    "index": 0,
-    "qualityFlag": "NO",
-    "accessToPublic": "YES",
-    "accessToAllOrg": "YES",
-    "accessToPHAC": "YES",
-    "accessToLocalHA": "YES",
-    "accessToProvHA": "YES",
-    "accessToOtherProv": "YES",
-    "accessToDetails": "YES",
-    "notes": None,
-}
-
-measurement_dico = {
-    "Turbidity": "wqTurb",
-    "covN1": "covN1",
-    "covN2": "covN2",
-    "covN3": "covN3",
-    "covE": "covE",
-    "covRdRp": "covRdRp",
-    "nPMMoV": "nPMMoV",
-    "nCrA": "nCrA",
-    "nBrsv": "nBrsv",
-    "TS": "wqTS",
-    "TSS": "wqTSS",
-    "VSS": "wqVSS",
-    "COD": "wqCOD",
-    "P": "wqOPhos",
-    "NH4": "wqNH4N",
-    "TN": "wqTN",
-    "pH": "wqPh",
-    "Conductivity": "wqCond",
-}
-
-
-def check_if_grab(row):
-    return pd.isna(row["Sample end date"]) or pd.isna(row["Sample start date"])
-
-
-def build_sample_id(measurement_sheet_row):
-    is_grab = check_if_grab(measurement_sheet_row)
-    if is_grab:
-        id_date = measurement_sheet_row["Date (enter end date here)"]
-    else:
-        id_date = measurement_sheet_row["Sample start date"]
-
-    id_date = id_date.strftime(r"%Y-%m-%d")
-
-    if "sampleType" in measurement_sheet_row:
-        sample_type = measurement_sheet_row["sampleType"]
-    else:
-        sample_type = default_sample["type"]
-
-    if "sampleIndex" in measurement_sheet_row:
-        sample_index = measurement_sheet_row["sampleIndex"]
-    else:
-        sample_index = default_sample["index"]
-
-    site_id = measurement_sheet_row["siteID"]
-    return ("_").join([site_id, id_date, sample_type, str(sample_index)])
-
-
-def build_measurement_id(measurement_sheet_row):
-    sample_id = build_sample_id(measurement_sheet_row)
-    lab_id = default_measurement["labID"]
-    measurement_type = measurement_dico[measurement_sheet_row["Measurement"]]
-    date = measurement_sheet_row["Analysis Date"].strftime(r"%Y-%m-%d")
-    if "measurementIndex" in measurement_sheet_row:
-        measurement_index = measurement_sheet_row["measurementIndex"]
-    else:
-        measurement_index = default_measurement["index"]
-    return ("_").join([
-        sample_id,
-        lab_id,
-        measurement_type,
-        date,
-        str(measurement_index)
-    ])
-
-
-def create_sample_row(row):
-    new_sample = default_sample.copy()
-    new_sample["sampleID"] = build_sample_id(row)
-    is_grab = check_if_grab(row)
-    if is_grab:
-        new_sample["dateTime"] = row["Date (enter end date here)"]
-    else:
-        new_sample["dateTimeEnd"] = row["Sample end date"]
-        new_sample["dateTimeStart"] = row["Sample start date"]
-
-    if "reporterID" in row:
-        new_sample["reporterID"] = row["reporterID"]
-    if "sampleIndex" in row:
-        new_sample["index"] = row["sampleIndex"]
-
-    new_sample["siteID"] = row["siteID"]
-
-    return pd.Series(new_sample)
-
-
-def reorder_sample_columns(df):
-    ordered_columns = [
-        "sampleID",
-        "siteID",
-        "instrumentID",
-        "reporterID",
-        "dateTime",
-        "dateTimeStart",
-        "dateTimeEnd",
-        "type",
-        "collection",
-        "preTreatment",
-        "pooled",
-        "children",
-        "parent",
-        "sizeL",
-        "index",
-        "fieldSampleTempC",
-        "shippedOnIce",
-        "storageTempC",
-        "qualityFlag",
-        "notes"
-    ]
-    return df[ordered_columns]
-
-
-def reorder_ww_measure_columns(df):
-    ordered_columns = [
-        "WWMeasureID",
-        "reporterID",
-        "sampleID",
-        "labID",
-        "assayMethodID",
-        "analysisDate",
-        "reportDate",
-        "fractionAnalyzed",
-        "type",
-        "value",
-        "unit",
-        "aggregation",
-        "index",
-        "qualityFlag",
-        "accessToPublic",
-        "accessToAllOrg",
-        "accessToPHAC",
-        "accessToLocalHA",
-        "accessToProvHA",
-        "accessToOtherProv",
-        "accessToDetails",
-        "notes"
-    ]
-    return df[ordered_columns]
-
-
-def get_samples_from_lab_sheet(df):
-    samples = df.apply(lambda x: create_sample_row(x), axis=1)
-    samples = samples.drop_duplicates()
-    samples.reset_index(drop=True, inplace=True)
-    samples = reorder_sample_columns(samples)
-    return samples
-
-
-def create_measurement_row(row):
-    new_measurement = default_measurement.copy()
-    new_measurement["sampleID"] = build_sample_id(row)
-    new_measurement["WWMeasureID"] = build_measurement_id(row)
-    new_measurement["analysisDate"] = row["Analysis Date"]
-    new_measurement["type"] = measurement_dico[row["Measurement"]]
-    new_measurement["value"] = row["Value"]
-    new_measurement["unit"] = row["Unit"]
-    new_measurement["fractionAnalyzed"] = row["fraction analyzed"]
-    new_measurement["qualityFlag"] = row["qualityFlag"]
-    new_measurement["notes"] = row["notes"]
-
-    if "index" in row:
-        new_measurement["index"] = row["index"]
-    return pd.Series(new_measurement)
+def replace_excel_dates(series):
+    return series.apply(
+        lambda x: pd.to_timedelta(x, unit='d') +
+        dt.datetime(1899, 12, 30) if isinstance(x, float) else x
+    )
 
 
 def edit_index_in_id(row):
@@ -253,34 +45,183 @@ def build_missing_indices(df):
     return df
 
 
-def get_measurements_from_lab_sheet(df):
-    measurements = df.apply(lambda x: create_measurement_row(x), axis=1)
-    measurements.reset_index(drop=True, inplace=True)
-    if len(measurements.loc[measurements["index"] == 0]) > 0:
-        measurements = build_missing_indices(measurements)
-    measurements = reorder_ww_measure_columns(measurements)
-    return measurements
+def break_down_labels(label, get):
+    city, site_no, collection, type_ = label.split("_")
+    if get == "siteID":
+        return ("_").join([city, site_no])
+    elif get == "collection":
+        return collection
+    elif get == "type":
+        return type_
+    raise ValueError(f"Item to get does not exist:{get}")
 
 
-class ModelEauMapper(base_mapper.BaseMapper):
-    def read(self, filepath, sheet_name):
-        df = pd.read_excel(filepath, sheet_name=sheet_name)
-        df = clean_up(df)
-        df.drop_duplicates(keep="first", inplace=True)
-        self.sample = get_samples_from_lab_sheet(df)
-        self.ww_measure = get_measurements_from_lab_sheet(df)
-        self.remove_duplicates()
+def get_site_id(labels):
+    return labels.apply(lambda x: break_down_labels(x, "type"))
+
+
+def is_grab(labels):
+    return labels.str.contains("grb")
+
+
+def get_grab_date(labels, raw_dates):
+    df = pd.concat([labels, raw_dates], axis=1)
+    df.columns = ["labels", "raw_dates"]
+    df["grb_dates"] = pd.NaT
+    filt = is_grab(df["labels"])
+    df.loc[filt, "grb_dates"] = df.loc[filt, "raw_dates"]
+    return pd.to_datetime(df["grb_dates"])
+
+
+def get_end_date(labels, raw_dates):
+    df = pd.concat([labels, raw_dates], axis=1)
+    df.columns = ["labels", "raw_dates"]
+    df["end_dates"] = pd.NaT
+    filt = is_grab(df["labels"])
+    df.loc[~filt, "end_dates"] = df.loc[~filt, "raw_dates"]
+    return pd.to_datetime(df["end_dates"])
+
+
+def get_cp_start_date(start_col, end_col, labels):
+    def calc_start_date(end_date, type_):
+        if pd.isna(end_date) or pd.isna(type_):
+            return pd.NaT
+        x = type_
+        hours = None
+        if re.match(r"cp[tf]p[0-9]+h", x, re.IGNORECASE):
+            hours = int(x[4:-1])
+        elif re.match(r"ps[0-9]+h", x, re.IGNORECASE):
+            hours = int(x[2:-1])
+        if hours is not None:
+            interval = pd.to_timedelta(f"{hours}h")
+            return end_date - interval
+        return pd.NaT
+
+    df = pd.concat([start_col, end_col, labels], axis=1)
+    df.columns = ["start", "end", "labels"]
+    df["collection"] = df.apply(
+        lambda row: break_down_labels(row["labels"], "collection"), axis=1)
+    df["s"] = df.apply(
+        lambda row: calc_start_date(row["end"], row["collection"]), axis=1)
+    return df["s"]
+
+
+def get_sample_type(labels):
+    return labels.apply(lambda x: break_down_labels(x, "type"))
+
+
+def get_collection_method(labels):
+    return labels.apply(lambda x: break_down_labels(x, "collection"))
+
+
+def get_measure_type(measures):
+    measure_dico = {
+        "Conductivity": "wqCond",
+        "Turbidity": "wqTurb",
+        "NH4": "wqNH4N",
+        "TS": "wqTS",
+        "TSS": "wqTSS",
+        "pH": "wqPh"
+    }
+    return measures.map(measure_dico)
+
+
+def get_wwmeasure_id(
+        label,
+        end_date,
+        sample_index,
+        lab_id,
+        type_,
+        analysis_date,
+        meas_index):
+    sample_id = get_sample_id(
+        label, end_date, sample_index
+    )
+    ana_date = mcm.str_date_from_timestamp(analysis_date)
+    df = pd.concat([sample_id, ana_date], axis=1)
+    df["meas_type"] = get_measure_type(type_)
+    df["lab_id"] = lab_id
+    df["index_no"] = str(meas_index) if not isinstance(meas_index, pd.Series) \
+        else meas_index.astype(str)
+    return df.agg("_".join, axis=1)
+
+
+def get_sample_id(label, end_date, sample_index):
+    # TODO: Deal with index once it's been implemented in McGill sheet
+    clean_date = mcm.str_date_from_timestamp(end_date)
+    clean_label = label.apply(lambda x: mcm.clean_labels(x))
+
+    df = pd.concat([clean_label, clean_date], axis=1)
+    df["index_no"] = str(sample_index) \
+        if not isinstance(sample_index, pd.Series) \
+        else sample_index.astype(str)
+    df.columns = [
+        "clean_label", "clean_date", "index_no"
+    ]
+    df["sample_ids"] = ""
+
+    df["sample_ids"] = df[[
+        "clean_label", "clean_date", "index_no"]].agg("_".join, axis=1)
+
+    return df["sample_ids"]
+
+
+def validate_fraction_analyzed(fracs):
+    fracs = fracs.str.lower()
+    fracs.loc[~fracs.isin(["mixed", "liquid", "solids"])] = ""
+    return fracs
+
+
+def validate_value(raw_values):
+    return pd.to_numeric(raw_values, errors="coerce")
+
+
+processing_functions = {
+    "get_sample_id": get_sample_id,
+    "get_site_id": get_site_id,
+    "get_grab_date": get_grab_date,
+    "get_start_date": get_cp_start_date,
+    "get_end_date": get_end_date,
+    "get_sample_type": get_sample_type,
+    "has_quality_flag": mcm.has_quality_flag,
+    "get_collection_method": get_collection_method,
+    "get_wwmeasure_id": get_wwmeasure_id,
+    "get_measure_type": get_measure_type,
+    "validate_fraction_analyzed": validate_fraction_analyzed,
+    "validate_value": validate_value,
+}
+
+
+class ModelEauMapper(mcm.McGillMapper):
+    def read(self, filepath, sheet_name,
+             modeleau_map=MODELEAU_MAP_NAME, lab_id="modeleau_lab"):
+        lab = pd.read_excel(filepath, sheet_name=sheet_name)
+        lab = clean_up(lab)
+        lab.columns = [
+            mcm.excel_style(i+1)
+            for i, _ in enumerate(lab.columns.to_list())
+        ]
+        mapping = pd.read_csv(modeleau_map)
+        mapping.fillna("", inplace=True)
+        mapping = mapping.astype(str)
+        static_data = self.read_static_data(None)
+        dynamic_tables = mcm.parse_sheet(
+            mapping,
+            static_data,
+            lab,
+            processing_functions,
+            lab_id
+        )
+        for table_name, table in dynamic_tables.items():
+            table = table.drop_duplicates(keep="first")
+            attr = self.get_attr_from_table_name(table_name)
+            setattr(self, attr, table)
         return
-
-    def validates(self):
-        return True
 
 
 if __name__ == "__main__":
-    path = "Data/Lab/modelEAU/COVIDProject_Lab Measurements.xlsx"
+    path = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/COVIDProject_Lab Measurements.xlsx"  # noqa
     sheet_name = "Lab analyses"
     mapper = ModelEauMapper()
     mapper.read(path, sheet_name)
-    mapper.ww_measure.to_excel("Data/Lab/modelEAU/to_paste_wwmeasure.xlsx")
-    mapper.sample.to_excel("Data/Lab/modelEAU/to_paste_sample.xlsx")
     print(mapper.ww_measure)

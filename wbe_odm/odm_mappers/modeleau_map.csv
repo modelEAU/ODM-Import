@@ -1,0 +1,43 @@
+﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+single,Sample,sampleID,,lab sheet,I;J;__const__1:int,get_sample_id
+single,Sample,siteID,,lab sheet,I,get_site_id
+single,Sample,instrumentID,,,,
+single,Sample,reporterID,MaryamTohidi,lab sheet,,
+single,Sample,dateTime,,lab sheet,I;J,get_grab_date
+single,Sample,dateTimeStart,,lab sheet,N;J;I,get_start_date
+single,Sample,dateTimeEnd,,lab sheet,I;J,get_end_date
+single,Sample,type,,lab sheet,I,get_sample_type
+single,Sample,collection,,lab sheet,I,get_collection_method
+single,Sample,preTreatment,,,,
+single,Sample,pooled,,lab sheet,,
+single,Sample,children,,lab sheet,,
+single,Sample,parent,,lab sheet,,
+single,Sample,sizeL,1,lab sheet,,
+single,Sample,index,1,,,
+single,Sample,fieldSampleTempC,4,lab sheet,,
+single,Sample,shippedOnIce,TRUE,lab sheet,,
+single,Sample,storageTempC,4,lab sheet,,
+single,Sample,qualityFlag,FALSE,lab sheet,,
+single,Sample,notes,,lab sheet,P,
+Measures,WWMeasure,wwMeasureID,,lab sheet,I;J;__const__1:int;__labID__;A;K;__const__1:str,get_wwmeasure_id
+Measures,WWMeasure,reporterID,MaryamTohidi,lab sheet,,
+Measures,WWMeasure,sampleID,,lab sheet,I;J;__const__1:int,get_sample_id
+Measures,WWMeasure,labID,,lab sheet,__labID__,
+Measures,WWMeasure,assayMethodID,,,,
+Measures,WWMeasure,analysisDate,,lab sheet,K,
+Measures,WWMeasure,reportDate,,,,
+Measures,WWMeasure,fractionAnalyzed,,lab sheet,B,validate_fraction_analyzed
+Measures,WWMeasure,type,,lab sheet,A,get_measure_type
+Measures,WWMeasure,value,,lab sheet,G,validate_value
+Measures,WWMeasure,unit,,,H,
+Measures,WWMeasure,aggregation,single,,,
+Measures,WWMeasure,index,,,,get_measure_index
+Measures,WWMeasure,qualityFlag,TRUE,lab sheet,,
+Measures,WWMeasure,accessToPublic,TRUE,lab sheet,,
+Measures,WWMeasure,accessToAllOrg,TRUE,lab sheet,,
+Measures,WWMeasure,accessToPHAC,TRUE,lab sheet,,
+Measures,WWMeasure,accessToLocalHA,TRUE,lab sheet,,
+Measures,WWMeasure,accessToProvHA,TRUE,lab sheet,,
+Measures,WWMeasure,accessToOtherProv,TRUE,lab sheet,,
+Measures,WWMeasure,accessToDetails,TRUE,lab sheet,,
+Measures,WWMeasure,notes,,lab sheet,P,

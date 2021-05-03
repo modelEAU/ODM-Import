@@ -34,6 +34,7 @@ def get_plot_datetime(df):
             e_filt & ~s_filt, "Sample.dateTimeEnd"]
     return df["Sample.plotDate"]
 
+
 def reduce_dt(x, y):
     if pd.isna(x) and pd.isna(y):
         return pd.NaT

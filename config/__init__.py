@@ -41,13 +41,22 @@ STR_NO = [
     'false'
 ]
 
+DEFAULT_START_DATE = "2021-01-01"
 
-DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data"  # noqa
+DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input"  # noqa
 CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
 STATIC_DATA = os.path.join(DATA_FOLDER, "CentrEAU-COVID_Static_Data.xlsx")  # noqa
 
-QC_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
-QC_SHEET_NAME = "QC Data Daily Samples (McGill)"
+QC_LAB_DATA = os.path.join(DATA_FOLDER, "COVIDProject_Lab Measurements.xlsx")  # noqa
+QC_SHEET_NAME = "Lab analyses"
+QC_LAB = "modeleau_lab"
+
+QC_CITY_SENSOR_FOLDER = "Qc_sensors"
+QC_CITY_PLANT_FOLDER = "Qc_plant"
+QC_CITY_RAIN_FOLDER = "Qc_rain"
+
+QC_VIRUS_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
+QC_VIRUS_SHEET_NAME = "QC Data Daily Samples (McGill)"
 QC_VIRUS_LAB = "frigon_lab"
 
 MTL_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Montreal_final.xlsx")  # noqa

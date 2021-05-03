@@ -1,24 +1,24 @@
 ﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
-single,Sample,sampleID,,lab sheet,I;J;__const__1:int,get_sample_id
-single,Sample,siteID,,lab sheet,I,get_site_id
-single,Sample,instrumentID,,,,
-single,Sample,reporterID,MaryamTohidi,lab sheet,,
-single,Sample,dateTime,,lab sheet,I;J,get_grab_date
-single,Sample,dateTimeStart,,lab sheet,N;J;I,get_start_date
-single,Sample,dateTimeEnd,,lab sheet,I;J,get_end_date
-single,Sample,type,,lab sheet,I,get_sample_type
-single,Sample,collection,,lab sheet,I,get_collection_method
-single,Sample,preTreatment,,,,
-single,Sample,pooled,,lab sheet,,
-single,Sample,children,,lab sheet,,
-single,Sample,parent,,lab sheet,,
-single,Sample,sizeL,1,lab sheet,,
-single,Sample,index,1,,,
-single,Sample,fieldSampleTempC,4,lab sheet,,
-single,Sample,shippedOnIce,TRUE,lab sheet,,
-single,Sample,storageTempC,4,lab sheet,,
-single,Sample,qualityFlag,FALSE,lab sheet,,
-single,Sample,notes,,lab sheet,P,
+Sample Info,Sample,sampleID,,lab sheet,I;J;__const__1:int,get_sample_id
+Sample Info,Sample,siteID,,lab sheet,I,get_site_id
+Sample Info,Sample,instrumentID,,,,
+Sample Info,Sample,reporterID,MaryamTohidi,,,
+Sample Info,Sample,dateTime,,lab sheet,I;J,get_grab_date
+Sample Info,Sample,dateTimeStart,,lab sheet,N;J;I,get_start_date
+Sample Info,Sample,dateTimeEnd,,lab sheet,I;J,get_end_date
+Sample Info,Sample,type,,lab sheet,I,get_sample_type
+Sample Info,Sample,collection,,lab sheet,I,get_collection_method
+Sample Info,Sample,preTreatment,,,,
+Sample Info,Sample,pooled,,lab sheet,,
+Sample Info,Sample,children,,lab sheet,,
+Sample Info,Sample,parent,,lab sheet,,
+Sample Info,Sample,sizeL,1,lab sheet,,
+Sample Info,Sample,index,1,,,
+Sample Info,Sample,fieldSampleTempC,4,lab sheet,,
+Sample Info,Sample,shippedOnIce,TRUE,lab sheet,,
+Sample Info,Sample,storageTempC,4,lab sheet,,
+Sample Info,Sample,qualityFlag,,lab sheet,P,has_quality_flag
+Sample Info,Sample,notes,,lab sheet,P,
 Measures,WWMeasure,wwMeasureID,,lab sheet,I;J;__const__1:int;__labID__;A;K;__const__1:str,get_wwmeasure_id
 Measures,WWMeasure,reporterID,MaryamTohidi,lab sheet,,
 Measures,WWMeasure,sampleID,,lab sheet,I;J;__const__1:int,get_sample_id

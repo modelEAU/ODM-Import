@@ -7,7 +7,8 @@ import shutil
 
 from wbe_odm import odm
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import mcgill_mapper, csv_mapper, ledevoir_mapper
+from wbe_odm.odm_mappers import mcgill_mapper, csv_mapper,\
+    ledevoir_mapper, modeleau_mapper, vdq_mapper
 
 import json
 from datetime import datetime, timedelta
@@ -154,7 +155,6 @@ def get_viral_timeseries(samples):
 def normalize_by_pmmv(df):
     div = df["sars"] / df["pmmov"]
     div = div.replace([np.inf], np.nan)
-
     return div[~div.isna()]
 
 
@@ -163,9 +163,6 @@ def build_empty_color_ts(date_range):
     df.columns = ["last_sunday"]
     df["norm"] = np.nan
     return df
-
-
-DEFAULT_START_DATE = pd.to_datetime("2021-01-01")
 
 
 def get_n_bins(series, all_colors):
@@ -179,6 +176,7 @@ def get_n_bins(series, all_colors):
 
 
 def get_color_ts(samples, dateStart=DEFAULT_START_DATE, dateEnd=None):
+    dateStart = pd.to_datetime(dateStart)
     weekly = None
     if samples is not None:
         viral = get_viral_timeseries(samples)
@@ -222,7 +220,7 @@ def get_color_ts(samples, dateStart=DEFAULT_START_DATE, dateEnd=None):
     return pd.Series(result["signal_strength"]).to_dict()
 
 
-def get_clean_type(types):
+def get_website_type(types):
     site_types = {
         "wwtpmuc": "Station de traitement des eaux usées municipale pour égouts combinés",  # noqa
         "pstat": "Station de pompage",
@@ -268,7 +266,7 @@ def get_municipality(ids):
     return city_id.map(municipalities)
 
 
-def clean_collection_method(cm):
+def website_collection_method(cm):
     collection = {
         "cp": {
             "french": "Composite",
@@ -312,9 +310,9 @@ def get_site_geoJSON(
             row["samples_to_plot"], dateStart, dateEnd),
         axis=1)
 
-    sites["clean_type"] = get_clean_type(sites["type"])
+    sites["clean_type"] = get_website_type(sites["type"])
     sites["municipality"] = get_municipality(sites["siteID"])
-    sites["collection_method"] = clean_collection_method(
+    sites["collection_method"] = website_collection_method(
         sites["collection_method"])
     cols_to_keep = [
         "siteID",
@@ -377,41 +375,78 @@ if __name__ == "__main__":
 
     if reload:
         if "qc" in cities:
+            print("Importing data from Québec City...")
+            print("Importing viral data from Québec City...")
             qc_lab = mcgill_mapper.McGillMapper()
-            qc_lab.read(QC_LAB_DATA, STATIC_DATA, QC_SHEET_NAME, QC_VIRUS_LAB)  # noqa
+            qc_lab.read(QC_VIRUS_DATA, STATIC_DATA, QC_VIRUS_SHEET_NAME, QC_VIRUS_LAB)  # noqa
             store.append_from(qc_lab)
+            print("Importing Wastewater lab data from Québec City...")
+            modeleau = modeleau_mapper.ModelEauMapper()
+            modeleau.read(QC_LAB_DATA, QC_SHEET_NAME, lab_id=QC_LAB)
+            store.append_from(modeleau)
+            print("Importing Quebec city sensor data...")
+            files = os.listdir(os.path.join(DATA_FOLDER, QC_CITY_SENSOR_FOLDER))
+            for file in files:
+                vdq_sensors = vdq_mapper.VdQSensorsMapper()
+                print("Parsing file " + file + "...")
+                vdq_sensors.read(file)
+                store.append_from(vdq_sensors)
+            print("Importing Quebec city lab data...")
+            files = os.listdir(os.path.join(DATA_FOLDER, QC_CITY_PLANT_FOLDER))
+            for file in files:
+                vdq_plant = vdq_mapper.VdQPlantMapper()
+                print("Parsing file " + file + "...")
+                vdq_plant.read(file)
+                store.append_from(vdq_plant)
+
 
         if "mtl" in cities:
+            print("Importing data from Montreal...")
             mcgill_lab = mcgill_mapper.McGillMapper()
             poly_lab = mcgill_mapper.McGillMapper()
+            print("Importing viral data from McGill...")
             mcgill_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_MCGILL_SHEET_NAME, MCGILL_VIRUS_LAB)  # noqa
+            print("Importing viral data from Poly...")
             poly_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
 
         if publichealth:
+            print("Importing case data from Le Devoir...")
             ledevoir = ledevoir_mapper.LeDevoirMapper()
             ledevoir.read()
             store.append_from(ledevoir)
 
+        print("Removing older dataset...")
         for root, dirs, files in os.walk(CSV_FOLDER):
             for f in files:
                 os.unlink(os.path.join(root, f))
             for d in dirs:
                 shutil.rmtree(os.path.join(root, d))
 
+        print("Saving dataset...")
         prefix = datetime.now().strftime("%Y-%m-%d")
         store.to_csv(CSV_FOLDER, prefix)
         print(f"Saved to folder {CSV_FOLDER} with prefix \"{prefix}\"")
 
+        print("Saving combined dataset...")
+        combined = store.combine_per_sample()
+        combined_path = os.path.join(CSV_FOLDER, "combined.csv")
+        combined = combined[~combined.index.duplicated(keep='first')]
+        combined.to_csv(combined_path)
+        print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
+
+    print("Reading data back from csv...")
     store = odm.Odm()
     from_csv = csv_mapper.CsvMapper()
     from_csv.read(CSV_FOLDER)
     store.append_from(from_csv)
+    print("Combining dataset into wide table...")
     combined = store.combine_per_sample()
     combined = combined[~combined.index.duplicated(keep='first')]
 
     if website:
+        print("Generating website files...")
         sites = store.site
         sites["siteID"] = sites["siteID"].str.lower()
         sites = sites.drop_duplicates(subset=["siteID"], keep="first").copy()
@@ -439,5 +474,4 @@ if __name__ == "__main__":
             polygons, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
 
     if generate:
-
-        cols_to_keep = []
+        print("Generating ML Dataset...")

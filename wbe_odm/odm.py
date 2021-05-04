@@ -5,7 +5,6 @@ import sqlite3
 import numpy as np
 import pandas as pd
 import requests
-from shapely import wkt
 from shapely.geometry import Point
 
 from wbe_odm import utilities
@@ -81,208 +80,6 @@ class Odm:
         }
         return null_values.get(dtype, np.nan)
 
-    def clean_qualifier_columns(self, df, qualifiers):
-        if df.empty:
-            return df
-        for qualifier in qualifiers:
-            filt1 = df[qualifier].isna()
-            filt2 = df[qualifier] == ""
-            df.loc[filt1 | filt2, qualifier] = f"unknown-{qualifier}"
-            df[qualifier] = df[qualifier].str.replace("/", "-")
-            if qualifier == "qualityFlag":
-                df[qualifier] = df[qualifier].str\
-                    .replace("True", "quality-issue")\
-                    .replace("False", "no-quality-issue")
-        return df
-
-    def widen(self, df, features, qualifiers):
-        """Takes important characteristics inside a table (features) and
-        creates new columns to store them based on the value of other columns
-        (qualifiers).
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            The DataFrame we are operating on.
-        features : list[str]
-            List of column names that contain the features to extract.
-        qualifiers : list[str]
-            List of column names that contain the qualifying information.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with the original feature and qualifier columns removed
-            and the features spread out over new columns named after the values
-            of the qualifier columns.
-        """
-        if df.empty:
-            return df
-        df = self.clean_qualifier_columns(df, qualifiers)
-        for qualifier in qualifiers:
-            df[qualifier] = df[qualifier].astype(str)
-        df["col_qualifiers"] = df[qualifiers].agg("_".join, axis=1)
-        unique_col_qualifiers = df["col_qualifiers"].unique()
-        for col_qualifier in unique_col_qualifiers:
-            for feature in features:
-                col_name = "_".join([col_qualifier, feature])
-                df[col_name] = np.nan
-                filt = df["col_qualifiers"] == col_qualifier
-                df.loc[filt, col_name] = df.loc[filt, feature]
-        df.drop(columns=features+qualifiers, inplace=True)
-        df.drop(columns=["col_qualifiers"], inplace=True)
-        return df
-
-    def __remove_access(self, df: pd.DataFrame) -> pd.DataFrame:
-        """removes all columns that set access rights
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            The tabel with the access rights columns
-
-        Returns
-        -------
-        pd.DataFrame
-            The same table with the access rights columns removed.
-        """
-        if df.empty:
-            return df
-        to_remove = [col for col in df.columns if "access" in col.lower()]
-        return df.drop(columns=to_remove)
-
-    # Parsers to go from the standard ODM tables to a unified samples table
-    def _parse_ww_measure(self) -> pd.DataFrame:
-        """Prepares the WWMeasure Table for merging with
-        the samples table to analyzer the data on a per-sample basis
-
-        Returns
-        -------
-        pd.DataFrame
-            Cleaned-up DataFrame indexed by sample.
-            - Categorical columns from the WWMeasure table
-                are separated into unique columns.
-            - Boolean column's values are declared in the column title.
-        """
-        df = self.ww_measure
-        if df.empty:
-            return df
-
-        df = self.__remove_access(df)
-        df = self.widen(
-            df,
-            features=[
-                "value",
-                # "analysisDate",
-                # "reportDate",
-                # "notes",
-                # "qualityFlag",
-                # assay_col
-            ],
-            qualifiers=[
-                "fractionAnalyzed",
-                "type",
-                "unit",
-                "aggregation",
-            ]
-        )
-        df.drop(columns=["index"], inplace=True)
-        df = df.add_prefix("WWMeasure.")
-        return df
-
-    def _parse_site_measure(self) -> pd.DataFrame:
-        df = self.site_measure
-        if df.empty:
-            return df
-        df = self.__remove_access(df)
-        df = self.widen(
-            df,
-            features=[
-                "value",
-                # "notes",
-            ],
-            qualifiers=[
-                "type",
-                "unit",
-                "aggregation",
-            ]
-        )
-
-        # Re-arrange the table so that it is arranged by dateTime, as this is
-        # how site measures will be joined to samples
-        df = df.groupby("dateTime").agg(utilities.reduce_by_type)
-        df.reset_index(inplace=True)
-
-        df = df.add_prefix("SiteMeasure.")
-        return df
-
-    def _parse_sample(self) -> pd.DataFrame:
-        df = self.sample
-        if df.empty:
-            return df
-        df_copy = df.copy(deep=True)
-
-        # we want the sample to show up in any site where it is relevant.
-        # Here, we gather all the siteIDs present in the siteID column for a
-        # given sample, and we spread them over additional new rows so that in
-        # the end, each row of the sample table has only one siteID
-        for i, row in df_copy.iterrows():
-            # Get the value of the siteID field
-            sites = row["siteID"]
-            # Check whether there are saveral ids in the field
-            if ";" in sites:
-                # Get all the site ids in the list
-                site_ids = {x.strip() for x in sites.split(";")}
-                # Assign one id to the original row
-                df["siteID"].iloc[i] = site_ids.pop()
-                # Create new rows for each additional siteID and assign them
-                # each a siteID
-                for site_id in site_ids:
-                    new_row = df.iloc[i].copy()
-                    new_row["siteID"] = site_id
-                    df = df.append(new_row, ignore_index=True)
-
-        df = df.add_prefix("Sample.")
-        return df
-
-    def _parse_site(self) -> pd.DataFrame:
-        df = self.site
-        if df.empty:
-            return df
-        df = df.add_prefix("Site.")
-        return df
-
-    def _parse_polygon(self) -> pd.DataFrame:
-        df = self.polygon
-        if df.empty:
-            return df
-        df = df.add_prefix("Polygon.")
-        return df
-
-    def _parse_cphd(self) -> pd.DataFrame:
-        df = self.cphd
-        if df.empty:
-            return df
-        df = self.__remove_access(df)
-        df = self.widen(
-            df,
-            features=[
-                "value",
-                # "dateTime",
-                # "notes"
-            ],
-            qualifiers=[
-                "polygonID",
-                "type",
-                "dateType",
-            ]
-        )
-
-        df = df.groupby("dateTime").agg(utilities.reduce_by_type)
-        df.reset_index(inplace=True)
-        df = df.add_prefix("CPHD.")
-        return df
-
     def append_from(self, mapper) -> None:
         """Concatenates the Odm object's current data with
         that of a mapper.
@@ -334,7 +131,7 @@ class Odm:
                 self_attrs[key] = new_df.drop_duplicates(
                     keep="first", ignore_index=True)
 
-    def get_geoJSON(self, types=None) -> dict:
+    def get_polygon_geoJSON(self, types=None) -> dict:
         """[summary]
 
         Args:
@@ -376,255 +173,6 @@ class Odm:
                 }
                 geo["features"].append(new_feature)
         return geo
-
-    def combine_per_sample(self) -> pd.DataFrame:
-        """Combines data from all tables containing sample-related information
-        into a single DataFrame.
-        To simplify data mining, the categorical columns are separated into
-        distinct columns.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with each row representing a sample
-        """
-        # ________________
-        # Helper functions
-        def agg_ww_measure_per_sample(ww: pd.DataFrame) -> pd.DataFrame:
-            """Helper function that aggregates the WWMeasure table by sample.
-
-            Parameters
-            ----------
-            ww : pd.DataFrame
-                The dataframe to rearrange. This dataframe should have gone
-                through the _parse_ww_measure funciton before being passed in
-                here. This is to ensure that categorical columns have been
-                spread out.
-
-            Returns
-            -------
-            pd.DataFrame
-                DataFrame containing the data from the WWMeasure table,
-                re-ordered so that each row represents a sample.
-            """
-            if ww.empty:
-                return ww
-            return ww.groupby("WWMeasure.sampleID")\
-                .agg(utilities.reduce_by_type)
-
-        def combine_ww_measure_and_sample(
-            ww: pd.DataFrame,
-            sample: pd.DataFrame
-                ) -> pd.DataFrame:
-            """Merges tables on sampleID
-
-            Parameters
-            ----------
-            ww : pd.DataFrame
-                WWMeasure table re-organized by sample
-            sample : pd.DataFrame
-                The sample table
-
-            Returns
-            -------
-            pd.DataFrame
-                A combined table containing the data from both DataFrames
-            """
-            if ww.empty and sample.empty:
-                return pd.DataFrame()
-            elif sample.empty:
-                return ww
-            elif ww.empty:
-                return sample
-
-            return pd.merge(
-                sample, ww,
-                how="left",
-                left_on="Sample.sampleID",
-                right_on="WWMeasure.sampleID")
-
-        def combine_sample_site_measure(
-            sample: pd.DataFrame,
-            site_measure: pd.DataFrame
-                ) -> pd.DataFrame:
-            """Combines site measures and sample tables.
-
-            Parameters
-            ----------
-            sample : pd.DataFrame
-                sample DataFrame
-            site_measure : pd.DataFrame
-                Site Measure DataFrame
-
-            Returns
-            -------
-            pd.DataFrame
-                A combined DataFrame joined on sampling date
-            """
-            if sample.empty and site_measure.empty:
-                return sample
-            elif sample.empty:
-                return site_measure
-            elif site_measure.empty:
-                return sample
-            # Pandas doesn't provide good joining capability using dates, so we
-            # go through SQLite to perform the join and come back to pandas
-            # afterwards.
-            # Make the db in memory
-            conn = sqlite3.connect(':memory:')
-            # write the tables
-            sample.to_sql('sample', conn, index=False)
-            site_measure.to_sql("site_measure", conn, index=False)
-
-            # write the query
-            qry = "select * from sample" + \
-                " left join site_measure on" + \
-                " [SiteMeasure.dateTime] between" + \
-                " [Sample.dateTimeStart] and [Sample.dateTimeEnd]"
-            merged = pd.read_sql_query(qry, conn)
-            conn.close()
-            return merged
-
-        def combine_site_sample(
-            sample: pd.DataFrame,
-            site: pd.DataFrame
-                ) -> pd.DataFrame:
-            """Combines the sample table with site-specific data.
-
-            Parameters
-            ----------
-            sample : pd.DataFrame
-                The sample table
-            site : pd.DataFrame
-                The site table
-
-            Returns
-            -------
-            pd.DataFrame
-                A combined DataFrame joined on siteID
-            """
-            if sample.empty and site.empty:
-                return sample
-            elif sample.empty:
-                return site
-            elif site.empty:
-                return sample
-            return pd.merge(
-                sample,
-                site,
-                how="left",
-                left_on="Sample.siteID",
-                right_on="Site.siteID")
-
-        def combine_polygons_per_sample(merged, polygons):
-            """
-                Adds a column called 'polygonIDs' containing a list
-                of polygons that pertain to a site
-            """
-            def convert_wkt(x):
-                try:
-                    return wkt.loads(x)
-                except Exception:
-                    return None
-
-            def get_encompassing_polygons(row, poly):
-                poly["contains"] = poly["shape"].apply(
-                    lambda x: x.contains(row["temp_point"])
-                    if x is not None else False)
-                poly_ids = poly[
-                    "Polygon.polygonID"].loc[poly["contains"]].to_list()
-                return ";".join(poly_ids)
-
-            merged["temp_point"] = merged.apply(
-                lambda row: Point(
-                    row["Site.geoLong"], row["Site.geoLat"]
-                ), axis=1)
-
-            polygons["shape"] = polygons["Polygon.wkt"].apply(
-                lambda x: convert_wkt(x))
-            merged["polygonIDs"] = merged.apply(
-                lambda row: get_encompassing_polygons(row, polygons), axis=1)
-            merged.drop(["temp_point"], axis=1, inplace=True)
-            return merged
-
-        def combine_cphd_with_samples(
-            sample: pd.DataFrame,
-            cphd: pd.DataFrame
-                ) -> pd.DataFrame:
-            """Return the cphd data relevant to a given dsample using the
-            geographical intersection between the sample's sewershed polygon
-            and the cphd's health region polygon.
-
-            Parameters
-            ----------
-            sample : pd.DataFrame
-                Table containg sample information as well as a site polygonID
-            cphd : pd.DataFrame
-                Table containing public health data and a polygonID.
-
-            Returns
-            -------
-            pd.DataFrame
-                Combined DataFrame containing bnoth sample data and public
-                health data.
-            """
-            def remove_irrelevant_cphd(row, cphd_val_cols):
-                relevant_polys = str(row["polygonIDs"]).split(";")
-                for col in cphd_val_cols:
-                    cols_to_clean = cphd_val_cols.copy()
-                    for poly_name in relevant_polys:
-                        if poly_name in col:
-                            continue
-                        cols_to_clean.append(col)
-                    row[cols_to_clean] = np.nan
-                return row
-
-            # right now this merge hasn't been developped
-            # we have to cphd data just yet
-            if sample.empty and cphd.empty:
-                return sample
-            elif sample.empty:
-                return cphd
-            elif cphd.empty:
-                return sample
-
-            sample["Sample.plotDate"] = utilities.get_plot_datetime(sample)
-            sample.dropna(subset=["Sample.plotDate"], inplace=True)
-            sample.sort_values("Sample.plotDate", inplace=True)
-            cphd["CPHD.dateTime"] = pd.to_datetime(cphd["CPHD.dateTime"])
-            cphd.sort_values("CPHD.dateTime", inplace=True)
-            max_delta = pd.to_timedelta("24 hours")
-            merged = pd.merge_asof(
-                sample,
-                cphd,
-                left_on="Sample.plotDate",
-                right_on="CPHD.dateTime",
-                tolerance=max_delta)
-            cphd_value_cols = [col for col in merged if "cphd" in col.lower() and "value" in col]
-            # merged = merged.apply(lambda row: remove_irrelevant_cphd(row, cphd_value_cols), axis=1)
-            return merged
-        # __________
-        # Actual logic of the funciton
-        ww_measure = self._parse_ww_measure()
-        ww_measure = agg_ww_measure_per_sample(ww_measure)
-
-        sample = self._parse_sample()
-        merged = combine_ww_measure_and_sample(ww_measure, sample)
-
-        site_measure = self._parse_site_measure()
-        merged = combine_sample_site_measure(merged, site_measure)
-
-        site = self._parse_site()
-        merged = combine_site_sample(merged, site)
-
-        polygons = self._parse_polygon()
-        merged = combine_polygons_per_sample(merged, polygons)
-        cphd = self._parse_cphd()
-        merged = combine_cphd_with_samples(merged, cphd)
-
-        merged.set_index("Sample.sampleID", inplace=True)
-        merged.drop_duplicates(keep="first", inplace=True)
-        return merged
 
     def to_sqlite3(
         self,
@@ -696,6 +244,434 @@ class Odm:
             self.add_to_attr(attribute, other_value)
         return
 
+    def combine_per_sample(self):
+        return TableCombiner(self).combine_per_sample()
+
+
+class TableWidener:
+    wide = None
+
+    def __init__(self, df, features, qualifiers):
+        self.raw_df = df
+        self.features = features
+        self.qualifiers = qualifiers
+        self.wide = None
+
+    def clean_qualifier_columns(self):
+        qualifiers = self.qualifiers
+        df = self.raw_df
+        if df.empty:
+            return df
+        for qualifier in qualifiers:
+            filt1 = df[qualifier].isna()
+            filt2 = df[qualifier] == ""
+            df.loc[filt1 | filt2, qualifier] = f"unknown-{qualifier}"
+            df[qualifier] = df[qualifier].str.replace("/", "-")
+            if qualifier == "qualityFlag":
+                df[qualifier] = df[qualifier].str\
+                    .replace("True", "quality-issue")\
+                    .replace("False", "no-quality-issue")
+        return df
+
+    def widen(self):
+        """Takes important characteristics inside a table (features) and
+        creates new columns to store them based on the value of other columns
+        (qualifiers).
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with the original feature and qualifier columns removed
+            and the features spread out over new columns named after the values
+            of the qualifier columns.
+        """
+        df = self.raw_df.copy()
+        if df.empty:
+            return
+        df = self.clean_qualifier_columns()
+        for qualifier in self.qualifiers:
+            df[qualifier] = df[qualifier].astype(str)
+        df["col_qualifiers"] = df[self.qualifiers].agg("_".join, axis=1)
+        unique_col_qualifiers = df["col_qualifiers"].unique()
+        for col_qualifier in unique_col_qualifiers:
+            for feature in self.features:
+                col_name = "_".join([col_qualifier, feature])
+                df[col_name] = np.nan
+                filt = df["col_qualifiers"] == col_qualifier
+                df.loc[filt, col_name] = df.loc[filt, feature]
+        df.drop(columns=self.features+self.qualifiers, inplace=True)
+        df.drop(columns=["col_qualifiers"], inplace=True)
+        self.wide = df.copy()
+        return self.wide
+
+
+class TableCombiner(Odm):
+    combined = None
+
+    def __init__(self, source_odm):
+        self.ww_measure = self.parse_ww_measure(source_odm.ww_measure)
+        self.site_measure = self.parse_site_measure(source_odm.site_measure)
+        self.sample = self.parse_sample(source_odm.sample)
+        self.cphd = self.parse_cphd(source_odm.cphd)
+        self.polygon = self.parse_polygon(source_odm.polygon)
+        self.site = self.parse_site(source_odm.site)
+
+    def remove_access(self, df: pd.DataFrame) -> pd.DataFrame:
+        """removes all columns that set access rights
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The tabel with the access rights columns
+
+        Returns
+        -------
+        pd.DataFrame
+            The same table with the access rights columns removed.
+        """
+        if df.empty:
+            return df
+        to_remove = [col for col in df.columns if "access" in col.lower()]
+        return df.drop(columns=to_remove)
+
+    # Parsers to go from the standard ODM tables to a unified samples table
+    def parse_ww_measure(self, df) -> pd.DataFrame:
+        """Prepares the WWMeasure Table for merging with
+        the samples table to analyzer the data on a per-sample basis
+
+        Returns
+        -------
+        pd.DataFrame
+            Cleaned-up DataFrame indexed by sample.
+            - Categorical columns from the WWMeasure table
+                are separated into unique columns.
+            - Boolean column's values are declared in the column title.
+        """
+        if df.empty:
+            return df
+
+        df = self.remove_access(df)
+        features = ["value"]
+        qualifiers = [
+                "fractionAnalyzed",
+                "type",
+                "unit",
+                "aggregation",
+            ]
+        wide = TableWidener(df, features, qualifiers).widen()
+        wide.drop(columns=["index"], inplace=True)
+        wide = wide.add_prefix("WWMeasure.")
+        return wide
+
+    def parse_site_measure(self, df) -> pd.DataFrame:
+        if df.empty:
+            return df
+        df = self.remove_access(df)
+        features = ["value"]
+        qualifiers = [
+            "type",
+            "unit",
+            "aggregation",
+        ]
+        wide = TableWidener(df, features, qualifiers).widen()
+
+        wide = wide.add_prefix("SiteMeasure.")
+        return wide
+
+    def parse_sample(self, df) -> pd.DataFrame:
+        if df.empty:
+            return df
+        df_copy = df.copy(deep=True)
+
+        # we want the sample to show up in any site where it is relevant.
+        # Here, we gather all the siteIDs present in the siteID column for a
+        # given sample, and we spread them over additional new rows so that in
+        # the end, each row of the sample table has only one siteID
+        for i, row in df_copy.iterrows():
+            # Get the value of the siteID field
+            sites = row["siteID"]
+            # Check whether there are saveral ids in the field
+            if ";" in sites:
+                # Get all the site ids in the list
+                site_ids = {x.strip() for x in sites.split(";")}
+                # Assign one id to the original row
+                df["siteID"].iloc[i] = site_ids.pop()
+                # Create new rows for each additional siteID and assign them
+                # each a siteID
+                for site_id in site_ids:
+                    new_row = df.iloc[i].copy()
+                    new_row["siteID"] = site_id
+                    df = df.append(new_row, ignore_index=True)
+        df = df.add_prefix("Sample.")
+        return df
+
+    def parse_site(self, df) -> pd.DataFrame:
+        if df.empty:
+            return df
+        df = df.add_prefix("Site.")
+        return df
+
+    def parse_polygon(self, df) -> pd.DataFrame:
+        if df.empty:
+            return df
+        df = df.add_prefix("Polygon.")
+        return df
+
+    def parse_cphd(self, df) -> pd.DataFrame:
+        if df.empty:
+            return df
+        df = self.remove_access(df)
+        features = ["value"]
+        qualifiers = ["polygonID", "type", "dateType"]
+        wide = TableWidener(df, features, qualifiers).widen()
+
+        wide = wide.groupby("dateTime").agg(utilities.reduce_by_type)
+        wide.reset_index(inplace=True)
+        wide = wide.add_prefix("CPHD.")
+        return wide
+
+    def agg_ww_measure_per_sample(self, ww: pd.DataFrame) -> pd.DataFrame:
+        """Helper function that aggregates the WWMeasure table by sample.
+
+        Parameters
+        ----------
+        ww : pd.DataFrame
+            The dataframe to rearrange. This dataframe should have gone
+            through the _parse_ww_measure funciton before being passed in
+            here. This is to ensure that categorical columns have been
+            spread out.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame containing the data from the WWMeasure table,
+            re-ordered so that each row represents a sample.
+        """
+        if ww.empty:
+            return ww
+        return ww.groupby("WWMeasure.sampleID")\
+            .agg(utilities.reduce_by_type)
+
+    def resample_site_measures_daily(self, df: pd.DataFrame) -> pd.DataFrame:
+        if df.empty:
+            return df
+        df = df.copy()
+        df.set_index("SiteMeasure.dateTime", inplace=True)
+        df = df.resample("1D").agg(utilities.reduce_by_type)
+        df.reset_index(inplace=True)
+        return df
+
+    def combine_ww_measure_and_sample(
+        self,
+        ww: pd.DataFrame,
+        sample: pd.DataFrame
+            ) -> pd.DataFrame:
+        """Merges tables on sampleID
+
+        Parameters
+        ----------
+        ww : pd.DataFrame
+            WWMeasure table re-organized by sample
+        sample : pd.DataFrame
+            The sample table
+
+        Returns
+        -------
+        pd.DataFrame
+            A combined table containing the data from both DataFrames
+        """
+        if ww.empty and sample.empty:
+            return pd.DataFrame()
+        elif sample.empty:
+            return ww
+        elif ww.empty:
+            return sample
+
+        return pd.merge(
+            sample, ww,
+            how="left",
+            left_on="Sample.sampleID",
+            right_on="WWMeasure.sampleID")
+
+    def combine_sample_site_measure(
+        self,
+        sample: pd.DataFrame,
+        site_measure: pd.DataFrame
+            ) -> pd.DataFrame:
+        """Combines site measures and sample tables.
+
+        Parameters
+        ----------
+        sample : pd.DataFrame
+            sample DataFrame
+        site_measure : pd.DataFrame
+            Site Measure DataFrame
+
+        Returns
+        -------
+        pd.DataFrame
+            A combined DataFrame joined on sampling date
+        """
+        if sample.empty and site_measure.empty:
+            return sample
+        elif sample.empty:
+            return site_measure
+        elif site_measure.empty:
+            return sample
+        # Pandas doesn't provide good joining capability using dates, so we
+        # go through SQLite to perform the join and come back to pandas
+        # afterwards.
+        # Make the db in memory
+        conn = sqlite3.connect(':memory:')
+        # write the tables
+        sample.to_sql('sample', conn, index=False)
+        site_measure.to_sql("site_measure", conn, index=False)
+
+        # write the query
+        qry = "select * from sample" + \
+            " left join site_measure on" + \
+            " [SiteMeasure.dateTime] between" + \
+            " [Sample.dateTimeStart] and [Sample.dateTimeEnd]"
+        merged = pd.read_sql_query(qry, conn)
+        conn.close()
+        return merged
+
+    def combine_site_sample(
+        self,
+        sample: pd.DataFrame,
+        site: pd.DataFrame
+            ) -> pd.DataFrame:
+        """Combines the sample table with site-specific data.
+
+        Parameters
+        ----------
+        sample : pd.DataFrame
+            The sample table
+        site : pd.DataFrame
+            The site table
+
+        Returns
+        -------
+        pd.DataFrame
+            A combined DataFrame joined on siteID
+        """
+        if sample.empty and site.empty:
+            return sample
+        elif sample.empty:
+            return site
+        elif site.empty:
+            return sample
+        return pd.merge(
+            sample,
+            site,
+            how="left",
+            left_on="Sample.siteID",
+            right_on="Site.siteID")
+
+    def combine_polygons_per_sample(self, merged, polygons):
+        """
+            Adds a column called 'polygonIDs' containing a list
+            of polygons that pertain to a site
+        """
+        merged["temp_point"] = merged.apply(
+            lambda row: Point(
+                row["Site.geoLong"], row["Site.geoLat"]
+            ), axis=1)
+        polygons["shape"] = polygons["Polygon.wkt"].apply(
+            lambda x: utilities.convert_wkt(x))
+        merged["polygonIDs"] = merged.apply(
+            lambda row: utilities.get_encompassing_polygons(
+                row, polygons), axis=1)
+        merged.drop(["temp_point"], axis=1, inplace=True)
+        return merged
+
+    def remove_irrelevant_cphd(row, cphd_val_cols):
+        relevant_polys = str(row["polygonIDs"]).split(";")
+        for col in cphd_val_cols:
+            cols_to_clean = cphd_val_cols.copy()
+            for poly_name in relevant_polys:
+                if poly_name in col:
+                    continue
+                cols_to_clean.append(col)
+            row[cols_to_clean] = np.nan
+        return row
+
+    def combine_cphd_with_samples(
+        self,
+        sample: pd.DataFrame,
+        cphd: pd.DataFrame
+            ) -> pd.DataFrame:
+        """Return the cphd data relevant to a given dsample using the
+        geographical intersection between the sample's sewershed polygon
+        and the cphd's health region polygon.
+
+        Parameters
+        ----------
+        sample : pd.DataFrame
+            Table containg sample information as well as a site polygonID
+        cphd : pd.DataFrame
+            Table containing public health data and a polygonID.
+
+        Returns
+        -------
+        pd.DataFrame
+            Combined DataFrame containing bnoth sample data and public
+            health data.
+        """
+        if sample.empty and cphd.empty:
+            return sample
+        elif sample.empty:
+            return cphd
+        elif cphd.empty:
+            return sample
+
+        sample["Sample.plotDate"] = utilities.get_plot_datetime(sample)
+        sample.dropna(subset=["Sample.plotDate"], inplace=True)
+        sample.sort_values("Sample.plotDate", inplace=True)
+        cphd["CPHD.dateTime"] = pd.to_datetime(cphd["CPHD.dateTime"])
+        cphd.sort_values("CPHD.dateTime", inplace=True)
+        max_delta = pd.to_timedelta("24 hours")
+        merged = pd.merge_asof(
+            sample,
+            cphd,
+            left_on="Sample.plotDate",
+            right_on="CPHD.dateTime",
+            tolerance=max_delta)
+        # cphd_value_cols = [
+            # col for col in merged if "cphd" in col.lower() and "value" in col]
+        # merged = merged.apply(lambda row: remove_irrelevant_cphd(row, cphd_value_cols), axis=1)
+        return merged
+
+    def combine_per_sample(self) -> pd.DataFrame:
+        """Combines data from all tables containing sample-related information
+        into a single DataFrame.
+        To simplify data mining, the categorical columns are separated into
+        distinct columns.
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with each row representing a sample
+        """
+        agg_ww_measure = self.agg_ww_measure_per_sample(self.ww_measure)
+
+        merged = self.combine_ww_measure_and_sample(
+            agg_ww_measure, self.sample)
+
+        agg_site_measure = self.resample_site_measures_daily(self.site_measure)
+
+        merged = self.combine_sample_site_measure(merged, agg_site_measure)
+
+        merged = self.combine_site_sample(merged, self.site)
+
+        merged = self.combine_polygons_per_sample(merged, self.polygon)
+
+        merged = self.combine_cphd_with_samples(merged, self.cphd)
+
+        merged.set_index("Sample.sampleID", inplace=True)
+        merged.drop_duplicates(keep="first", inplace=True)
+        self.combined = merged
+        return merged
+
 
 class OdmEncoder(json.JSONEncoder):
     def default(self, o):
@@ -738,7 +714,7 @@ def destroy_db(filepath):
 
 
 if __name__ == "__main__":
-    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
+    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/short_csv"  # noqa
     mapper = csv_mapper.CsvMapper()
     mapper.read(CSV_FOLDER)
     store = Odm()

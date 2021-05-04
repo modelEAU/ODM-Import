@@ -1,11 +1,11 @@
 import pandas as pd 
-from wbe_odm.odm_mappers.base_mapper import BaseMapper
+from base_mapper import BaseMapper
 
 
 default_site_measurement = {
     "siteMeasureID": None,
     "siteID" : None,
-    "reporterID": " ",
+    "reporterID": "CityQC",
     "instrumentID": "Pluvio_VilledeQuebec",
     "dateTime" : None,
     "type": "envRnF",
@@ -14,28 +14,29 @@ default_site_measurement = {
     "value" : None,
     "unit": "mm",
     "accessToPublic": "No",
-    "accessToAllOrg": "No",
+    "accessToAllOrgs": "No",
     "accessToPHAC": "No",
     "accessToLocalHA": "No",
     "accessToProvHA": "No",
     "accessToOtherProv": "No",
     "accessToDetails": "No",
-    "notes" : " "
+    "notes" : ""
 }
 
 
 class VdQRainMapper(BaseMapper):
     def read(self, filepath):
-        sheet_names = ["Pluvio Hiver - Janvier 2021", "Pluvio Hiver brut-Janvier 2021"]
+        xl_file = pd.ExcelFile(filepath)
         odm_name = self.conversion_dict["site_measure"]["odm_name"]
+        second_sheet_name = xl_file.sheet_names[1]
         xls = pd.read_excel(
             filepath,
-            sheet_name=sheet_names,
+            sheet_name=[second_sheet_name],
             header=0,
             skiprows=[1])
 
-        df = xls["Pluvio Hiver brut-Janvier 2021"][['Date', 'Pluvio', 'Hauteur totale (mm)']]
-        df.dropna(subset=['Date'], axis=0)
+        df = xls[second_sheet_name][['Date', 'Pluvio', 'Hauteur totale (mm)']]
+        df = df.dropna(subset=['Date'], axis=0)
         df = df.reset_index(drop=True)
 
         df['siteID'] = pd.Series(map(lambda x : 'QC_wstation_' + str(x), df['Pluvio']))
@@ -52,12 +53,11 @@ class VdQRainMapper(BaseMapper):
         df = df[list(default_site_measurement.keys())]
         site_measure = self.type_cast_table(odm_name, df)
         self.site_measure = site_measure
-
-
+        
     def validates(self):
         return True
 
 if __name__ == '__main__' :
     mapper = VdQRainMapper()
     mapper.read('/mnt/c/Users/medab/Downloads/Pluvio.xlsx')
-    mapper.site_measure.head(10)
+    #print(mapper.site_measure.head(10))

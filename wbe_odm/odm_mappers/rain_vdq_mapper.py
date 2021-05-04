@@ -1,5 +1,5 @@
 import pandas as pd 
-from base_mapper import BaseMapper
+from wbe_odm.odm_mappers.base_mapper import BaseMapper
 
 
 default_site_measurement = {

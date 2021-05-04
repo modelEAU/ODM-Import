@@ -40,6 +40,7 @@ def parse_types(table_name, series):
         series = series.str.replace("oui", "true", case=False)
         series = series.str.replace("yes", "true", case=False)
         series = series.str.startswith("true")
+        series = series.astype("bool")
     elif desired_type in ["string", "category"]:
         series = series.astype(str)
         series = series.str.strip()
@@ -49,11 +50,11 @@ def parse_types(table_name, series):
     elif desired_type == "datetime64[ns]":
         series = series.astype(str)
         series = series.apply(lambda x: replace_unknown_by_default(x, ""))
+        series = pd.to_datetime(series)
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
-        return series
 
-    return series.astype(desired_type)
+    return series
 
 
 class BaseMapper(ABC):

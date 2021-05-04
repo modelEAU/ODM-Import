@@ -1,20 +1,21 @@
-# To add a new cell, type '# %%'
-# To add a new markdown cell, type '# %% [markdown]'
-# %%
-import os
 import argparse
-import shutil
-
-from wbe_odm import odm
-from wbe_odm import utilities
-from wbe_odm.odm_mappers import mcgill_mapper, csv_mapper,\
-    ledevoir_mapper, modeleau_mapper, vdq_mapper
-
 import json
+import os
+import shutil
 from datetime import datetime, timedelta
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
 from config import *
+from wbe_odm import odm, utilities
+from wbe_odm.odm_mappers import (
+    csv_mapper,
+    ledevoir_mapper,
+    mcgill_mapper,
+    modeleau_mapper,
+    vdq_mapper
+)
 
 
 def str2bool(arg):
@@ -175,7 +176,10 @@ def get_n_bins(series, all_colors):
     return max_len
 
 
-def get_color_ts(samples, dateStart=DEFAULT_START_DATE, dateEnd=None):
+def get_color_ts(samples,
+                 colorscale,
+                 dateStart=DEFAULT_START_DATE,
+                 dateEnd=None):
     dateStart = pd.to_datetime(dateStart)
     weekly = None
     if samples is not None:
@@ -203,7 +207,7 @@ def get_color_ts(samples, dateStart=DEFAULT_START_DATE, dateEnd=None):
         right_on="last_sunday",
         how="left")
 
-    n_bins = get_n_bins(result["norm"], COLORS)
+    n_bins = get_n_bins(result["norm"], colorscale)
     if n_bins is None:
         result["signal_strength"] = 0
     elif n_bins == 1:
@@ -287,6 +291,7 @@ def get_site_geoJSON(
         combined,
         site_output_dir,
         site_name,
+        colorscale,
         dateStart=None,
         dateEnd=None,):
     combined["Sample.plotDate"] = utilities.get_plot_datetime(combined)
@@ -329,7 +334,8 @@ def get_site_geoJSON(
     point_list = list(sites["features"])
     js = {
         "type": "FeatureCollection",
-        "features": point_list
+        "features": point_list,
+        "colorKey": colorscale
     }
     path = os.path.join(site_output_dir, site_name)
     with open(path, "w") as f:
@@ -341,10 +347,26 @@ def build_polygon_geoJSON(polygons, output_dir, name, types=None):
     for col in ["pop", "link"]:
         if col in polygons.columns:
             polygons.drop(columns=[col], inplace=True)
-    polys = store.get_geoJSON(types=types)
+    polys = store.get_polygon_geoJSON(types=types)
     path = os.path.join(output_dir, name)
     with open(path, "w") as f:
         f.write(json.dumps(polys, indent=4))
+
+
+def load_files_from_folder(folder, extension):
+    files = os.listdir(folder)
+    return [file for file in files if "$" not in file and extension in file]
+
+
+def get_data_excerpt(origin_folder):
+    short_csv_path = os.path.join(os.path.dirname(origin_folder), "short_csv")
+    files = load_files_from_folder(origin_folder, "csv")
+    for file in files:
+        path = os.path.join(origin_folder, file)
+        df = pd.read_csv(path)
+        if len(df) > 1000:
+            df = df.sample(n=1000)
+        df.to_csv(os.path.join(short_csv_path, file), sep=",", na_rep="na", index=False)
 
 
 if __name__ == "__main__":
@@ -356,7 +378,7 @@ if __name__ == "__main__":
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help='build geojson files for website (default=False)')  # noqa
-
+    parser.add_argument('-sh', '--short', type=str2bool, default=True, help='Generate a small dataset for testing purposes')
     args = parser.parse_args()
 
     cities = args.cities
@@ -366,6 +388,7 @@ if __name__ == "__main__":
     website = args.website
     reload = args.reload
     generate = args.generate
+    short = args.short
 
     if not os.path.exists(CSV_FOLDER):
         raise ValueError(
@@ -375,30 +398,31 @@ if __name__ == "__main__":
 
     if reload:
         if "qc" in cities:
-            print("Importing data from Québec City...")
-            print("Importing viral data from Québec City...")
+            print("Importing data from Quebec City...")
+            print("Importing viral data from Quebec City...")
             qc_lab = mcgill_mapper.McGillMapper()
             qc_lab.read(QC_VIRUS_DATA, STATIC_DATA, QC_VIRUS_SHEET_NAME, QC_VIRUS_LAB)  # noqa
             store.append_from(qc_lab)
-            print("Importing Wastewater lab data from Québec City...")
+            print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
             modeleau.read(QC_LAB_DATA, QC_SHEET_NAME, lab_id=QC_LAB)
             store.append_from(modeleau)
             print("Importing Quebec city sensor data...")
-            files = os.listdir(os.path.join(DATA_FOLDER, QC_CITY_SENSOR_FOLDER))
+            subfolder = os.path.join(os.path.join(DATA_FOLDER, QC_CITY_SENSOR_FOLDER))
+            files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_sensors = vdq_mapper.VdQSensorsMapper()
                 print("Parsing file " + file + "...")
-                vdq_sensors.read(file)
+                vdq_sensors.read(os.path.join(subfolder, file))
                 store.append_from(vdq_sensors)
             print("Importing Quebec city lab data...")
-            files = os.listdir(os.path.join(DATA_FOLDER, QC_CITY_PLANT_FOLDER))
+            subfolder = os.path.join(DATA_FOLDER, QC_CITY_PLANT_FOLDER)
+            files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_plant = vdq_mapper.VdQPlantMapper()
                 print("Parsing file " + file + "...")
-                vdq_plant.read(file)
+                vdq_plant.read(os.path.join(subfolder, file))
                 store.append_from(vdq_plant)
-
 
         if "mtl" in cities:
             print("Importing data from Montreal...")
@@ -429,12 +453,14 @@ if __name__ == "__main__":
         store.to_csv(CSV_FOLDER, prefix)
         print(f"Saved to folder {CSV_FOLDER} with prefix \"{prefix}\"")
 
-        print("Saving combined dataset...")
-        combined = store.combine_per_sample()
-        combined_path = os.path.join(CSV_FOLDER, "combined.csv")
-        combined = combined[~combined.index.duplicated(keep='first')]
-        combined.to_csv(combined_path)
-        print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
+        if short:
+            get_data_excerpt(CSV_FOLDER)
+        # print("Saving combined dataset...")
+        # combined = store.combine_per_sample()
+        # combined_path = os.path.join(CSV_FOLDER, "combined.csv")
+        # combined = combined[~combined.index.duplicated(keep='first')]
+        # combined.to_csv(combined_path)
+        # print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
 
     print("Reading data back from csv...")
     store = odm.Odm()
@@ -442,8 +468,8 @@ if __name__ == "__main__":
     from_csv.read(CSV_FOLDER)
     store.append_from(from_csv)
     print("Combining dataset into wide table...")
-    combined = store.combine_per_sample()
-    combined = combined[~combined.index.duplicated(keep='first')]
+    # combined = store.combine_per_sample()
+    # combined = combined[~combined.index.duplicated(keep='first')]
 
     if website:
         print("Generating website files...")
@@ -462,6 +488,7 @@ if __name__ == "__main__":
             combined,
             SITE_OUTPUT_DIR,
             SITE_NAME,
+            COLORS,
             dateStart=None,
             dateEnd=None)
 

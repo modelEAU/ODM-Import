@@ -65,9 +65,9 @@ MTL_MCGILL_SHEET_NAME = "Mtl Data Daily Samples (McGill)"
 MCGILL_VIRUS_LAB = "frigon_lab"
 POLY_VIRUS_LAB = "dorner_lab"
 
-POLYGON_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"
+POLYGON_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"  # noqa
 POLY_NAME = "polygons.geojson"
 POLYS_TO_EXTRACT = ["swrCat"]
 
-SITE_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"
+SITE_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"  # noqa
 SITE_NAME = "sites.geojson"

@@ -284,7 +284,7 @@ def map_from_samples(odm_data):
         raise PreventUpdate
     odm_instance = load_serialized(odm_data)
     samples = odm_instance.combine_per_sample()
-    geo = odm_instance.get_geoJSON()
+    geo = odm_instance.get_polygon_geoJSON()
     return samples.to_json(date_format='iso'), geo
 
 

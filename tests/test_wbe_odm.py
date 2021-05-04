@@ -14,6 +14,6 @@ def test_samples_from_excel():
     excel_mapper.read(filename)
     odm_instance = Odm()
     odm_instance.load_from(excel_mapper)
-    geo = odm_instance.get_geoJSON()
+    geo = odm_instance.get_polygon_geoJSON()
     samples = odm_instance.combine_per_sample()
     return geo, samples, odm_instance

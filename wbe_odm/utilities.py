@@ -4,7 +4,24 @@ from functools import reduce
 import numpy as np
 import pandas as pd
 from geojson_rewind import rewind
-from geomet import wkt
+import shapely.wkt
+import geomet.wkt
+
+
+def convert_wkt(x):
+    try:
+        return shapely.wkt.loads(x)
+    except Exception:
+        return None
+
+
+def get_encompassing_polygons(row, poly):
+    poly["contains"] = poly["shape"].apply(
+        lambda x: x.contains(row["temp_point"])
+        if x is not None else False)
+    poly_ids = poly[
+        "Polygon.polygonID"].loc[poly["contains"]].to_list()
+    return ";".join(poly_ids)
 
 
 def get_midpoint_time(date1, date2):
@@ -91,7 +108,7 @@ def reduce_by_type(series):
 def convert_wkt_to_geojson(s):
     if s in ["-", ""]:
         return None  # {"type":"Polygon", "coordinates":None}
-    geojson_feature = json.loads(json.dumps(wkt.loads(s)))
+    geojson_feature = json.loads(json.dumps(geomet.wkt.loads(s)))
     geojson_feature = rewind(geojson_feature, rfc7946=False)
     return geojson_feature
 

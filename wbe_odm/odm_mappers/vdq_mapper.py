@@ -123,7 +123,6 @@ class VdQPlantMapper(mcm.McGillMapper):
         site_measure.dropna(subset=["value"], inplace=True)
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
-        self.remove_duplicates()
         return
 
 
@@ -139,8 +138,12 @@ class VdQSensorsMapper(mcm.McGillMapper):
             mcm.excel_style(i+1)
             for i, _ in enumerate(df.columns.to_list())
         ]
-        df = df.loc[~df["D"].str.lower().isin(["moyen", "max", "min"])]
+        df = df.loc[~df["D"].astype(str).str.lower().isin(["moyen", "max", "min"])]
         df = df.dropna(how="all")
+        date_cols = ["A", "B", "C", "D"]
+        numeric_cols = [col for col in df.columns if col not in date_cols]
+        for col in numeric_cols:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
         dynamic_tables = mcm.parse_sheet(
             mapping, static_data, df, sensor_funcs, lab_id
         )
@@ -149,7 +152,6 @@ class VdQSensorsMapper(mcm.McGillMapper):
         site_measure = site_measure.dropna(subset=["value"])
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
-        self.remove_duplicates()
         return
 
 

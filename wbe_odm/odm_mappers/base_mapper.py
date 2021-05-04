@@ -76,7 +76,7 @@ def parse_types(table_name, series):
         series = pd.to_numeric(series, errors="coerce")
         return series
 
-    return series.astype(desired_type)
+    return series
 
 
 class BaseMapper(ABC):

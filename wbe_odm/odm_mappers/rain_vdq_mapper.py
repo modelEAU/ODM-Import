@@ -1,17 +1,17 @@
-import pandas as pd 
+import pandas as pd
 from wbe_odm.odm_mappers.base_mapper import BaseMapper
 
 
 default_site_measurement = {
     "siteMeasureID": None,
-    "siteID" : None,
+    "siteID": None,
     "reporterID": "CityQC",
     "instrumentID": "Pluvio_VilledeQuebec",
-    "dateTime" : None,
+    "dateTime": None,
     "type": "envRnF",
     "aggregation": "single",
     "aggregationDesc": "Cumulative rainfall in one day.",
-    "value" : None,
+    "value": None,
     "unit": "mm",
     "accessToPublic": "No",
     "accessToAllOrgs": "No",
@@ -20,7 +20,7 @@ default_site_measurement = {
     "accessToProvHA": "No",
     "accessToOtherProv": "No",
     "accessToDetails": "No",
-    "notes" : ""
+    "notes": ""
 }
 
 
@@ -39,25 +39,32 @@ class VdQRainMapper(BaseMapper):
         df = df.dropna(subset=['Date'], axis=0)
         df = df.reset_index(drop=True)
 
-        df['siteID'] = pd.Series(map(lambda x : 'QC_wstation_' + str(x), df['Pluvio']))
+        df['siteID'] = pd.Series(
+            map(lambda x: 'QC_wstation_' + str(x), df['Pluvio']))
         del df['Pluvio']
 
         for k, v in default_site_measurement.items():
-            if v is not None :
+            if v is not None:
                 df[k] = v
 
-        df['siteMeasureID'] = df['siteID'] +"_"+ df['type'] + "_" \
-                            + df["Date"].dt.strftime('%Y-%m-%d')
+        df['siteMeasureID'] = df['siteID'] + "_" + df['type'] + "_" \
+            + df["Date"].dt.strftime('%Y-%m-%d')
         df['siteMeasureID'].astype(str)
-        df.rename(columns={ 'Hauteur totale (mm)' : 'value', "Date": "dateTime"}, inplace=True)
+        df.rename(columns={
+            "Hauteur totale (mm)": "value",
+            "Date": "dateTime"
+            }, inplace=True)
         df = df[list(default_site_measurement.keys())]
         site_measure = self.type_cast_table(odm_name, df)
         self.site_measure = site_measure
-        
+
     def validates(self):
         return True
 
-if __name__ == '__main__' :
+
+if __name__ == '__main__':
+    jd_path = '/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/Qc_rain/01-Pluvio Hiver - Janvier 2021.xlsx'  # noqa
+    med_path= '/mnt/c/Users/medab/Downloads/Pluvio.xlsx'
     mapper = VdQRainMapper()
-    mapper.read('/mnt/c/Users/medab/Downloads/Pluvio.xlsx')
-    #print(mapper.site_measure.head(10))
+    mapper.read(jd_path)
+    print(mapper.site_measure.head(10))

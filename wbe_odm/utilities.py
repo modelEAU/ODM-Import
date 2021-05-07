@@ -1,11 +1,33 @@
 import json
 from functools import reduce
+import re
 
 import numpy as np
 import pandas as pd
 from geojson_rewind import rewind
 import shapely.wkt
 import geomet.wkt
+
+
+def has_cphd_data(x, uniques):
+    if pd.isna(x):
+        return None
+    ls = x.split(";")
+    ls = [i for i in ls if i in uniques]
+    return ";".join(ls) if ls else None
+
+
+def pick_cphd_poly_by_size(x, poly):
+    if pd.isna(x):
+        return None
+    ls = x.split(";")
+    areas = []
+    for id_ in ls:
+        area = poly.loc[poly["Polygon.polygonID"] == id_, "area"]
+        areas.append(area)
+    min_area = min(areas)
+    min_idx = areas.index(min_area)
+    return ls[min_idx]
 
 
 def convert_wkt(x):
@@ -15,12 +37,26 @@ def convert_wkt(x):
         return None
 
 
+def get_polygon_for_cphd(merged, poly, cphd):
+    poly["shape"] = poly["Polygon.wkt"].apply(lambda x: convert_wkt(x))
+    poly["area"] = poly["shape"].apply(lambda x: x.area)
+    unique_cphd_polys = cphd["CPHD.polygonID"].unique()
+    merged["polys_w_cphd"] = merged["Calculated.polygonList"].apply(
+        lambda x: has_cphd_data(x, unique_cphd_polys))
+    merged["Calculated.polygonIDForCPHD"] = merged["polys_w_cphd"].apply(
+        lambda x: pick_cphd_poly_by_size(x, poly))
+    poly.drop(columns=["shape", "area"], inplace=True)
+    merged.drop(columns=["polys_w_cphd"], inplace=True)
+    return merged
+
+
 def get_encompassing_polygons(row, poly):
     poly["contains"] = poly["shape"].apply(
         lambda x: x.contains(row["temp_point"])
         if x is not None else False)
     poly_ids = poly[
         "Polygon.polygonID"].loc[poly["contains"]].to_list()
+    poly.drop(columns=["contains"], inplace=True)
     return ";".join(poly_ids)
 
 
@@ -30,26 +66,72 @@ def get_midpoint_time(date1, date2):
     return date1 + (date2 - date1)/2
 
 
-def get_plot_datetime(df):
-    # grb -> "dateTime"
-    # ps and cp -> if start and end are present: midpoint
-    # ps and cp -> if only end is present: end
-    df["Sample.plotDate"] = pd.NaT
-    grb_filt = df["Sample.collection"].str.contains("grb")
-    s_filt = ~df["Sample.dateTimeStart"].isna()
-    e_filt = ~df["Sample.dateTimeEnd"].isna()
+def clean_grab_datetime(df):
+    one_day = pd.to_timedelta("24 hours")
+    result_end = ["Calculated.dateTimeEnd"]
+    result_start = ["Calculated.dateTimeStart"]
+    grab_date = "Sample.dateTime"
+    grab_token = "grb"
+    collection = "Sample.collection"
+    df[result_start] = pd.to_datetime(None)
+    df[result_end] = pd.to_datetime(None)
 
-    df.loc[grb_filt, "Sample.plotDate"] = df.loc[grb_filt, "Sample.dateTime"]
-    df.loc[s_filt & e_filt, "Sample.plotDate"] = df.apply(
-        lambda row: get_midpoint_time(
-            row["Sample.dateTimeStart"], row["Sample.dateTimeEnd"]
-        ),
-        axis=1
-    )
-    df.loc[
-        e_filt & ~s_filt, "Sample.plotDate"] = df.loc[
-            e_filt & ~s_filt, "Sample.dateTimeEnd"]
-    return df["Sample.plotDate"]
+    grb_filt = df[collection].str.contains(grab_token)
+    na_filt = ~df[grab_date].isna()
+    filt = na_filt & grb_filt
+    df2 = df.loc[filt, df.columns.to_list()]
+    df2[result_start] = df2[grab_date].dt.normalize()
+    df2[result_end] = df2[result_start] + one_day
+
+    df.loc[filt] = df2
+    return df
+
+
+def calc_start_date(end_date, type_):
+    if pd.isna(end_date) or pd.isna(type_):
+        return pd.NaT
+    x = type_
+    hours = None
+    if re.match(r"cp[tf]p[0-9]+h", x):
+        hours = int(x[4:-1])
+    elif re.match(r"ps[0-9]+h", x):
+        hours = int(x[2:-1])
+    if hours is not None:
+        interval = pd.to_timedelta(f"{hours}h")
+        return end_date - interval
+    return pd.NaT
+
+
+def clean_composite_data_intervals(df):
+    """This function implements the following rules for
+    associating composite samples with a time interval:
+        1. The Composite ends at midnight of the day recorded as the end date.
+        2. The start date is back-calculated from the interval of the composite
+            and the calculated end date.
+
+    Args:
+        df (pd.DataFrame): The (combined) dataframe with the samples to treat.
+        It should have the columns:
+            "Sample.dateTimeStart",
+            "Sample.dateTimeEnd",
+            "Sample.collection",
+
+    Returns:
+        pd.DataFrame: The entrance DataFrame with modified
+        values in the columns:
+            "Sample.dateTimeStart",
+            "Sample.dateTimeEnd"
+    """
+    coll = "Sample.collection"
+    end = "Sample.dateTimeEnd"
+    result_end = "Calculated.dateTimeEnd"
+    result_start = "Calculated.dateTimeStart"
+
+    one_day = pd.to_timedelta("23 hours 59 minutes")
+    df[result_end] = pd.to_datetime(df[end] + one_day).dt.date
+    df[result_start] = df.apply(
+        lambda row: calc_start_date(row[result_end], row[coll]), axis=1)
+    return df
 
 
 def reduce_dt(x, y):
@@ -138,3 +220,20 @@ def get_table_fields(table_name):
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)
     return variables.loc[variables["tableName"] == table_name, "variableName"]
+
+
+def build_site_specific_dataset(df, site_id):
+    filt_site1 = df["Site.siteID"] == site_id
+    filt_site2 = df["SiteMeasure.siteID"] == site_id
+    filt_site = filt_site1 | filt_site2
+    df1 = df[filt_site]
+
+    cphd_poly_id = str(
+        df.loc[filt_site1, "Calculated.polygonIDForCPHD"].iloc[0]).lower()
+    poly_filt = df["CPHD.polygonID"]\
+        .fillna("").str.lower().str.match(cphd_poly_id)
+    df2 = df[poly_filt]
+    dataset = pd.concat([df1, df2], axis=0)
+    dataset = dataset.set_index(["Calculated.timestamp"])
+    dataset.sort_index()
+    return dataset.reindex(sorted(dataset.columns), axis=1)

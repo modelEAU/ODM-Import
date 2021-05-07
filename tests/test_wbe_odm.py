@@ -1,4 +1,4 @@
-from wbe_odm.odm import Odm, OdmEncoder
+from wbe_odm.odm import Odm
 from wbe_odm.odm_mappers.excel_template_mapper import ExcelTemplateMapper
 
 
@@ -15,5 +15,5 @@ def test_samples_from_excel():
     odm_instance = Odm()
     odm_instance.load_from(excel_mapper)
     geo = odm_instance.get_polygon_geoJSON()
-    samples = odm_instance.combine_per_sample()
+    samples = odm_instance.combine_dataset()
     return geo, samples, odm_instance

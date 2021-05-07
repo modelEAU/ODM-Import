@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import re
 import warnings
+from wbe_odm import utilities
 from wbe_odm.odm_mappers import base_mapper
 from wbe_odm.odm_mappers import excel_template_mapper
 
@@ -120,24 +121,10 @@ def get_sample_type(sample_type):
 
 
 def get_cp_start_date(start_col, end_col, sample_type):
-    def calc_start_date(end_date, type_):
-        if pd.isna(end_date) or pd.isna(type_):
-            return pd.NaT
-        x = type_
-        hours = None
-        if re.match(r"cp[tf]p[0-9]+h", x):
-            hours = int(x[4:-1])
-        elif re.match(r"ps[0-9]+h", x):
-            hours = int(x[2:-1])
-        if hours is not None:
-            interval = pd.to_timedelta(f"{hours}h")
-            return end_date - interval
-        return pd.NaT
-
     df = pd.concat([start_col, end_col, sample_type], axis=1)
     df.columns = ["start", "end", "type"]
     df["s"] = df.apply(
-        lambda row: calc_start_date(row["end"], row["type"]), axis=1)
+        lambda row: utilities.calc_start_date(row["end"], row["type"]), axis=1)
     return df["s"]
 
 

@@ -366,7 +366,9 @@ def get_data_excerpt(origin_folder):
         df = pd.read_csv(path)
         if len(df) > 1000:
             df = df.sample(n=1000)
-        df.to_csv(os.path.join(short_csv_path, file), sep=",", na_rep="na", index=False)
+        df.to_csv(
+            os.path.join(short_csv_path, file),
+            sep=",", na_rep="na", index=False)
 
 
 if __name__ == "__main__":
@@ -376,9 +378,9 @@ if __name__ == "__main__":
     parser.add_argument('-st', '--sitetypes', nargs="+", default=["wwtp"], help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
+    parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help='build geojson files for website (default=False)')  # noqa
-    parser.add_argument('-sh', '--short', type=str2bool, default=True, help='Generate a small dataset for testing purposes')
     args = parser.parse_args()
 
     cities = args.cities
@@ -408,7 +410,8 @@ if __name__ == "__main__":
             modeleau.read(QC_LAB_DATA, QC_SHEET_NAME, lab_id=QC_LAB)
             store.append_from(modeleau)
             print("Importing Quebec city sensor data...")
-            subfolder = os.path.join(os.path.join(DATA_FOLDER, QC_CITY_SENSOR_FOLDER))
+            subfolder = os.path.join(
+                os.path.join(DATA_FOLDER, QC_CITY_SENSOR_FOLDER))
             files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_sensors = vdq_mapper.VdQSensorsMapper()
@@ -455,21 +458,21 @@ if __name__ == "__main__":
 
         if short:
             get_data_excerpt(CSV_FOLDER)
-        # print("Saving combined dataset...")
-        # combined = store.combine_per_sample()
-        # combined_path = os.path.join(CSV_FOLDER, "combined.csv")
-        # combined = combined[~combined.index.duplicated(keep='first')]
-        # combined.to_csv(combined_path)
-        # print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
+        print("Saving combined dataset...")
+        combined = store.combine_dataset()
+        combined_path = os.path.join(CSV_FOLDER, prefix+"_"+"combined.csv")
+        combined.to_csv(combined_path, sep=",", na_rep="na", index=False)
+        print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
 
-    print("Reading data back from csv...")
-    store = odm.Odm()
-    from_csv = csv_mapper.CsvMapper()
-    from_csv.read(CSV_FOLDER)
-    store.append_from(from_csv)
-    print("Combining dataset into wide table...")
-    # combined = store.combine_per_sample()
-    # combined = combined[~combined.index.duplicated(keep='first')]
+    if not reload:
+        print("Reading data back from csv...")
+        store = odm.Odm()
+        from_csv = csv_mapper.CsvMapper()
+        from_csv.read(CSV_FOLDER)
+        store.append_from(from_csv)
+
+        print("Combining dataset into wide table...")
+        combined = store.combine_dataset()
 
     if website:
         print("Generating website files...")

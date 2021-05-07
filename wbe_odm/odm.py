@@ -244,7 +244,7 @@ class Odm:
             self.add_to_attr(attribute, other_value)
         return
 
-    def combine_per_sample(self):
+    def combine_dataset(self):
         return TableCombiner(self).combine_per_sample()
 
 
@@ -422,11 +422,9 @@ class TableCombiner(Odm):
             return df
         df = self.remove_access(df)
         features = ["value"]
-        qualifiers = ["polygonID", "type", "dateType"]
+        qualifiers = ["type", "dateType"]
         wide = TableWidener(df, features, qualifiers).widen()
 
-        wide = wide.groupby("dateTime").agg(utilities.reduce_by_type)
-        wide.reset_index(inplace=True)
         wide = wide.add_prefix("CPHD.")
         return wide
 
@@ -451,15 +449,6 @@ class TableCombiner(Odm):
             return ww
         return ww.groupby("WWMeasure.sampleID")\
             .agg(utilities.reduce_by_type)
-
-    def resample_site_measures_daily(self, df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty:
-            return df
-        df = df.copy()
-        df.set_index("SiteMeasure.dateTime", inplace=True)
-        df = df.resample("1D").agg(utilities.reduce_by_type)
-        df.reset_index(inplace=True)
-        return df
 
     def combine_ww_measure_and_sample(
         self,
@@ -493,82 +482,22 @@ class TableCombiner(Odm):
             left_on="Sample.sampleID",
             right_on="WWMeasure.sampleID")
 
-    def combine_sample_site_measure(
-        self,
-        sample: pd.DataFrame,
-        site_measure: pd.DataFrame
-            ) -> pd.DataFrame:
-        """Combines site measures and sample tables.
+    def combine_site_measure(self, merged, site_measure):
+        return pd.concat([merged, site_measure], axis=0)
 
-        Parameters
-        ----------
-        sample : pd.DataFrame
-            sample DataFrame
-        site_measure : pd.DataFrame
-            Site Measure DataFrame
-
-        Returns
-        -------
-        pd.DataFrame
-            A combined DataFrame joined on sampling date
-        """
-        if sample.empty and site_measure.empty:
-            return sample
-        elif sample.empty:
-            return site_measure
-        elif site_measure.empty:
-            return sample
-        # Pandas doesn't provide good joining capability using dates, so we
-        # go through SQLite to perform the join and come back to pandas
-        # afterwards.
-        # Make the db in memory
-        conn = sqlite3.connect(':memory:')
-        # write the tables
-        sample.to_sql('sample', conn, index=False)
-        site_measure.to_sql("site_measure", conn, index=False)
-
-        # write the query
-        qry = "select * from sample" + \
-            " left join site_measure on" + \
-            " [SiteMeasure.dateTime] between" + \
-            " [Sample.dateTimeStart] and [Sample.dateTimeEnd]"
-        merged = pd.read_sql_query(qry, conn)
-        conn.close()
-        return merged
-
-    def combine_site_sample(
-        self,
-        sample: pd.DataFrame,
-        site: pd.DataFrame
-            ) -> pd.DataFrame:
-        """Combines the sample table with site-specific data.
-
-        Parameters
-        ----------
-        sample : pd.DataFrame
-            The sample table
-        site : pd.DataFrame
-            The site table
-
-        Returns
-        -------
-        pd.DataFrame
-            A combined DataFrame joined on siteID
-        """
-        if sample.empty and site.empty:
+    def combine_site_sample(self,
+                            sample: pd.DataFrame,
+                            site: pd.DataFrame) -> pd.DataFrame:
+        if site.empty:
             return sample
         elif sample.empty:
             return site
-        elif site.empty:
-            return sample
-        return pd.merge(
-            sample,
-            site,
-            how="left",
-            left_on="Sample.siteID",
-            right_on="Site.siteID")
 
-    def combine_polygons_per_sample(self, merged, polygons):
+        return pd.merge(sample, site, how="left",
+                        left_on="Sample.siteID",
+                        right_on="Site.siteID")
+
+    def get_polygon_list(self, merged, polygons):
         """
             Adds a column called 'polygonIDs' containing a list
             of polygons that pertain to a site
@@ -579,68 +508,82 @@ class TableCombiner(Odm):
             ), axis=1)
         polygons["shape"] = polygons["Polygon.wkt"].apply(
             lambda x: utilities.convert_wkt(x))
-        merged["polygonIDs"] = merged.apply(
+        merged["Calculated.polygonList"] = merged.apply(
             lambda row: utilities.get_encompassing_polygons(
                 row, polygons), axis=1)
         merged.drop(["temp_point"], axis=1, inplace=True)
+        polygons.drop(["shape"], axis=1, inplace=True)
         return merged
 
-    def remove_irrelevant_cphd(row, cphd_val_cols):
-        relevant_polys = str(row["polygonIDs"]).split(";")
-        for col in cphd_val_cols:
-            cols_to_clean = cphd_val_cols.copy()
-            for poly_name in relevant_polys:
-                if poly_name in col:
-                    continue
-                cols_to_clean.append(col)
-            row[cols_to_clean] = np.nan
-        return row
+    def combine_cphd_polygon_sample(self,
+                                    df: pd.DataFrame,
+                                    polygon: pd.DataFrame) -> pd.DataFrame:
+        if polygon.empty:
+            return df
+        elif df.empty:
+            return polygon
+        polygon = polygon.copy()
+        polygon = polygon.add_prefix("CPHD.")
+        return pd.merge(df, polygon, how="left",
+                        left_on="Calculated.polygonIDForCPHD",
+                        right_on="CPHD.Polygon.polygonID")
 
-    def combine_cphd_with_samples(
-        self,
-        sample: pd.DataFrame,
-        cphd: pd.DataFrame
-            ) -> pd.DataFrame:
-        """Return the cphd data relevant to a given dsample using the
-        geographical intersection between the sample's sewershed polygon
-        and the cphd's health region polygon.
+    def combine_sewershed_polygon_sample(
+            self,
+            df: pd.DataFrame,
+            polygon: pd.DataFrame) -> pd.DataFrame:
+        if polygon.empty:
+            return df
+        elif df.empty:
+            return polygon
+        polygon = polygon.copy()
+        polygon = polygon.add_prefix("Sewershed.")
+        return pd.merge(df, polygon, how="left",
+                        left_on="Site.polygonID",
+                        right_on="Sewershed.Polygon.polygonID")
 
-        Parameters
-        ----------
-        sample : pd.DataFrame
-            Table containg sample information as well as a site polygonID
-        cphd : pd.DataFrame
-            Table containing public health data and a polygonID.
+    def get_site_measure_ts(self, site_measure):
+        site_measure["Calculated.timestamp"] = site_measure[
+            "SiteMeasure.dateTime"]
+        return site_measure
 
-        Returns
-        -------
-        pd.DataFrame
-            Combined DataFrame containing bnoth sample data and public
-            health data.
-        """
-        if sample.empty and cphd.empty:
-            return sample
-        elif sample.empty:
-            return cphd
-        elif cphd.empty:
-            return sample
+    def get_samples_timestamp(self, df):
+        # grb -> "dateTime"
+        # ps and cp -> if start and end are present: midpoint
+        # ps and cp -> if only end is present: end
+        df["Calculated.timestamp"] = pd.NaT
+        grb_filt = df["Sample.collection"].str.contains("grb")
+        s_filt = ~df["Sample.dateTimeStart"].isna()
+        e_filt = ~df["Sample.dateTimeEnd"].isna()
 
-        sample["Sample.plotDate"] = utilities.get_plot_datetime(sample)
-        sample.dropna(subset=["Sample.plotDate"], inplace=True)
-        sample.sort_values("Sample.plotDate", inplace=True)
-        cphd["CPHD.dateTime"] = pd.to_datetime(cphd["CPHD.dateTime"])
-        cphd.sort_values("CPHD.dateTime", inplace=True)
-        max_delta = pd.to_timedelta("24 hours")
-        merged = pd.merge_asof(
-            sample,
-            cphd,
-            left_on="Sample.plotDate",
-            right_on="CPHD.dateTime",
-            tolerance=max_delta)
-        # cphd_value_cols = [
-            # col for col in merged if "cphd" in col.lower() and "value" in col]
-        # merged = merged.apply(lambda row: remove_irrelevant_cphd(row, cphd_value_cols), axis=1)
-        return merged
+        df.loc[grb_filt, "Calculated.timestamp"] =\
+            df.loc[grb_filt, "Sample.dateTime"]
+        df.loc[grb_filt, "Sample.dateTimeStart"] =\
+            df.loc[grb_filt, "Sample.dateTime"]
+        df.loc[grb_filt, "Sample.dateTimeEnd"] =\
+            df.loc[grb_filt, "Sample.dateTime"]
+
+        df.loc[s_filt & e_filt, "Calculated.timestamp"] = df.apply(
+            lambda row: utilities.get_midpoint_time(
+                row["Sample.dateTimeStart"], row["Sample.dateTimeEnd"]
+            ),
+            axis=1
+        )
+        df.loc[
+            e_filt & ~s_filt, "Calculated.timestamp"] = df.loc[
+                e_filt & ~s_filt, "Sample.dateTimeEnd"]
+        return df
+
+    def get_cphd_ts(self, df):
+        df["Calculated.timestamp"] = df["CPHD.date"]
+        return df
+
+    def combine_cphd(self, merged, cphd_ts):
+        if cphd_ts.empty:
+            return merged
+        elif merged.empty:
+            return cphd_ts
+        return pd.concat([merged, cphd_ts], axis=0)
 
     def combine_per_sample(self) -> pd.DataFrame:
         """Combines data from all tables containing sample-related information
@@ -654,23 +597,34 @@ class TableCombiner(Odm):
         """
         agg_ww_measure = self.agg_ww_measure_per_sample(self.ww_measure)
 
-        merged = self.combine_ww_measure_and_sample(
+        samples = self.combine_ww_measure_and_sample(
             agg_ww_measure, self.sample)
 
-        agg_site_measure = self.resample_site_measures_daily(self.site_measure)
+        # clean grab dates
+        samples = utilities.clean_grab_datetime(samples)
+        # clean composite dates
+        samples = utilities.clean_composite_data_intervals(samples)
+        samples = self.combine_site_sample(samples, self.site)
+        samples_ts = self.get_samples_timestamp(samples)
 
-        merged = self.combine_sample_site_measure(merged, agg_site_measure)
+        site_measure_ts = self.get_site_measure_ts(self.site_measure)
 
-        merged = self.combine_site_sample(merged, self.site)
+        merged_s_sm = self.combine_site_measure(samples_ts, site_measure_ts)
 
-        merged = self.combine_polygons_per_sample(merged, self.polygon)
+        merged_s_sm = self.get_polygon_list(merged_s_sm, self.polygon)
+        merged_s_sm = utilities.get_polygon_for_cphd(
+            merged_s_sm, self.polygon, self.cphd)
+        merged_s_sm_p = self.combine_cphd_polygon_sample(
+            merged_s_sm, self.polygon)
+        merged_s_sm_pp = self.combine_sewershed_polygon_sample(
+            merged_s_sm_p, self.polygon)
 
-        merged = self.combine_cphd_with_samples(merged, self.cphd)
+        cphd_ts = self.get_cphd_ts(self.cphd)
+        merged_s_sm_pp_cphd = self.combine_cphd(merged_s_sm_pp, cphd_ts)
 
-        merged.set_index("Sample.sampleID", inplace=True)
-        merged.drop_duplicates(keep="first", inplace=True)
-        self.combined = merged
-        return merged
+        merged_s_sm_pp_cphd.drop_duplicates(keep="first", inplace=True)
+        self.combined = merged_s_sm_pp_cphd
+        return merged_s_sm_pp_cphd
 
 
 class OdmEncoder(json.JSONEncoder):
@@ -719,5 +673,5 @@ if __name__ == "__main__":
     mapper.read(CSV_FOLDER)
     store = Odm()
     store.load_from(mapper)
-    samples = store.combine_per_sample()
+    samples = store.combine_dataset()
     print("?")

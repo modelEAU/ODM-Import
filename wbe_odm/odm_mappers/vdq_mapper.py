@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from wbe_odm.odm_mappers import(
+from wbe_odm.odm_mappers import (
     mcgill_mapper as mcm,
     base_mapper as bm
 )
@@ -70,8 +70,8 @@ def maizerets_from_height(height, is_open):
     df["maizerets"] = pd.to_numeric(df["maizerets"], errors="coerce")
     df["is_open"] = pd.to_numeric(df["is_open"], errors="coerce")
     df.loc[df["is_open"].isna(), "maizerets"] = 0
-    df["m3/h"] = df["maizerets"] * 3600 / 1000
-    return df["m3/h"]
+    df["m3/d"] = df["maizerets"] * 3600 * 24 / 1000
+    return df["m3/d"]
 
 
 def charlesbourg_flow(tot_flow, height, is_open):
@@ -82,11 +82,11 @@ def charlesbourg_flow(tot_flow, height, is_open):
 
 
 def limoilou_n_flow(flow):
-    return pd.to_numeric(flow, errors="coerce")/3
+    return pd.to_numeric(flow, errors="coerce")/3 * 24
 
 
 def limoilou_s_flow(flow):
-    return pd.to_numeric(flow, errors="coerce") * 2/3
+    return pd.to_numeric(flow, errors="coerce") * 2/3 * 24
 
 
 sensor_funcs = {
@@ -158,6 +158,7 @@ class VdQSensorsMapper(mcm.McGillMapper):
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
         return
+
 
 rain_default_site_measurement = {
     "siteMeasureID": None,

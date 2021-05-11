@@ -8,7 +8,7 @@ import requests
 from shapely.geometry import Point
 
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, csv_mapper
+from wbe_odm.odm_mappers import base_mapper, csv_mapper, mcgill_mapper
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
 # instead of on the data itself.
@@ -266,7 +266,7 @@ class TableWidener:
             filt1 = df[qualifier].isna()
             filt2 = df[qualifier] == ""
             df.loc[filt1 | filt2, qualifier] = f"unknown-{qualifier}"
-            df[qualifier] = df[qualifier].str.replace("/", "-")
+            df[qualifier] = df[qualifier].str.replace("/", "-").str.lower()
             if qualifier == "qualityFlag":
                 df[qualifier] = df[qualifier].str\
                     .replace("True", "quality-issue")\
@@ -291,6 +291,7 @@ class TableWidener:
         df = self.clean_qualifier_columns()
         for qualifier in self.qualifiers:
             df[qualifier] = df[qualifier].astype(str)
+            df[qualifier] = df[qualifier].str.replace("single", "agg-singles")
         df["col_qualifiers"] = df[self.qualifiers].agg("_".join, axis=1)
         unique_col_qualifiers = df["col_qualifiers"].unique()
         for col_qualifier in unique_col_qualifiers:
@@ -353,7 +354,7 @@ class TableCombiner(Odm):
         df = self.remove_access(df)
         features = ["value"]
         qualifiers = [
-                "fractionAnalyzed",
+                # "fractionAnalyzed",
                 "type",
                 "unit",
                 "aggregation",
@@ -543,6 +544,8 @@ class TableCombiner(Odm):
                         right_on="Sewershed.Polygon.polygonID")
 
     def get_site_measure_ts(self, site_measure):
+        if site_measure.empty:
+            return site_measure
         site_measure["Calculated.timestamp"] = site_measure[
             "SiteMeasure.dateTime"]
         return site_measure
@@ -606,10 +609,11 @@ class TableCombiner(Odm):
         samples = utilities.clean_composite_data_intervals(samples)
         samples = self.combine_site_sample(samples, self.site)
         samples_ts = self.get_samples_timestamp(samples)
-
-        site_measure_ts = self.get_site_measure_ts(self.site_measure)
-
-        merged_s_sm = self.combine_site_measure(samples_ts, site_measure_ts)
+        if self.site_measure.empty:
+            merged_s_sm = samples_ts
+        else:
+            site_measure_ts = self.get_site_measure_ts(self.site_measure)
+            merged_s_sm = self.combine_site_measure(samples_ts, site_measure_ts)
 
         merged_s_sm = self.get_polygon_list(merged_s_sm, self.polygon)
         merged_s_sm = utilities.get_polygon_for_cphd(
@@ -668,9 +672,16 @@ def destroy_db(filepath):
 
 
 if __name__ == "__main__":
-    CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/short_csv"  # noqa
-    mapper = csv_mapper.CsvMapper()
-    mapper.read(CSV_FOLDER)
+    mapper = mcgill_mapper.McGillMapper()
+    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
+    sheet_name = "QC Data Daily Samples (McGill)"
+    lab_id = "frigon_lab"
+    mapper.read(lab_data,
+                static_data,
+                sheet_name,
+                lab_id)
+    print(mapper.site)
     store = Odm()
     store.load_from(mapper)
     samples = store.combine_dataset()

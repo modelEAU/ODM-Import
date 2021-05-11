@@ -11,7 +11,7 @@ from config import *
 from wbe_odm import odm, utilities
 from wbe_odm.odm_mappers import (
     csv_mapper,
-    ledevoir_mapper,
+    inspq_mapper,
     mcgill_mapper,
     modeleau_mapper,
     vdq_mapper
@@ -26,6 +26,10 @@ def str2bool(arg):
         return False
     else:
         raise argparse.ArgumentError('Unrecognized boolean value.')
+
+
+def str2list(arg):
+    return arg.lower().split("-")
 
 
 def make_point_feature(row, props_to_add):
@@ -374,8 +378,8 @@ def get_data_excerpt(origin_folder):
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-cty', '--cities', nargs="+", default=["qc", "mtl"], help='Cities to load data from')  # noqa
-    parser.add_argument('-st', '--sitetypes', nargs="+", default=["wwtp"], help='Types of sites to parse')  # noqa
+    parser.add_argument('-cty', '--cities', type=str2list, default="qc-mtl", help='Cities to load data from')  # noqa
+    parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtp", help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
     parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
@@ -397,7 +401,7 @@ if __name__ == "__main__":
             "CSV folder does not exist. Please modify config file.")
 
     store = odm.Odm()
-
+    print(cities)
     if reload:
         if "qc" in cities:
             print("Importing data from Quebec City...")
@@ -439,10 +443,10 @@ if __name__ == "__main__":
             store.append_from(poly_lab)
 
         if publichealth:
-            print("Importing case data from Le Devoir...")
-            ledevoir = ledevoir_mapper.LeDevoirMapper()
-            ledevoir.read()
-            store.append_from(ledevoir)
+            print("Importing case data from INSPQ...")
+            public_health = inspq_mapper.INSPQ_mapper()
+            public_health.read(INSPQ_DATA)
+            store.append_from(public_health)
 
         print("Removing older dataset...")
         for root, dirs, files in os.walk(CSV_FOLDER):
@@ -460,6 +464,7 @@ if __name__ == "__main__":
             get_data_excerpt(CSV_FOLDER)
         print("Saving combined dataset...")
         combined = store.combine_dataset()
+        combined = utilities.typecast_wide_table(combined)
         combined_path = os.path.join(CSV_FOLDER, prefix+"_"+"combined.csv")
         combined.to_csv(combined_path, sep=",", na_rep="na", index=False)
         print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
@@ -471,8 +476,16 @@ if __name__ == "__main__":
         from_csv.read(CSV_FOLDER)
         store.append_from(from_csv)
 
-        print("Combining dataset into wide table...")
-        combined = store.combine_dataset()
+        print("Reading combined data back from csv...")
+        for root, dirs, files in os.walk(CSV_FOLDER):
+            for f in files:
+                if "combined" in f:
+                    combined_path = f
+                    break
+        if combined_path is None:
+            combined = pd.DataFrame()
+        combined = pd.read_csv(os.path.join(CSV_FOLDER, f), na_values="na")
+        combined = utilities.typecast_wide_table(combined)
 
     if website:
         print("Generating website files...")
@@ -504,4 +517,15 @@ if __name__ == "__main__":
             polygons, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
 
     if generate:
+        date = datetime.now().strftime("%Y-%m-%d")
         print("Generating ML Dataset...")
+        sites = store.site
+        for city in cities:
+            filt_city = sites["siteID"].str.contains(city)
+            site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
+            city_sites = sites.loc[filt_city & site_type_filt, "siteID"].dropna().unique()
+            for city_site in city_sites:
+                print(f"Generating dataset for {city_site}")
+                dataset = utilities.build_site_specific_dataset(combined, city_site)
+                dataset = utilities.resample_per_day(dataset)
+                dataset.to_csv(os.path.join(CITY_OUTPUT_DIR, f"{date}_{city_site}.csv"))

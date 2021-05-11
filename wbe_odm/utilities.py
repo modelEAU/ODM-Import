@@ -9,6 +9,18 @@ import shapely.wkt
 import geomet.wkt
 
 
+def typecast_wide_table(df):
+    for col in df.columns:
+        name = df[col].name
+        if "date" in name or "timestamp" in name:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+        elif "value" in name:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+        else:
+            df[col] = df[col].astype(str)
+    return df
+
+
 def has_cphd_data(x, uniques):
     if pd.isna(x):
         return None
@@ -169,10 +181,12 @@ def reduce_nums(x, y):
         return y
     elif pd.isna(y):
         return x
-    return x+y/2
+    return (x+y)/2
 
 
 def reduce_by_type(series):
+    if series.empty:
+        return np.nan
     data_type = str(series.dtype)
     name = series.name
     if "datetime" in data_type:
@@ -223,17 +237,33 @@ def get_table_fields(table_name):
 
 
 def build_site_specific_dataset(df, site_id):
+    if df.empty:
+        return df
     filt_site1 = df["Site.siteID"] == site_id
-    filt_site2 = df["SiteMeasure.siteID"] == site_id
-    filt_site = filt_site1 | filt_site2
+    if "SiteMeasure.siteID" in df.columns:
+        filt_site2 = df["SiteMeasure.siteID"] == site_id
+        filt_site = filt_site1 | filt_site2
+    else:
+        filt_site = filt_site1
     df1 = df[filt_site]
 
-    cphd_poly_id = str(
-        df.loc[filt_site1, "Calculated.polygonIDForCPHD"].iloc[0]).lower()
-    poly_filt = df["CPHD.polygonID"]\
-        .fillna("").str.lower().str.match(cphd_poly_id)
-    df2 = df[poly_filt]
-    dataset = pd.concat([df1, df2], axis=0)
+    filt_cphd_df = df.loc[filt_site1, "Calculated.polygonIDForCPHD"]
+    if not filt_cphd_df.empty:
+        cphd_poly_id = str(
+            filt_cphd_df.iloc[0]).lower()
+        poly_filt = df["CPHD.polygonID"]\
+            .fillna("").str.lower().str.match(cphd_poly_id)
+        df2 = df[poly_filt]
+        dataset = pd.concat([df1, df2], axis=0)
+    else:
+        dataset = df1
+
     dataset = dataset.set_index(["Calculated.timestamp"])
     dataset.sort_index()
     return dataset.reindex(sorted(dataset.columns), axis=1)
+
+
+def resample_per_day(df):
+    if df.empty:
+        return df
+    return df.resample('1D').agg(reduce_by_type)

@@ -47,6 +47,8 @@ DATA_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data
 CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"  # noqa
 STATIC_DATA = os.path.join(DATA_FOLDER, "CentrEAU-COVID_Static_Data.xlsx")  # noqa
 
+INSPQ_DATA = os.path.join(DATA_FOLDER, "INSPQ/covid19-hist.csv")
+
 QC_LAB_DATA = os.path.join(DATA_FOLDER, "COVIDProject_Lab Measurements.xlsx")  # noqa
 QC_SHEET_NAME = "Lab analyses"
 QC_LAB = "modeleau_lab"
@@ -71,3 +73,5 @@ POLYS_TO_EXTRACT = ["swrCat"]
 
 SITE_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"  # noqa
 SITE_NAME = "sites.geojson"
+
+CITY_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Cities"  # noqa

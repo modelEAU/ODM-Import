@@ -8,6 +8,7 @@ from wbe_odm import utilities
 from wbe_odm.odm_mappers import base_mapper
 from wbe_odm.odm_mappers import excel_template_mapper
 
+
 LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 
 directory = os.path.dirname(__file__)
@@ -641,8 +642,8 @@ class McGillMapper(base_mapper.BaseMapper):
 
 if __name__ == "__main__":
     mapper = McGillMapper()
-    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/mcgill_static.xlsx"  # noqa
+    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
     sheet_name = "QC Data Daily Samples (McGill)"
     lab_id = "frigon_lab"
     mapper.read(lab_data,

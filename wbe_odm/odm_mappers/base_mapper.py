@@ -50,7 +50,7 @@ def parse_types(table_name, series):
     elif desired_type == "datetime64[ns]":
         series = series.astype(str)
         series = series.apply(lambda x: replace_unknown_by_default(x, ""))
-        series = pd.to_datetime(series)
+        series = pd.to_datetime(series, errors="coerce")
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
 

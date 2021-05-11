@@ -74,4 +74,4 @@ POLYS_TO_EXTRACT = ["swrCat"]
 SITE_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"  # noqa
 SITE_NAME = "sites.geojson"
 
-CITY_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Cities"  # noqa
+CITY_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/ML_Cities"  # noqa

@@ -17,7 +17,7 @@
             "request": "launch",
             "module": "pipelines",
             "args": [
-                "-re", "true", "--generate", "true", "--cities", "mtl"
+                "-web", "true"
             ]
         }
     ]

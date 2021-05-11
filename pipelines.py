@@ -48,9 +48,8 @@ def make_point_feature(row, props_to_add):
 def get_latest_sample_date(df):
     if len(df) == 0:
         return pd.NaT
-    df["plotDate"] = utilities.get_plot_datetime(df)
-    df = df.sort_values(by="plotDate")
-    return df.iloc[-1, df.columns.get_loc("plotDate")]
+    df = df.sort_values(by="Calculated.timestamp")
+    return df.iloc[-1, df.columns.get_loc("Calculated.timestamp")]
 
 
 def get_cm_to_plot(samples, thresh_n):
@@ -94,7 +93,7 @@ def get_viral_measures(df):
         cond1 = "wwmeasure" in l_col
         cond2 = "covn2" in l_col or 'npmmov' in l_col
         cond3 = "gc" in l_col
-        if (cond1 and cond2 and cond3) or "plotdate" in l_col:
+        if (cond1 and cond2 and cond3) or "timestamp" in l_col:
             continue
         cols_to_remove.append(col)
     df.drop(columns=cols_to_remove, inplace=True)
@@ -117,9 +116,10 @@ def combine_viral_cols(viral):
     sars = []
     pmmov = []
     for col in viral.columns:
-        if "plotDate" in col:
+        if "timestamp" in col:
             continue
-        _, virus, _, _, _ = col.lower().split("_")
+        _, desc = col.split(".")
+        virus, _, _, _ = desc.lower().split("_")
         if "cov" in virus:
             sars.append(col)
         elif "pmmov" in virus:
@@ -131,16 +131,15 @@ def combine_viral_cols(viral):
 
 
 def get_samples_in_interval(samples, dateStart, dateEnd):
-    samples
     if pd.isna(dateStart) and pd.isna(dateEnd):
         return samples
     elif pd.isna(dateStart):
-        return samples.loc[samples["Sample.plotDate"] <= dateEnd]
+        return samples.loc[samples["Calculated.timestamp"] <= dateEnd]
     elif pd.isna(dateEnd):
-        return samples.loc[samples["Sample.plotDate"] >= dateStart]
+        return samples.loc[samples["Calculated.timestamp"] >= dateStart]
     return samples.loc[
-        samples["Sample.plotDate"] >= dateStart &
-        samples["Sample.plotDate"] <= dateEnd]
+        samples["Calculated.timestamp"] >= dateStart &
+        samples["Calculated.timestamp"] <= dateEnd]
 
 
 def get_samples_to_plot(samples, cm):
@@ -189,7 +188,7 @@ def get_color_ts(samples,
     if samples is not None:
         viral = get_viral_timeseries(samples)
         if viral is not None:
-            viral["last_sunday"] = viral["Sample.plotDate"].apply(
+            viral["last_sunday"] = viral["Calculated.timestamp"].apply(
                 get_last_sunday)
             weekly = viral.resample("W", on="last_sunday").mean()
 
@@ -298,7 +297,7 @@ def get_site_geoJSON(
         colorscale,
         dateStart=None,
         dateEnd=None,):
-    combined["Sample.plotDate"] = utilities.get_plot_datetime(combined)
+
     sites["samples_for_site"] = sites.apply(
         lambda row: get_samples_for_site(row["siteID"], combined),
         axis=1)
@@ -316,7 +315,7 @@ def get_site_geoJSON(
         axis=1)
     sites["date_color"] = sites.apply(
         lambda row: get_color_ts(
-            row["samples_to_plot"], dateStart, dateEnd),
+            row["samples_to_plot"], colorscale, dateStart, dateEnd),
         axis=1)
 
     sites["clean_type"] = get_website_type(sites["type"])

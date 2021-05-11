@@ -3,7 +3,6 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-
   - dash
   - flake8
   - jupyter-dash
@@ -23,6 +22,7 @@ dependencies:
   - sqlalchemy
   - pytest
   - python-kaleido
+  - unidecode
   - pip:
     - geojson-rewind
     - geomet

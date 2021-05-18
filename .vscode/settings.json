@@ -5,5 +5,6 @@
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestEnabled": true,
-    "jupyter.jupyterServerType": "local"
+    "jupyter.jupyterServerType": "local",
+    "python.pythonPath": "C:\\Users\\ANNED2\\AppData\\Local\\Continuum\\anaconda3\\envs\\covid\\python.exe"
 }

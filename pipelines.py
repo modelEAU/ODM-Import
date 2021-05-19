@@ -70,7 +70,7 @@ def get_cm_to_plot(samples, thresh_n):
     types.columns = ["type", "n", "last_date"]
     types = types.sort_values("last_date", ascending=True)
 
-    # if there is no colleciton method that has enough
+    # if there is no collection method that has enough
     # samples to satisfy the threshold, that condition is moot
     types = types.loc[~types["last_date"].isna()]
     if len(types.loc[types["n"] >= thresh_n]) == 0:

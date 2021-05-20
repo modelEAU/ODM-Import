@@ -146,3 +146,4 @@ some_output_file.txt
 orig.json
 deserialized.json
 Data/VdQ
+.vscode

@@ -3,7 +3,7 @@ import pandas as pd
 from wbe_odm.odm_mappers import base_mapper
 
 
-class CsvMapper(base_mapper.BaseMapper):
+class CsvFolderMapper(base_mapper.BaseMapper):
     def is_valid_file_name(self, file_name):
         if "_" in file_name:
             file_name = file_name.partition("_")[-1]

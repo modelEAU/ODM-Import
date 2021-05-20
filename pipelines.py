@@ -11,7 +11,7 @@ import pandas as pd
 from config import *
 from wbe_odm import odm, utilities
 from wbe_odm.odm_mappers import (
-    csv_mapper,
+    csv_folder_mapper,
     inspq_mapper,
     mcgill_mapper,
     modeleau_mapper,
@@ -623,7 +623,7 @@ if __name__ == "__main__":
     if not reload:
         print("Reading data back from csv...")
         store = odm.Odm()
-        from_csv = csv_mapper.CsvMapper()
+        from_csv = csv_folder_mapper.CsvFolderMapper()
         from_csv.read(CSV_FOLDER)
         store.append_from(from_csv)
 

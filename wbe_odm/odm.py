@@ -8,7 +8,7 @@ import requests
 from shapely.geometry import Point
 
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, csv_mapper, mcgill_mapper
+from wbe_odm.odm_mappers import base_mapper, csv_folder_mapper, mcgill_mapper
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
 # instead of on the data itself.

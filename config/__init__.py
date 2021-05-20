@@ -67,6 +67,15 @@ MTL_MCGILL_SHEET_NAME = "Mtl Data Daily Samples (McGill)"
 MCGILL_VIRUS_LAB = "frigon_lab"
 POLY_VIRUS_LAB = "dorner_lab"
 
+BSL_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_BSL_final.xlsx")  # noqa
+BSL_SHEET_NAME = "BSL Data Daily Samples (UQAR)"
+BSL_VIRUS_LAB = "bsl_lab"
+BSL_CITIES = ["stak", "3p", "mtne", "riki", "rdl"]
+
+LVL_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Laval_final.xlsx")
+LVL_SHEET_NAME = "LVL_Data Daily Samples (Poly)"
+LVL_VIRUS_LAB = "dorner_lab"
+
 POLYGON_OUTPUT_DIR = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website geo"  # noqa
 POLY_NAME = "polygons.geojson"
 POLYS_TO_EXTRACT = ["swrCat"]

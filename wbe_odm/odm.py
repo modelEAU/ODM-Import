@@ -80,6 +80,14 @@ class Odm:
         }
         return null_values.get(dtype, np.nan)
 
+    def combine_table_instances(self, table_name, df1, df2):
+        primary_key = utilities.get_primary_key(table_name)
+        df = df1.append(df2)
+        # This is way too slow, I'll have to find something else...
+        # df = df.groupby(primary_key).agg(utilities.reduce_with_warnings).reset_index()
+        df = df.drop_duplicates(subset=[primary_key])
+        return df
+    
     def append_from(self, mapper) -> None:
         """Concatenates the Odm object's current data with
         that of a mapper.
@@ -103,9 +111,10 @@ class Odm:
                 continue
             else:
                 try:
-                    combined = current_df.append(new_df)\
-                        .drop_duplicates(keep="first", ignore_index=True)
+                    table_name = base_mapper.get_odm_names(attr)
+                    combined = self.combine_table_instances(table_name, current_df, new_df)
                     setattr(self, attr, combined)
+
                 except Exception as e:
                     setattr(self, attr, current_df)
                     raise e
@@ -235,7 +244,7 @@ class Odm:
             if df is None or df.empty:
                 continue
             complete_path = os.path.join(path, filename)
-            df.to_csv(complete_path+".csv", sep=",", na_rep="na", index=False)
+            df.to_csv(complete_path+".csv", sep=",", index=False)
         return
 
     def append_odm(self, other_odm):
@@ -243,6 +252,9 @@ class Odm:
             other_value = getattr(other_odm, attribute)
             self.add_to_attr(attribute, other_value)
         return
+
+    def add_to_attr(self, attribute, other_value):
+        raise NotImplementedError()
 
     def combine_dataset(self):
         return TableCombiner(self).combine_per_sample()

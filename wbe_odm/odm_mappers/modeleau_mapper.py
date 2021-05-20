@@ -214,6 +214,7 @@ class ModelEauMapper(mcm.McGillMapper):
         )
         for table_name, table in dynamic_tables.items():
             table = table.drop_duplicates(keep="first")
+            table = self.type_cast_table(table_name, table)
             attr = self.get_attr_from_table_name(table_name)
             setattr(self, attr, table)
         return

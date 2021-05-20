@@ -339,7 +339,7 @@ def get_field_sample_temp(series):
         "refrigerated": 4.0,
         "ice": 0.0,
         "norefrigaration": 20.0,
-        "norefrigeration": np.nan
+        # "norefrigeration": np.nan
     }
     series = series.str.lower().map(temp_map)
     return series
@@ -633,6 +633,7 @@ class McGillMapper(base_mapper.BaseMapper):
         )
         for table_name, table in dynamic_tables.items():
             attr = self.get_attr_from_table_name(table_name)
+            table = self.type_cast_table(table_name, table)
             setattr(self, attr, table)
         return
 

@@ -10,7 +10,7 @@ class CsvMapper(base_mapper.BaseMapper):
         if ".csv" not in file_name:
             return False
         name = file_name.partition(".")[0]
-        acceptable_names = self.get_odm_names()
+        acceptable_names = base_mapper.get_odm_names()
         return name in acceptable_names
 
     def get_odm_name_from_file_name(self, file_name):

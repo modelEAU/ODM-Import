@@ -1,6 +1,7 @@
 import json
 from functools import reduce
 import re
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -236,6 +237,26 @@ def get_table_fields(table_name):
     return variables.loc[variables["tableName"] == table_name, "variableName"]
 
 
+def clean_primary_key(key):
+    key = str(key)
+    if key.startswith('u'):
+        key = key[1:]
+    if key[0].isupper():
+        key = key[0].lower() + key[1:]
+    return key.replace('Ww', 'ww')
+
+
+def get_primary_key(table_name=None):
+    url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
+    variables = pd.read_csv(url)
+    keys = variables.loc[variables["key"] == "Primary Key", ["tableName", "variableName"]].set_index("tableName")
+    keys = keys.apply(lambda x: clean_primary_key(x["variableName"]), axis=1)
+    keys = keys.to_dict()
+    if table_name is None:
+        return keys
+    return keys[table_name]
+
+
 def build_site_specific_dataset(df, site_id):
     if df.empty:
         return df
@@ -267,3 +288,14 @@ def resample_per_day(df):
     if df.empty:
         return df
     return df.resample('1D').agg(reduce_by_type)
+
+
+def reduce_with_warnings(series):
+    values = series.repalce('', np.nan).dropna().unique()
+    n = len(values)
+    if n == 0:
+        return np.nan
+    if n > 1:
+        mismatched_values = series.loc[~series.duplicated()]
+        warnings.warn(f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}")
+    return list(values)[0]

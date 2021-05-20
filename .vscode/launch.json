@@ -12,13 +12,12 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "pipelines module",
-            "type": "python",
+            "name": "Pipelines module",
+            "type":"python",
             "request": "launch",
-            "module": "pipelines",
-            "args": [
-                "-web", "true"
-            ]
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["-cty", "bsl", "-re", "true", "-web", "true"]
         }
     ]
 }

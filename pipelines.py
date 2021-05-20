@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import shutil
 from datetime import datetime, timedelta
@@ -170,7 +171,7 @@ def build_empty_color_ts(date_range):
 
 
 def get_n_bins(series, all_colors):
-    max_len = len(all_colors)
+    max_len = len(all_colors)-1
     len_not_null = len(series[~series.isna()])
     if len_not_null == 0:
         return None
@@ -190,7 +191,7 @@ def get_color_ts(samples,
         if viral is not None:
             viral["last_sunday"] = viral["Calculated.timestamp"].apply(
                 get_last_sunday)
-            weekly = viral.resample("W", on="last_sunday").mean()
+            weekly = viral.resample("W", on="last_sunday").median()
 
     date_range_start = get_last_sunday(dateStart)
     if dateEnd is None:
@@ -229,30 +230,158 @@ def get_color_ts(samples,
 
 def get_website_type(types):
     site_types = {
-        "wwtpmuc": "Station de traitement des eaux usées municipale pour égouts combinés",  # noqa
-        "pstat": "Station de pompage",
-        "ltcf": "Établissement de soins de longue durée",
-        "airpln": "Avion",
-        "corFcil": "Prison",
-        "school": "École",
-        "hosptl": "Hôpital",
-        "shelter": "Refuge",
-        "swgTrck": "Camion de vidange",
-        "uCampus": "Campus universitaire",
-        "mSwrPpl": "Collecteur d'égouts",
-        "holdTnk": "Bassin de stockage",
-        "retPond": "Bassin de rétention",
-        "wwtpMuS": "Station de traitement des eaux usées municipales pour égouts sanitaires seulement",  # noqa
-        "wwtpInd": "Station de traitement des eaux usées industrielle",
-        "lagoon": "Système de lagunage pour traitement des eaux usées",
-        "septTnk": "Fosse septique.",
-        "river": "Rivière",
-        "lake": "Lac",
-        "estuary": "Estuaire",
-        "sea": "Mer",
-        "ocean": "Océan",
+        "wwtpmuc": {
+            "french": "StaRRE municipale pour égouts unitaires",  # noqa
+            "english": "WRRF for combined sewers"
+        },
+        "pstat": {
+            "french": "Station de pompage",
+            "english": "Pumping station"
+            },
+        "ltcf": {
+            "french": "Établissement de soins de longue durée",
+            "english": "Long-term care facility"
+            },
+        "airpln": {
+            "french": "Avion",
+            "english": "Airplane"
+            },        
+        "corFcil": {
+            "french": "Prison",
+            "english": "Correctional facility"
+            },
+        "school": {
+            "french": "École",
+            "english": "School"
+            },        
+        "hosptl": {
+            "french": "Hôpital",
+            "english": "Hospital"
+            },
+        "shelter": {
+            "french": "Refuge",
+            "english": "Shelter"
+            },
+        "swgTrck": {
+            "french": "Camion de vidange",
+            "english": "Sewage truck"
+            },
+        "uCampus": {
+            "french": "Campus universitaire",
+            "english": "University campus"
+            },
+        "mSwrPpl": {
+            "french": "Collecteur d'égouts",
+            "english": "Sewer main collector"
+            },
+        "holdTnk": {
+            "french": "Bassin de stockage",
+            "english": "Holding tank"
+            },
+        "retPond": {
+            "french": "Bassin de rétention",
+            "english": "Retention tank"
+            },
+        "wwtpMuS": {
+            "french": "StaRRE municipale pour égouts sanitaires",  # noqa
+            "english": "Municipal WRRF for sanitary sewers"
+            },
+        "wwtpInd": {
+            "french": "StaRRE eaux industrielles",
+            "english": "WWRF for industrial waters"
+            },
+        "lagoon": {
+            "french": "Étang aéré",
+            "english": "Aerated lagoon"
+            },
+        "septTnk": {
+            "french": "Fosse septique",
+            "english": "Septic tank"
+            },
+        "river": {
+            "french": "Rivière",
+            "english": "River"
+            },
+        "lake": {
+            "french": "Lac",
+            "english": "Lake",
+        },
+        "estuary": {
+            "french": "Estuaire",
+            "english": "Estuary"
+            },
+        "sea": {
+            "french": "Mer",
+            "english": "Sea",
+            },
+        "ocean": {
+            "french": "Océan",
+            "english": "Ocean"
+            },
     }
     return types.str.lower().map(site_types)
+
+
+def get_website_name(names):
+    sitename_lang_map = {
+        "quebec station est":{
+            "french": "Québec Station Est",
+            "english": "Québec East WRRF",
+        },
+        "quebec station ouest":{
+            "french": "Québec Station Ouest",
+            "english": "Québec West WRRF",
+        },
+        "montréal intercepteur nord":{
+            "french": "Montréal Intercepteur Nord",
+            "english": "Montreal North Intercepter",
+        },
+        "montréal intercepteur sud":{
+            "french": "Montréal Intercepteur Sud",
+            "english": "Montreal South Intercepter",
+        },
+        "station rimouski": {
+            "french": "StaRRE de Rimouski",
+            "english": "Rimouski WRRF",
+        },
+        "station rivière-du-loup": {
+            "french": "StaRRE de Rivière-du-Loup",
+            "english": "Rivière-du-Loup WRRF",
+        },
+        "station st-alexandre-de-kamouraska": {
+            "french": "StaRRE de St-Alexandre-de Kamouraska",
+            "english": "St-Alexandre-de-Kamouraska WRRF",
+        },
+        "trois-pistoles": {
+            "french": "StaRRE de Trois-Pistoles",
+            "english": "Trois-Pistoles WRRF",
+        },
+        "matane": {
+            "french": "StaRRE de Matane",
+            "english": "Matane WRRF",
+        },
+        "auteuil": {
+            "french": "StaRRE Auteuil",
+            "english": "Auteuil WRRF",
+        },
+        "fabreville": {
+            "french": "StaRRE Fabreville",
+            "english": "Fabreville WRRF",
+        },
+        "station de pompage sainte-dorothée": {
+            "french": "Station de pompage de Ste-Dorothée",
+            "english": "Ste-Dorothée pumping station",
+        },
+        "station de pompage bertrand": {
+            "french": "Station de pompage Bertrand",
+            "english": "Bertrand pumping station",
+        },
+        "la pinière": {
+            "french": "StaRRE de La Pinière",
+            "english": "La Pinière WRRF",
+        },
+    }
+    return names.map(sitename_lang_map)
 
 
 def get_municipality(ids):
@@ -320,6 +449,8 @@ def get_site_geoJSON(
 
     sites["clean_type"] = get_website_type(sites["type"])
     sites["municipality"] = get_municipality(sites["siteID"])
+    sites["name"] = get_website_name(sites["name"])
+
     sites["collection_method"] = website_collection_method(
         sites["collection_method"])
     cols_to_keep = [
@@ -346,11 +477,15 @@ def get_site_geoJSON(
     return
 
 
-def build_polygon_geoJSON(polygons, output_dir, name, types=None):
-    for col in ["pop", "link"]:
-        if col in polygons.columns:
-            polygons.drop(columns=[col], inplace=True)
+def build_polygon_geoJSON(store, poly_list, output_dir, name, types=None):
     polys = store.get_polygon_geoJSON(types=types)
+    features = polys["features"]
+    for feature in features.copy():
+        props = feature["properties"]
+        poly_id = props["polygonID"]
+        if poly_id not in poly_list:
+            features.remove(feature)
+    polys["feature"] = features
     path = os.path.join(output_dir, name)
     with open(path, "w") as f:
         f.write(json.dumps(polys, indent=4))
@@ -371,20 +506,22 @@ def get_data_excerpt(origin_folder):
             df = df.sample(n=1000)
         df.to_csv(
             os.path.join(short_csv_path, file),
-            sep=",", na_rep="na", index=False)
+            sep=",", index=False)
 
 
 if __name__ == "__main__":
+
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-cty', '--cities', type=str2list, default="qc-mtl", help='Cities to load data from')  # noqa
-    parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtp", help='Types of sites to parse')  # noqa
+    parser.add_argument('-cty', '--cities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to load data from')  # noqa
+    parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtpmus-wwtpmuc-lagoon", help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
     parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help='build geojson files for website (default=False)')  # noqa
     args = parser.parse_args()
+
 
     cities = args.cities
     sitetypes = args.sitetypes
@@ -440,6 +577,21 @@ if __name__ == "__main__":
             poly_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
+        
+        if "bsl" in cities:
+            print(f"BSL cities found in config file are {BSL_CITIES}")
+            cities.remove("bsl")
+            cities.extend(BSL_CITIES)
+            print("Importing data from Bas St-Laurent...")
+            bsl_lab = mcgill_mapper.McGillMapper()
+            bsl_lab.read(BSL_LAB_DATA, STATIC_DATA, BSL_SHEET_NAME, BSL_VIRUS_LAB)  # noqa
+            store.append_from(bsl_lab)
+
+        if "lvl" in cities:
+            print("Importing data from Laval...")
+            lvl_lab = mcgill_mapper.McGillMapper()
+            lvl_lab.read(LVL_LAB_DATA, STATIC_DATA, LVL_SHEET_NAME, LVL_VIRUS_LAB)  # noqa
+            store.append_from(lvl_lab)
 
         if publichealth:
             print("Importing case data from INSPQ...")
@@ -465,7 +617,7 @@ if __name__ == "__main__":
         combined = store.combine_dataset()
         combined = utilities.typecast_wide_table(combined)
         combined_path = os.path.join(CSV_FOLDER, prefix+"_"+"combined.csv")
-        combined.to_csv(combined_path, sep=",", na_rep="na", index=False)
+        combined.to_csv(combined_path, sep=",", index=False)
         print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
 
     if not reload:
@@ -483,7 +635,7 @@ if __name__ == "__main__":
                     break
         if combined_path is None:
             combined = pd.DataFrame()
-        combined = pd.read_csv(os.path.join(CSV_FOLDER, f), na_values="na")
+        combined = pd.read_csv(os.path.join(CSV_FOLDER, f))
         combined = utilities.typecast_wide_table(combined)
 
     if website:
@@ -492,13 +644,13 @@ if __name__ == "__main__":
         sites["siteID"] = sites["siteID"].str.lower()
         sites = sites.drop_duplicates(subset=["siteID"], keep="first").copy()
 
-        site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
+        site_type_filt = sites["type"].str.lower().str.contains('|'.join(sitetypes))
         sites = sites.loc[site_type_filt]
 
         city_filt = sites["siteID"].str.contains('|'.join(cities))
         sites = sites.loc[city_filt]
 
-        js = get_site_geoJSON(
+        get_site_geoJSON(
             sites,
             combined,
             SITE_OUTPUT_DIR,
@@ -507,13 +659,9 @@ if __name__ == "__main__":
             dateStart=None,
             dateEnd=None)
 
-        polygons = store.polygon
-        polygons["polygonID"] = polygons["polygonID"].str.lower()
-        polygons = polygons.drop_duplicates(
-            subset=["polygonID"], keep="first").copy()
-
+        poly_list = sites["polygonID"].to_list()
         build_polygon_geoJSON(
-            polygons, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
+            store, poly_list, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")

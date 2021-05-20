@@ -17,6 +17,48 @@ UNKNOWN_TOKENS = [
     "n/d",
     ""
 ]
+CONVERSION_DICT = {
+    "ww_measure": {
+        "odm_name": "WWMeasure",
+        "source_name": ""
+        },
+    "site_measure": {
+        "odm_name": "SiteMeasure",
+        "source_name": ""
+        },
+    "sample": {
+        "odm_name": "Sample",
+        "source_name": ""
+        },
+    "site": {
+        "odm_name": "Site",
+        "source_name": ""
+        },
+    "polygon": {
+        "odm_name": "Polygon",
+        "source_name": ""
+        },
+    "cphd": {
+        "odm_name": "CovidPublicHealthData",
+        "source_name": ""
+        },
+    "reporter": {
+        "odm_name": "Reporter",
+        "source_name": ""
+        },
+    "lab": {
+        "odm_name": "Lab",
+        "source_name": ""
+        },
+    "assay_method": {
+        "odm_name": "AssayMethod",
+        "source_name": ""
+        },
+    "instrument": {
+        "odm_name": "Instrument",
+        "source_name": ""
+        },
+}
 
 
 def replace_unknown_by_default(string, default):
@@ -79,58 +121,7 @@ class BaseMapper(ABC):
     cphd = pd.DataFrame(
         columns=utilities.get_table_fields("CPHD"))
     # Attribute name to source name
-    conversion_dict = {
-        "ww_measure": {
-            "odm_name": "WWMeasure",
-            "primary_key": "wwMeasureID",
-            "source_name": ""
-            },
-        "site_measure": {
-            "odm_name": "SiteMeasure",
-            "primary_key": "siteMeasureID",
-            "source_name": ""
-            },
-        "sample": {
-            "odm_name": "Sample",
-            "primary_key": "sampleID",
-            "source_name": ""
-            },
-        "site": {
-            "odm_name": "Site",
-            "primary_key": "siteID",
-            "source_name": ""
-            },
-        "polygon": {
-            "odm_name": "Polygon",
-            "primary_key": "polygonID",
-            "source_name": ""
-            },
-        "cphd": {
-            "odm_name": "CovidPublicHealthData",
-            "primary_key": "cphdID",
-            "source_name": ""
-            },
-        "reporter": {
-            "odm_name": "Reporter",
-            "primary_key": "reporterID",
-            "source_name": ""
-            },
-        "lab": {
-            "odm_name": "Lab",
-            "primary_key": "labID",
-            "source_name": ""
-            },
-        "assay_method": {
-            "odm_name": "AssayMethod",
-            "primary_key": "assayMethodID",
-            "source_name": ""
-            },
-        "instrument": {
-            "odm_name": "Instrument",
-            "primary_key": "instrumentID",
-            "source_name": ""
-            },
-    }
+    conversion_dict = CONVERSION_DICT
 
     @abstractmethod
     def read():
@@ -151,22 +142,24 @@ class BaseMapper(ABC):
                 return pd.DataFrame(
                     columns=utilities.get_table_fields(table_name))
             return value.drop_duplicates(
-                keep="first", ignore_index=True
-            )
-
+                keep="first", ignore_index=True)
+    
     def type_cast_table(self, odm_name, df):
         return df.apply(
                 lambda x: parse_types(odm_name, x),
                 axis=0)
-
-    def get_odm_names(self):
-        return [
-            self.conversion_dict[x]["odm_name"]
-            for x in self.conversion_dict.keys()]
-
+    
     def get_attribute_from_odm_name(self, odm_name):
         for attribute, dico in self.conversion_dict.items():
             table_name = dico["odm_name"]
             if table_name == odm_name:
                 return attribute
         raise NameError("Could not find attribute for table %s", odm_name)
+
+
+def get_odm_names(attr=None):
+        if attr is None:
+            return [
+                CONVERSION_DICT[x]["odm_name"]
+                for x in CONVERSION_DICT.keys()]
+        return CONVERSION_DICT[attr]["odm_name"]

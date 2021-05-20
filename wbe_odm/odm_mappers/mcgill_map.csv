@@ -30,7 +30,7 @@ single,Sample,preTreatment,,,,
 single,Sample,pooled,,lab sheet,L,sample_is_pooled
 single,Sample,children,,lab sheet,L;B,get_children_samples
 single,Sample,parent,,lab sheet,,
-single,Sample,sizeL,1,lab sheet,I;__default__,get_sample_volume
+single,Sample,sizeL,,lab sheet,I;__default__,get_sample_volume
 single,Sample,index,1,,,
 single,Sample,fieldSampleTempC,,lab sheet,J,get_field_sample_temp
 single,Sample,shippedOnIce,,lab sheet,K,get_shipped_on_ice
@@ -367,7 +367,7 @@ SARS-CoV-2 Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 SARS-CoV-2 Ct3,WWMeasure,notes,,lab sheet,BN,
-SARS-CoV-2 gc/ml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__1:int,get_wwmeasure_id
+SARS-CoV-2 gc/ml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__4:int,get_wwmeasure_id
 SARS-CoV-2 gc/ml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 SARS-CoV-2 gc/ml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 SARS-CoV-2 gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -379,7 +379,7 @@ SARS-CoV-2 gc/ml,WWMeasure,type,covN2,,,
 SARS-CoV-2 gc/ml,WWMeasure,value,,lab sheet,BJ,validate_value
 SARS-CoV-2 gc/ml,WWMeasure,unit,gc/ml,,,
 SARS-CoV-2 gc/ml,WWMeasure,aggregation,single,,,
-SARS-CoV-2 gc/ml,WWMeasure,index,1,,,
+SARS-CoV-2 gc/ml,WWMeasure,index,4,,,
 SARS-CoV-2 gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
 SARS-CoV-2 gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 SARS-CoV-2 gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access

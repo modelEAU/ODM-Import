@@ -285,7 +285,7 @@ class TableWidener:
                     .replace("False", "no-quality-issue")
         return df
 
-    def widen(self):
+    def widen(self, agg="mean"):
         """Takes important characteristics inside a table (features) and
         creates new columns to store them based on the value of other columns
         (qualifiers).
@@ -303,7 +303,7 @@ class TableWidener:
         df = self.clean_qualifier_columns()
         for qualifier in self.qualifiers:
             df[qualifier] = df[qualifier].astype(str)
-            df[qualifier] = df[qualifier].str.replace("single", "agg-singles")
+            df[qualifier] = df[qualifier].str.replace("single", f"agg-{agg}")
         df["col_qualifiers"] = df[self.qualifiers].agg("_".join, axis=1)
         unique_col_qualifiers = df["col_qualifiers"].unique()
         for col_qualifier in unique_col_qualifiers:

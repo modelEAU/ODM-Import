@@ -675,4 +675,4 @@ if __name__ == "__main__":
                 print(f"Generating dataset for {city_site}")
                 dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
-                dataset.to_csv(os.path.join(CITY_OUTPUT_DIR, f"{date}_{city_site}.csv"))
+                dataset.to_csv(os.path.join(CITY_OUTPUT_DIR, f"{city_site}.csv"))

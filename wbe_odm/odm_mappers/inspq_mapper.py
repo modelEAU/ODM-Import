@@ -72,8 +72,12 @@ def build_cphd_ids(reporter, region, type_, datetype, date):
     return df.agg("_".join, axis=1)
 
 
+INSPQ_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/donnees/covid19-hist.csv?randNum=27002747"
+
 class INSPQ_mapper(bm.BaseMapper):
-    def read(self, filepath):
+    def read(self, filepath=None):
+        if filepath is None:
+            filepath = INSPQ_DATASET_URL
         hist = pd.read_csv(filepath)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
@@ -109,5 +113,5 @@ class INSPQ_mapper(bm.BaseMapper):
 if __name__ == "__main__":
     filepath = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/INSPQ/covid19-hist.csv"  # noqa
     mapper = INSPQ_mapper()
-    mapper.read(filepath)
+    mapper.read()
     print(mapper.cphd.head())

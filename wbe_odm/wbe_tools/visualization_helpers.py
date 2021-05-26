@@ -13,7 +13,7 @@ def find_time_columns_to_merge(df):
         col = col.lower()
         if "date" not in col:
             continue
-        info = col.split(".")
+        info = col.split("_")
         for bit in info:
             if "date" in bit:
                 if bit in categories:

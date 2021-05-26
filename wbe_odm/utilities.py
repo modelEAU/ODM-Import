@@ -9,6 +9,7 @@ from geojson_rewind import rewind
 import shapely.wkt
 import geomet.wkt
 
+UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
 def typecast_wide_table(df):
     for col in df.columns:
@@ -36,7 +37,7 @@ def pick_cphd_poly_by_size(x, poly):
     ls = x.split(";")
     areas = []
     for id_ in ls:
-        area = poly.loc[poly["Polygon.polygonID"] == id_, "area"]
+        area = poly.loc[poly["Polygon_polygonID"] == id_, "area"]
         areas.append(area)
     min_area = min(areas)
     min_idx = areas.index(min_area)
@@ -51,12 +52,12 @@ def convert_wkt(x):
 
 
 def get_polygon_for_cphd(merged, poly, cphd):
-    poly["shape"] = poly["Polygon.wkt"].apply(lambda x: convert_wkt(x))
+    poly["shape"] = poly["Polygon_wkt"].apply(lambda x: convert_wkt(x))
     poly["area"] = poly["shape"].apply(lambda x: x.area)
-    unique_cphd_polys = cphd["CPHD.polygonID"].unique()
-    merged["polys_w_cphd"] = merged["Calculated.polygonList"].apply(
+    unique_cphd_polys = cphd["CPHD_polygonID"].unique()
+    merged["polys_w_cphd"] = merged["Calculated_polygonList"].apply(
         lambda x: has_cphd_data(x, unique_cphd_polys))
-    merged["Calculated.polygonIDForCPHD"] = merged["polys_w_cphd"].apply(
+    merged["Calculated_polygonIDForCPHD"] = merged["polys_w_cphd"].apply(
         lambda x: pick_cphd_poly_by_size(x, poly))
     poly.drop(columns=["shape", "area"], inplace=True)
     merged.drop(columns=["polys_w_cphd"], inplace=True)
@@ -68,7 +69,7 @@ def get_encompassing_polygons(row, poly):
         lambda x: x.contains(row["temp_point"])
         if x is not None else False)
     poly_ids = poly[
-        "Polygon.polygonID"].loc[poly["contains"]].to_list()
+        "Polygon_polygonID"].loc[poly["contains"]].to_list()
     poly.drop(columns=["contains"], inplace=True)
     return ";".join(poly_ids)
 
@@ -81,11 +82,11 @@ def get_midpoint_time(date1, date2):
 
 def clean_grab_datetime(df):
     one_day = pd.to_timedelta("24 hours")
-    result_end = ["Calculated.dateTimeEnd"]
-    result_start = ["Calculated.dateTimeStart"]
-    grab_date = "Sample.dateTime"
+    result_end = ["Calculated_dateTimeEnd"]
+    result_start = ["Calculated_dateTimeStart"]
+    grab_date = "Sample_dateTime"
     grab_token = "grb"
-    collection = "Sample.collection"
+    collection = "Sample_collection"
     df[result_start] = pd.to_datetime(None)
     df[result_end] = pd.to_datetime(None)
 
@@ -135,10 +136,10 @@ def clean_composite_data_intervals(df):
             "Sample.dateTimeStart",
             "Sample.dateTimeEnd"
     """
-    coll = "Sample.collection"
-    end = "Sample.dateTimeEnd"
-    result_end = "Calculated.dateTimeEnd"
-    result_start = "Calculated.dateTimeStart"
+    coll = "Sample_collection"
+    end = "Sample_dateTimeEnd"
+    result_end = "Calculated_dateTimeEnd"
+    result_start = "Calculated_dateTimeStart"
 
     one_day = pd.to_timedelta("23 hours 59 minutes")
     df[result_end] = pd.to_datetime(df[end] + one_day).dt.date
@@ -158,18 +159,19 @@ def reduce_dt(x, y):
 
 
 def reduce_text(x, y):
-    if x is None and y is None:
-        return ""
-    elif x is None:
-        return y
-    elif y is None:
+    x, y = str(x), str(y)
+    if pd.isna(x):
+        x = 'na'
+    if pd.isna(y):
+        y = 'na'
+    
+    if x == y:
         return x
-
-    if x == "" and y == "":
+    elif re.match(UNKNOWN_REGEX, x) and re.match(UNKNOWN_REGEX, y):
         return ""
-    elif x == "":
+    elif re.match(UNKNOWN_REGEX, x):
         return y
-    elif y == "" or x == y:
+    elif re.match(UNKNOWN_REGEX, y):
         return x
     else:
         return ";".join([x, y])
@@ -208,9 +210,6 @@ def convert_wkt_to_geojson(s):
     geojson_feature = json.loads(json.dumps(geomet.wkt.loads(s)))
     geojson_feature = rewind(geojson_feature, rfc7946=False)
     return geojson_feature
-
-
-UNKNOWN_REGEX = r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none"
 
 
 def get_data_types():
@@ -260,26 +259,26 @@ def get_primary_key(table_name=None):
 def build_site_specific_dataset(df, site_id):
     if df.empty:
         return df
-    filt_site1 = df["Site.siteID"] == site_id
-    if "SiteMeasure.siteID" in df.columns:
-        filt_site2 = df["SiteMeasure.siteID"] == site_id
+    filt_site1 = df["Site_siteID"] == site_id
+    if "SiteMeasure_siteID" in df.columns:
+        filt_site2 = df["SiteMeasure_siteID"] == site_id
         filt_site = filt_site1 | filt_site2
     else:
         filt_site = filt_site1
     df1 = df[filt_site]
 
-    filt_cphd_df = df.loc[filt_site1, "Calculated.polygonIDForCPHD"]
+    filt_cphd_df = df.loc[filt_site1, "Calculated_polygonIDForCPHD"]
     if not filt_cphd_df.empty:
         cphd_poly_id = str(
             filt_cphd_df.iloc[0]).lower()
-        poly_filt = df["CPHD.polygonID"]\
+        poly_filt = df["CPHD_polygonID"]\
             .fillna("").str.lower().str.match(cphd_poly_id)
         df2 = df[poly_filt]
         dataset = pd.concat([df1, df2], axis=0)
     else:
         dataset = df1
 
-    dataset = dataset.set_index(["Calculated.timestamp"])
+    dataset = dataset.set_index(["Calculated_timestamp"])
     dataset.sort_index()
     return dataset.reindex(sorted(dataset.columns), axis=1)
 

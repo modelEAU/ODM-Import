@@ -9,7 +9,7 @@ Assay,AssayMethod,link,,,,
 Assay,AssayMethod,extractionVolMl,,lab sheet,Q,
 Assay,AssayMethod,lod,,lab sheet,LOD,
 Assay,AssayMethod,loq,,lab sheet,LOQ,
-Assay,AssayMethod,unit,gc/rx,,,
+Assay,AssayMethod,unit,gcrx,,,
 Assay,AssayMethod,methodConc,,lab sheet,S;Q;V,write_concentration_method
 Assay,AssayMethod,methodExtraction,,lab sheet,AG,
 Assay,AssayMethod,methodPCR,,lab sheet,BM,
@@ -47,7 +47,7 @@ TSS,WWMeasure,reportDate,,,,
 TSS,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
 TSS,WWMeasure,type,wqTSS,,,
 TSS,WWMeasure,value,,lab sheet,Y,validate_value
-TSS,WWMeasure,unit,mg/l,,,
+TSS,WWMeasure,unit,mgl,,,
 TSS,WWMeasure,aggregation,single,,,
 TSS,WWMeasure,index,1,,,
 TSS,WWMeasure,qualityFlag,TRUE,lab sheet,Z,has_quality_flag
@@ -279,28 +279,28 @@ PMMV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 PMMV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 PMMV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 PMMV Ct3,WWMeasure,notes,,lab sheet,BN,
-PMMV gc/ml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nPMMoV:str;AI;__const__4:int,get_wwmeasure_id
-PMMV gc/ml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
-PMMV gc/ml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
-PMMV gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
-PMMV gc/ml,WWMeasure,assayMethodID,,,,
-PMMV gc/ml,WWMeasure,analysisDate,,lab sheet,AI,
-PMMV gc/ml,WWMeasure,reportDate,,,,
-PMMV gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-PMMV gc/ml,WWMeasure,type,nPMMoV,,,
-PMMV gc/ml,WWMeasure,value,,lab sheet,BB,validate_value
-PMMV gc/ml,WWMeasure,unit,gc/ml,,,
-PMMV gc/ml,WWMeasure,aggregation,single,,,
-PMMV gc/ml,WWMeasure,index,4,,,
-PMMV gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
-PMMV gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
-PMMV gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
-PMMV gc/ml,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
-PMMV gc/ml,WWMeasure,accessToLocalHA,TRUE,lab sheet,BS,grant_access
-PMMV gc/ml,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
-PMMV gc/ml,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
-PMMV gc/ml,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
-PMMV gc/ml,WWMeasure,notes,,lab sheet,BN,
+PMMV gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nPMMoV:str;AI;__const__4:int,get_wwmeasure_id
+PMMV gcml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
+PMMV gcml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
+PMMV gcml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMV gcml,WWMeasure,assayMethodID,,,,
+PMMV gcml,WWMeasure,analysisDate,,lab sheet,AI,
+PMMV gcml,WWMeasure,reportDate,,,,
+PMMV gcml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
+PMMV gcml,WWMeasure,type,nPMMoV,,,
+PMMV gcml,WWMeasure,value,,lab sheet,BB,validate_value
+PMMV gcml,WWMeasure,unit,gcml,,,
+PMMV gcml,WWMeasure,aggregation,single,,,
+PMMV gcml,WWMeasure,index,4,,,
+PMMV gcml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+PMMV gcml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
+PMMV gcml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
+PMMV gcml,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
+PMMV gcml,WWMeasure,accessToLocalHA,TRUE,lab sheet,BS,grant_access
+PMMV gcml,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
+PMMV gcml,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
+PMMV gcml,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
+PMMV gcml,WWMeasure,notes,,lab sheet,BN,
 SARS-CoV-2 Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__1:int,get_wwmeasure_id
 SARS-CoV-2 Ct1,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 SARS-CoV-2 Ct1,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
@@ -367,25 +367,25 @@ SARS-CoV-2 Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 SARS-CoV-2 Ct3,WWMeasure,notes,,lab sheet,BN,
-SARS-CoV-2 gc/ml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__4:int,get_wwmeasure_id
-SARS-CoV-2 gc/ml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
-SARS-CoV-2 gc/ml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
-SARS-CoV-2 gc/ml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
-SARS-CoV-2 gc/ml,WWMeasure,assayMethodID,,,,
-SARS-CoV-2 gc/ml,WWMeasure,analysisDate,,lab sheet,AI,
-SARS-CoV-2 gc/ml,WWMeasure,reportDate,,,,
-SARS-CoV-2 gc/ml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-SARS-CoV-2 gc/ml,WWMeasure,type,covN2,,,
-SARS-CoV-2 gc/ml,WWMeasure,value,,lab sheet,BJ,validate_value
-SARS-CoV-2 gc/ml,WWMeasure,unit,gc/ml,,,
-SARS-CoV-2 gc/ml,WWMeasure,aggregation,single,,,
-SARS-CoV-2 gc/ml,WWMeasure,index,4,,,
-SARS-CoV-2 gc/ml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
-SARS-CoV-2 gc/ml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,accessToLocalHA,TRUE,lab sheet,BS,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
-SARS-CoV-2 gc/ml,WWMeasure,notes,,lab sheet,BN,
+SARS-CoV-2 gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__4:int,get_wwmeasure_id
+SARS-CoV-2 gcml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
+SARS-CoV-2 gcml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 gcml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 gcml,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 gcml,WWMeasure,analysisDate,,lab sheet,AI,
+SARS-CoV-2 gcml,WWMeasure,reportDate,,,,
+SARS-CoV-2 gcml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
+SARS-CoV-2 gcml,WWMeasure,type,covN2,,,
+SARS-CoV-2 gcml,WWMeasure,value,,lab sheet,BJ,validate_value
+SARS-CoV-2 gcml,WWMeasure,unit,gcml,,,
+SARS-CoV-2 gcml,WWMeasure,aggregation,single,,,
+SARS-CoV-2 gcml,WWMeasure,index,4,,,
+SARS-CoV-2 gcml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+SARS-CoV-2 gcml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
+SARS-CoV-2 gcml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
+SARS-CoV-2 gcml,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
+SARS-CoV-2 gcml,WWMeasure,accessToLocalHA,TRUE,lab sheet,BS,grant_access
+SARS-CoV-2 gcml,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
+SARS-CoV-2 gcml,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
+SARS-CoV-2 gcml,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
+SARS-CoV-2 gcml,WWMeasure,notes,,lab sheet,BN,

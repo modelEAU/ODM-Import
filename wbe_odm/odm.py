@@ -373,7 +373,7 @@ class TableCombiner(Odm):
             ]
         wide = TableWidener(df, features, qualifiers).widen()
         wide.drop(columns=["index"], inplace=True)
-        wide = wide.add_prefix("WWMeasure.")
+        wide = wide.add_prefix("WWMeasure_")
         return wide
 
     def parse_site_measure(self, df) -> pd.DataFrame:
@@ -388,7 +388,7 @@ class TableCombiner(Odm):
         ]
         wide = TableWidener(df, features, qualifiers).widen()
 
-        wide = wide.add_prefix("SiteMeasure.")
+        wide = wide.add_prefix("SiteMeasure_")
         return wide
 
     def parse_sample(self, df) -> pd.DataFrame:
@@ -415,19 +415,19 @@ class TableCombiner(Odm):
                     new_row = df.iloc[i].copy()
                     new_row["siteID"] = site_id
                     df = df.append(new_row, ignore_index=True)
-        df = df.add_prefix("Sample.")
+        df = df.add_prefix("Sample_")
         return df
 
     def parse_site(self, df) -> pd.DataFrame:
         if df.empty:
             return df
-        df = df.add_prefix("Site.")
+        df = df.add_prefix("Site_")
         return df
 
     def parse_polygon(self, df) -> pd.DataFrame:
         if df.empty:
             return df
-        df = df.add_prefix("Polygon.")
+        df = df.add_prefix("Polygon_")
         return df
 
     def parse_cphd(self, df) -> pd.DataFrame:
@@ -438,7 +438,7 @@ class TableCombiner(Odm):
         qualifiers = ["type", "dateType"]
         wide = TableWidener(df, features, qualifiers).widen()
 
-        wide = wide.add_prefix("CPHD.")
+        wide = wide.add_prefix("CPHD_")
         return wide
 
     def agg_ww_measure_per_sample(self, ww: pd.DataFrame) -> pd.DataFrame:
@@ -460,7 +460,7 @@ class TableCombiner(Odm):
         """
         if ww.empty:
             return ww
-        return ww.groupby("WWMeasure.sampleID")\
+        return ww.groupby("WWMeasure_sampleID")\
             .agg(utilities.reduce_by_type)
 
     def combine_ww_measure_and_sample(
@@ -492,8 +492,8 @@ class TableCombiner(Odm):
         return pd.merge(
             sample, ww,
             how="left",
-            left_on="Sample.sampleID",
-            right_on="WWMeasure.sampleID")
+            left_on="Sample_sampleID",
+            right_on="WWMeasure_sampleID")
 
     def combine_site_measure(self, merged, site_measure):
         return pd.concat([merged, site_measure], axis=0)
@@ -507,8 +507,8 @@ class TableCombiner(Odm):
             return site
 
         return pd.merge(sample, site, how="left",
-                        left_on="Sample.siteID",
-                        right_on="Site.siteID")
+                        left_on="Sample_siteID",
+                        right_on="Site_siteID")
 
     def get_polygon_list(self, merged, polygons):
         """
@@ -517,11 +517,11 @@ class TableCombiner(Odm):
         """
         merged["temp_point"] = merged.apply(
             lambda row: Point(
-                row["Site.geoLong"], row["Site.geoLat"]
+                row["Site_geoLong"], row["Site_geoLat"]
             ), axis=1)
-        polygons["shape"] = polygons["Polygon.wkt"].apply(
+        polygons["shape"] = polygons["Polygon_wkt"].apply(
             lambda x: utilities.convert_wkt(x))
-        merged["Calculated.polygonList"] = merged.apply(
+        merged["Calculated_polygonList"] = merged.apply(
             lambda row: utilities.get_encompassing_polygons(
                 row, polygons), axis=1)
         merged.drop(["temp_point"], axis=1, inplace=True)
@@ -536,10 +536,10 @@ class TableCombiner(Odm):
         elif df.empty:
             return polygon
         polygon = polygon.copy()
-        polygon = polygon.add_prefix("CPHD.")
+        polygon = polygon.add_prefix("CPHD-")
         return pd.merge(df, polygon, how="left",
-                        left_on="Calculated.polygonIDForCPHD",
-                        right_on="CPHD.Polygon.polygonID")
+                        left_on="Calculated_polygonIDForCPHD",
+                        right_on="CPHD-Polygon_polygonID")
 
     def combine_sewershed_polygon_sample(
             self,
@@ -550,47 +550,47 @@ class TableCombiner(Odm):
         elif df.empty:
             return polygon
         polygon = polygon.copy()
-        polygon = polygon.add_prefix("Sewershed.")
+        polygon = polygon.add_prefix("Sewershed-")
         return pd.merge(df, polygon, how="left",
-                        left_on="Site.polygonID",
-                        right_on="Sewershed.Polygon.polygonID")
+                        left_on="Site_polygonID",
+                        right_on="Sewershed-Polygon_polygonID")
 
     def get_site_measure_ts(self, site_measure):
         if site_measure.empty:
             return site_measure
-        site_measure["Calculated.timestamp"] = site_measure[
-            "SiteMeasure.dateTime"]
+        site_measure["Calculated_timestamp"] = site_measure[
+            "SiteMeasure_dateTime"]
         return site_measure
 
     def get_samples_timestamp(self, df):
         # grb -> "dateTime"
         # ps and cp -> if start and end are present: midpoint
         # ps and cp -> if only end is present: end
-        df["Calculated.timestamp"] = pd.NaT
-        grb_filt = df["Sample.collection"].str.contains("grb")
-        s_filt = ~df["Sample.dateTimeStart"].isna()
-        e_filt = ~df["Sample.dateTimeEnd"].isna()
+        df["Calculated_timestamp"] = pd.NaT
+        grb_filt = df["Sample_collection"].str.contains("grb")
+        s_filt = ~df["Sample_dateTimeStart"].isna()
+        e_filt = ~df["Sample_dateTimeEnd"].isna()
 
-        df.loc[grb_filt, "Calculated.timestamp"] =\
-            df.loc[grb_filt, "Sample.dateTime"]
-        df.loc[grb_filt, "Sample.dateTimeStart"] =\
-            df.loc[grb_filt, "Sample.dateTime"]
-        df.loc[grb_filt, "Sample.dateTimeEnd"] =\
-            df.loc[grb_filt, "Sample.dateTime"]
+        df.loc[grb_filt, "Calculated_timestamp"] =\
+            df.loc[grb_filt, "Sample_dateTime"]
+        df.loc[grb_filt, "Sample_dateTimeStart"] =\
+            df.loc[grb_filt, "Sample_dateTime"]
+        df.loc[grb_filt, "Sample_dateTimeEnd"] =\
+            df.loc[grb_filt, "Sample_dateTime"]
 
-        df.loc[s_filt & e_filt, "Calculated.timestamp"] = df.apply(
+        df.loc[s_filt & e_filt, "Calculated_timestamp"] = df.apply(
             lambda row: utilities.get_midpoint_time(
-                row["Sample.dateTimeStart"], row["Sample.dateTimeEnd"]
+                row["Sample_dateTimeStart"], row["Sample_dateTimeEnd"]
             ),
             axis=1
         )
         df.loc[
-            e_filt & ~s_filt, "Calculated.timestamp"] = df.loc[
-                e_filt & ~s_filt, "Sample.dateTimeEnd"]
+            e_filt & ~s_filt, "Calculated_timestamp"] = df.loc[
+                e_filt & ~s_filt, "Sample_dateTimeEnd"]
         return df
 
     def get_cphd_ts(self, df):
-        df["Calculated.timestamp"] = df["CPHD.date"]
+        df["Calculated_timestamp"] = df["CPHD_date"]
         return df
 
     def combine_cphd(self, merged, cphd_ts):

@@ -380,16 +380,16 @@ def get_times(df):
 def clean_labels_y(cols):
     clean_labels = []
     for col in cols:
-        table_name = col.split(".")[0]
+        table_name = col.split("_")[0]
         if table_name == "WWMeasure":
-            _, param, unit, _, _ = col.split(".")[1:]
+            _, param, unit, _, _ = col.split("_")[1:]
             unit = unit.replace("-", "/")
             clean_label = f"{table_name} {param} ({unit})"
 
         if table_name == "Sample":
             clean_label = col
         if table_name == "SiteMeasure":
-            param, unit, _, _ = col.split(".")[1:]
+            param, unit, _, _ = col.split_"_")[1:]
             unit = unit.replace("-", "/")
             clean_label = f"{table_name} {param} ({unit})"
 
@@ -401,7 +401,7 @@ def clean_labels_y(cols):
 def clean_labels_x(cols):
     clean_labels = []
     for col in cols:
-        fields = col.split(".")
+        fields = col.split("_")
         for field in fields:
             if "date" in field and field not in clean_labels:
                 clean_labels.append(field)

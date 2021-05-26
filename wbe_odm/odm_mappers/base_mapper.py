@@ -62,7 +62,7 @@ CONVERSION_DICT = {
 
 
 def replace_unknown_by_default(string, default):
-    if re.fullmatch(utilities.UNKNOWN_REGEX, string, re.IGNORECASE):
+    if re.fullmatch(utilities.UNKNOWN_REGEX, string):
         return default
     return string
 

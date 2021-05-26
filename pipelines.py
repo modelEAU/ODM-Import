@@ -49,8 +49,8 @@ def make_point_feature(row, props_to_add):
 def get_latest_sample_date(df):
     if len(df) == 0:
         return pd.NaT
-    df = df.sort_values(by="Calculated.timestamp")
-    return df.iloc[-1, df.columns.get_loc("Calculated.timestamp")]
+    df = df.sort_values(by="Calculated_timestamp")
+    return df.iloc[-1, df.columns.get_loc("Calculated_timestamp")]
 
 
 def get_cm_to_plot(samples, thresh_n):
@@ -62,7 +62,7 @@ def get_cm_to_plot(samples, thresh_n):
     n_samples = []
     for cm in possible_cms:
         samples_of_type = samples.loc[
-            samples["Sample.collection"].str.contains(cm)
+            samples["Sample_collection"].str.contains(cm)
         ]
         n_samples.append(len(samples_of_type))
         last_dates.append(get_latest_sample_date(samples_of_type))
@@ -83,7 +83,7 @@ def get_cm_to_plot(samples, thresh_n):
 
 
 def get_samples_for_site(site_id, df):
-    sample_filter1 = df["Sample.siteID"].str.lower() == site_id.lower()
+    sample_filter1 = df["Sample_siteID"].str.lower() == site_id.lower()
     return df.loc[sample_filter1].copy()
 
 
@@ -119,7 +119,7 @@ def combine_viral_cols(viral):
     for col in viral.columns:
         if "timestamp" in col:
             continue
-        _, desc = col.split(".")
+        _, *desc = col.split("_")
         virus, _, _, _ = desc.lower().split("_")
         if "cov" in virus:
             sars.append(col)
@@ -135,19 +135,19 @@ def get_samples_in_interval(samples, dateStart, dateEnd):
     if pd.isna(dateStart) and pd.isna(dateEnd):
         return samples
     elif pd.isna(dateStart):
-        return samples.loc[samples["Calculated.timestamp"] <= dateEnd]
+        return samples.loc[samples["Calculated_timestamp"] <= dateEnd]
     elif pd.isna(dateEnd):
-        return samples.loc[samples["Calculated.timestamp"] >= dateStart]
+        return samples.loc[samples["Calculated_timestamp"] >= dateStart]
     return samples.loc[
-        samples["Calculated.timestamp"] >= dateStart &
-        samples["Calculated.timestamp"] <= dateEnd]
+        samples["Calculated_timestamp"] >= dateStart &
+        samples["Calculated_timestamp"] <= dateEnd]
 
 
 def get_samples_to_plot(samples, cm):
     if pd.isna(cm):
         return None
     return samples.loc[
-        samples["Sample.collection"].str.contains(cm)]
+        samples["Sample_collection"].str.contains(cm)]
 
 
 def get_viral_timeseries(samples):
@@ -189,7 +189,7 @@ def get_color_ts(samples,
     if samples is not None:
         viral = get_viral_timeseries(samples)
         if viral is not None:
-            viral["last_sunday"] = viral["Calculated.timestamp"].apply(
+            viral["last_sunday"] = viral["Calculated_timestamp"].apply(
                 get_last_sunday)
             weekly = viral.resample("W", on="last_sunday").median()
 

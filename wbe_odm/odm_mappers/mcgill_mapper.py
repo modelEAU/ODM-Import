@@ -643,10 +643,10 @@ class McGillMapper(CsvMapper):
 
 if __name__ == "__main__":
     mapper = McGillMapper(processing_functions=processing_functions)
-    # lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    # static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
-    lab_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    static_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/mcgill_static.xlsx"  # noqa
+    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
+    # lab_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    # static_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/mcgill_static.xlsx"  # noqa
     sheet_name = "QC Data Daily Samples (McGill)"
     lab_id = "frigon_lab"
     mapper.read(lab_data,

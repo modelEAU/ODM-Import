@@ -278,7 +278,7 @@ class TableWidener:
             filt1 = df[qualifier].isna()
             filt2 = df[qualifier] == ""
             df.loc[filt1 | filt2, qualifier] = f"unknown-{qualifier}"
-            df[qualifier] = df[qualifier].str.replace("/", "-").str.lower()
+            df[qualifier] = df[qualifier].str.replace("/", "").str.lower()
             if qualifier == "qualityFlag":
                 df[qualifier] = df[qualifier].str\
                     .replace("True", "quality-issue")\
@@ -364,7 +364,7 @@ class TableCombiner(Odm):
             return df
 
         df = self.remove_access(df)
-        features = ["value"]
+        features = ["value", "qualityFlag"]
         qualifiers = [
                 # "fractionAnalyzed",
                 "type",

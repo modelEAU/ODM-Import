@@ -91,7 +91,7 @@ Conductivity,WWMeasure,reportDate,,,,
 Conductivity,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
 Conductivity,WWMeasure,type,wqCond,,,
 Conductivity,WWMeasure,value,,lab sheet,X,validate_value
-Conductivity,WWMeasure,unit,us/cm,,,
+Conductivity,WWMeasure,unit,uscm,,,
 Conductivity,WWMeasure,aggregation,single,,,
 Conductivity,WWMeasure,index,1,,,
 Conductivity,WWMeasure,qualityFlag,TRUE,lab sheet,Z,has_quality_flag

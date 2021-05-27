@@ -49,8 +49,8 @@ def make_point_feature(row, props_to_add):
 def get_latest_sample_date(df):
     if len(df) == 0:
         return pd.NaT
-    df = df.sort_values(by="Calculated_timestamp")
-    return df.iloc[-1, df.columns.get_loc("Calculated_timestamp")]
+    df = df.sort_index()
+    return df.iloc[-1].name
 
 
 def get_cm_to_plot(samples, thresh_n):
@@ -87,19 +87,6 @@ def get_samples_for_site(site_id, df):
     return df.loc[sample_filter1].copy()
 
 
-def get_viral_measures(df):
-    cols_to_remove = []
-    for col in df.columns:
-        l_col = col.lower()
-        cond1 = "wwmeasure" in l_col
-        cond2 = "covn2" in l_col or 'npmmov' in l_col
-        cond3 = "gc" in l_col
-        if (cond1 and cond2 and cond3) or "timestamp" in l_col:
-            continue
-        cols_to_remove.append(col)
-    df.drop(columns=cols_to_remove, inplace=True)
-    return df
-
 
 def get_site_list(sites):
     return sites["siteID"].dropna().unique().to_list()
@@ -119,14 +106,12 @@ def combine_viral_cols(viral):
     for col in viral.columns:
         if "timestamp" in col:
             continue
-        _, *desc = col.split("_")
-        virus, _, _, _ = desc.lower().split("_")
+        table, virus, unit, agg, var = desc = col.lower().split("_")
+        
         if "cov" in virus:
             sars.append(col)
         elif "pmmov" in virus:
             pmmov.append(col)
-    for name, ls in zip(["sars", "pmmov"], [sars, pmmov]):
-        viral[name] = viral[ls].mean(axis=1)
     viral.drop(columns=sars+pmmov, inplace=True)
     return viral
 
@@ -135,15 +120,13 @@ def get_samples_in_interval(samples, dateStart, dateEnd):
     if pd.isna(dateStart) and pd.isna(dateEnd):
         return samples
     elif pd.isna(dateStart):
-        return samples.loc[samples["Calculated_timestamp"] <= dateEnd]
+        return samples.loc[: dateEnd]
     elif pd.isna(dateEnd):
-        return samples.loc[samples["Calculated_timestamp"] >= dateStart]
-    return samples.loc[
-        samples["Calculated_timestamp"] >= dateStart &
-        samples["Calculated_timestamp"] <= dateEnd]
+        return samples.loc[dateStart: ]
+    return samples.loc[dateStart : dateEnd]
 
 
-def get_samples_to_plot(samples, cm):
+def get_samples_of_collection_method(samples, cm):
     if pd.isna(cm):
         return None
     return samples.loc[
@@ -151,16 +134,30 @@ def get_samples_to_plot(samples, cm):
 
 
 def get_viral_timeseries(samples):
-    viral = get_viral_measures(samples)
-    viral = combine_viral_cols(viral)
-    viral["norm"] = normalize_by_pmmv(viral)
+    table = "WWMeasure"
+    unit = 'gcml'
+    agg_method = 'single-to-mean'
+    value_cols = []
+    dfs = []
+    covn2_col = None
+    for virus in ['npmmov', 'covn2']:
+        common = "_".join([table, virus, unit, agg_method])
+        value_col = "_".join([common, 'value'])
+        value_cols.append(value_col)
+        if 'covn2' in value_col:
+            covn2_col = value_col
+        elif 'npmmov' in value_col:
+            npmmov_col = value_col
+        quality_col = "_".join([common, 'qualityFlag'])
+        df = samples.loc[:, [value_col, quality_col]]
+        quality_filt = ~df[quality_col].str.lower().str.contains('true')
+        df = df.loc[quality_filt]
+        dfs.append(df)
+
+    viral = pd.concat(dfs, axis=1)
+    viral = viral[[col for col in viral.columns if 'value' in col]]
+    viral["norm"] = viral[covn2_col] / viral[npmmov_col]
     return viral
-
-
-def normalize_by_pmmv(df):
-    div = df["sars"] / df["pmmov"]
-    div = div.replace([np.inf], np.nan)
-    return div[~div.isna()]
 
 
 def build_empty_color_ts(date_range):
@@ -180,18 +177,15 @@ def get_n_bins(series, all_colors):
     return max_len
 
 
-def get_color_ts(samples,
+def get_color_ts(viral,
                  colorscale,
                  dateStart=DEFAULT_START_DATE,
                  dateEnd=None):
     dateStart = pd.to_datetime(dateStart)
     weekly = None
-    if samples is not None:
-        viral = get_viral_timeseries(samples)
-        if viral is not None:
-            viral["last_sunday"] = viral["Calculated_timestamp"].apply(
-                get_last_sunday)
-            weekly = viral.resample("W", on="last_sunday").median()
+    if viral is not None:
+        viral["last_sunday"] = viral["Calculated_timestamp"].apply(get_last_sunday)
+        weekly = viral.resample("W", on="last_sunday").median()
 
     date_range_start = get_last_sunday(dateStart)
     if dateEnd is None:
@@ -418,6 +412,14 @@ def website_collection_method(cm):
     return cm.map(collection)
 
 
+def get_samples_to_plot(site_id, combined, dateStart=None, dateEnd=None):
+    samples_for_site = utilities.build_site_specific_dataset(combined, site_id)
+    samples_in_range = get_samples_in_interval(samples_for_site, dateStart, dateEnd)
+    collection_method = get_cm_to_plot(samples_in_range, thresh_n=7)
+    samples_to_plot = get_samples_of_collection_method(samples_in_range, collection_method)
+    return samples_to_plot
+    
+
 def get_site_geoJSON(
         sites,
         combined,
@@ -425,26 +427,17 @@ def get_site_geoJSON(
         site_name,
         colorscale,
         dateStart=None,
-        dateEnd=None,):
+        dateEnd=None):
 
-    sites["samples_for_site"] = sites.apply(
-        lambda row: get_samples_for_site(row["siteID"], combined),
+    sites["samples"] = sites.apply(
+        lambda row: get_samples_to_plot(row["siteID"], combined, dateStart, dateEnd),
         axis=1)
-    sites["samples_in_range"] = sites.apply(
-        lambda row: get_samples_in_interval(
-            row["samples_for_site"], dateStart, dateEnd),
-        axis=1)
-    sites["collection_method"] = sites.apply(
-        lambda row: get_cm_to_plot(
-            row["samples_in_range"], thresh_n=7),
-        axis=1)
-    sites["samples_to_plot"] = sites.apply(
-        lambda row: get_samples_to_plot(
-            row["samples_in_range"], row["collection_method"]),
-        axis=1)
+    sites["viral"] = sites.apply(
+        lambda row: get_viral_timeseries(row['samples'], axis=1)
+    )
     sites["date_color"] = sites.apply(
         lambda row: get_color_ts(
-            row["samples_to_plot"], colorscale, dateStart, dateEnd),
+            row["viral"], colorscale, dateStart, dateEnd),
         axis=1)
 
     sites["clean_type"] = get_website_type(sites["type"])
@@ -509,6 +502,27 @@ def get_data_excerpt(origin_folder):
             sep=",", index=False)
 
 
+def get_cases_for_site(combined, site_id):
+    cases = utilities.build_site_specific_dataset(combined, site_id)
+    cases = cases[['CPHD_conf_report_value']]
+    return cases
+
+
+def centreau_website_plot(combined, site_id, dateStart, dateEnd=None):
+    samples = get_samples_to_plot(site, combined, dateStart, dateEnd)
+    viral = get_viral_timeseries(samples)
+    sars_col = [col for col in viral.columns if 'covn2' in col][0]
+    pmmv_col = [col for col in viral.columns if 'npmmov' in col][0]
+    norm_col = 'norm'
+
+    
+    cases = get_cases_for_site(combined, site_id)
+    df = pd.concat([viral, cases], axis=1)
+
+
+    
+    pass
+
 if __name__ == "__main__":
 
     # Arguments
@@ -547,6 +561,7 @@ if __name__ == "__main__":
             print("Importing viral data from Quebec City...")
             qc_lab = mcgill_mapper.McGillMapper()
             qc_lab.read(QC_VIRUS_DATA, STATIC_DATA, QC_VIRUS_SHEET_NAME, QC_VIRUS_LAB)  # noqa
+            print("Adding Quality Checks...")
             quality_checker = mcgill_mapper.QcChecker()
             qc_lab = quality_checker.read_validation(qc_lab, QC_VIRUS_DATA, QC_QUALITY_SHEET_NAME)
             store.append_from(qc_lab)
@@ -619,6 +634,7 @@ if __name__ == "__main__":
         if short:
             get_data_excerpt(CSV_FOLDER)
         print("Saving combined dataset...")
+
         combined = store.combine_dataset()
         combined = utilities.typecast_wide_table(combined)
         combined_path = os.path.join(CSV_FOLDER, prefix+"_"+"combined.csv")
@@ -661,12 +677,15 @@ if __name__ == "__main__":
             SITE_OUTPUT_DIR,
             SITE_NAME,
             COLORS,
-            dateStart=None,
-            dateEnd=None)
+            dateStart=DEFAULT_START_DATE)
 
         poly_list = sites["polygonID"].to_list()
         build_polygon_geoJSON(
             store, poly_list, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
+
+        for site in sites:
+            fig = centreau_website_plot(combined, site, ['fr', 'en'], DEFAULT_START_DATE)
+            fig.write_html(f"{SITE_OUTPUT_DIR}/{site}.html")
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")

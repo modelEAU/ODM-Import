@@ -3,7 +3,7 @@ import os
 import requests
 import pandas as pd
 import unidecode
-from wbe_odm.odm_mappers import mcgill_mapper as mcm
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 
 directory = os.path.dirname(__file__)
@@ -33,7 +33,7 @@ POLYGON_LOOKUP = {
 
 def get_cphd_id(reporter, region, type_, datetype, date):
     df = pd.DataFrame(
-        mcm.str_date_from_timestamp(date))
+        CsvMapper.str_date_from_timestamp(date))
     df.columns = ["date"]
     df["reporter"] = reporter
     df["region"] = region
@@ -58,7 +58,10 @@ cphd_funcs = {
 }
 
 
-class LeDevoirMapper(mcm.McGillMapper):
+class LeDevoirMapper(CsvMapper):
+    def __init__(self, config_file=None):
+        super().__init__(processing_functions=cphd_funcs, config_file=config_file)
+
     def merge_regions_data(self, dfs, final_name):
         """Some regions are reported separately by INSPQ,
         but we don't have polygons for them. This function
@@ -124,8 +127,8 @@ class LeDevoirMapper(mcm.McGillMapper):
 
         case_data = self.load_ledevoir_data()
         case_data.reset_index(inplace=True)
-        dynamic_tables = mcm.parse_sheet(
-            mapping, static_data, case_data, cphd_funcs, lab_id
+        dynamic_tables = self.parse_sheet(
+            mapping, static_data, case_data, self.processing_functions, lab_id
         )
         cphd = dynamic_tables["CovidPublicHealthData"]
         cphd.drop_duplicates(keep="first", inplace=True)

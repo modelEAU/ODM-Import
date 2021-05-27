@@ -1,10 +1,11 @@
+#%%
 import os
 import pandas as pd
 import numpy as np
 from wbe_odm.odm_mappers import (
-    mcgill_mapper as mcm,
     base_mapper as bm
 )
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 
 directory = os.path.dirname(__file__)
@@ -98,7 +99,10 @@ sensor_funcs = {
 }
 
 
-class VdQPlantMapper(mcm.McGillMapper):
+class VdQPlantMapper(CsvMapper):
+    def __init__(self, config_file=None):
+        super().__init__(processing_functions=lab_funcs, config_file=config_file)
+
     def read(self, lab_path, lab_map=VDQ_LAB_MAP_NAME):
         sheet_names = ["Données station Est", "Données station Ouest"]
         static_data = self.read_static_data(None)
@@ -112,12 +116,12 @@ class VdQPlantMapper(mcm.McGillMapper):
         site_measure_dfs = []
         for sheet_name, df in xls.items():
             df.columns = [
-                mcm.excel_style(i+1)
+                self.excel_style(i+1)
                 for i, _ in enumerate(df.columns.to_list())
             ]
             df["location"] = site_map[sheet_name]
-            dynamic_tables = mcm.parse_sheet(
-                mapping, static_data, df, lab_funcs, lab_id
+            dynamic_tables = self.parse_sheet(
+                mapping, static_data, df, self.processing_functions, lab_id
             )
             site_measure_dfs.append(dynamic_tables["SiteMeasure"])
 
@@ -129,7 +133,10 @@ class VdQPlantMapper(mcm.McGillMapper):
         return
 
 
-class VdQSensorsMapper(mcm.McGillMapper):
+class VdQSensorsMapper(CsvMapper):
+    def __init__(self, config_file=None):
+        super().__init__(processing_functions=sensor_funcs, config_file=config_file)
+
     def read(self, sensors_path, sensors_map=VDQ_SENSOR_MAP_NAME):
         static_data = self.read_static_data(None)
         df = pd.read_excel(sensors_path, header=8, usecols="A:N")
@@ -138,7 +145,7 @@ class VdQSensorsMapper(mcm.McGillMapper):
         mapping = mapping.astype(str)
         lab_id = None
         df.columns = [
-            mcm.excel_style(i+1)
+            self.excel_style(i+1)
             for i, _ in enumerate(df.columns.to_list())
         ]
         df = df.loc[
@@ -149,8 +156,8 @@ class VdQSensorsMapper(mcm.McGillMapper):
         numeric_cols = [col for col in df.columns if col not in date_cols]
         for col in numeric_cols:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-        dynamic_tables = mcm.parse_sheet(
-            mapping, static_data, df, sensor_funcs, lab_id
+        dynamic_tables = self.parse_sheet(
+            mapping, static_data, df, self.processing_functions, lab_id
         )
         site_measure = dynamic_tables["SiteMeasure"]
         site_measure.drop_duplicates(keep="first", inplace=True)

@@ -1,0 +1,297 @@
+elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+Instrument,Instrument,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+Instrument,Instrument,name,,lab sheet,__labID__;C,get_instrument_name
+Instrument,Instrument,model,,lab sheet,__labID__;C,get_instrument_model
+Instrument,Instrument,description,,lab sheet,__labID__;C,get_instrument_description
+Instrument,Instrument,alias,,,,
+Instrument,Instrument,referenceLink,,,,
+Instrument,Instrument,type,online,,,
+Instrument,Instrument,typeOther,,,,
+,,,,,,
+Assay,AssayMethod,assayMethodID,,lab sheet,__labID__;C,get_assay_method_id
+Assay,AssayMethod,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+Assay,AssayMethod,name,QPCR,,,
+Assay,AssayMethod,version,1.0.0,,,
+Assay,AssayMethod,summary,,,,
+Assay,AssayMethod,referenceLink,,,,
+Assay,AssayMethod,date,,,,
+Assay,AssayMethod,aliasID,,,,
+Assay,AssayMethod,extractionVolMl,,,,
+Assay,AssayMethod,loq,,,,
+Assay,AssayMethod,lod,,,,
+Assay,AssayMethod,unit,,,,
+Assay,AssayMethod,unitOther,,,,
+Assay,AssayMethod,methodConc,,,,
+Assay,AssayMethod,methodExtract,,,,
+Assay,AssayMethod,methodPcr,,,,
+Assay,AssayMethod,qualityAssQC,,,,
+Assay,AssayMethod,inhibition,,,,
+Assay,AssayMethod,surrogateRecovery,,,,
+,,,,,,
+single,Sample,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+single,Sample,siteID,Ottawa,,,
+single,Sample,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+single,Sample,reporterID,,,,
+single,Sample,dateTime,,lab sheet,B,
+single,Sample,dateTimeStart,,lab sheet,B,
+single,Sample,dateTimeEnd,,lab sheet,B,
+single,Sample,type,,,,
+single,Sample,typeOther,,,,
+single,Sample,collection,,,,
+single,Sample,collectionOther,,,,
+single,Sample,preTreatment,,,,
+single,Sample,preTreatmentDescription,FALSE,,,
+single,Sample,pooled,,,,
+single,Sample,children,,,,
+single,Sample,parent,,,,
+single,Sample,sizeL,,,,
+single,Sample,fieldSampleTempC,,,,
+single,Sample,shippedOnIce,,,,
+single,Sample,storageTempC,,,,
+single,Sample,qualityFlag,FALSE,,,
+single,Sample,notes,,,,
+,,,,,,
+PMMoV CpC 1,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcPMMoV_single_1:str,get_uwwmeasure_id
+PMMoV CpC 1,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpC 1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpC 1,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpC 1,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpC 1,WWMeasure,reporterID,,,,
+PMMoV CpC 1,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpC 1,WWMeasure,reportDate,,,,
+PMMoV CpC 1,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpC 1,WWMeasure,type,,,F,get_gene_type
+PMMoV CpC 1,WWMeasure,unit,gcPMMoV,,,
+PMMoV CpC 1,WWMeasure,unitOther,,,,
+PMMoV CpC 1,WWMeasure,aggregation,single,,,
+PMMoV CpC 1,WWMeasure,aggregationOther,,,,
+PMMoV CpC 1,WWMeasure,index,1,,,
+PMMoV CpC 1,WWMeasure,value,,lab sheet,L;AK,get_cpc_pmmov
+PMMoV CpC 1,WWMeasure,qualityFlag,FALSE,lab sheet,AU,get_quality_flag
+PMMoV CpC 1,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpC 1,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpC 1,WWMeasure,notes,,lab sheet,AU,get_notes
+,,,,,,
+PMMoV CpC 2,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcPMMoV_single_2:str,get_uwwmeasure_id
+PMMoV CpC 2,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpC 2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpC 2,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpC 2,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpC 2,WWMeasure,reporterID,,,,
+PMMoV CpC 2,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpC 2,WWMeasure,reportDate,,,,
+PMMoV CpC 2,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpC 2,WWMeasure,type,,,F,get_gene_type
+PMMoV CpC 2,WWMeasure,unit,gcPMMoV,,,
+PMMoV CpC 2,WWMeasure,unitOther,,,,
+PMMoV CpC 2,WWMeasure,aggregation,single,,,
+PMMoV CpC 2,WWMeasure,aggregationOther,,,,
+PMMoV CpC 2,WWMeasure,index,2,,,
+PMMoV CpC 2,WWMeasure,value,,lab sheet,M;AK,get_cpc_pmmov
+PMMoV CpC 2,WWMeasure,qualityFlag,FALSE,lab sheet,AV,get_quality_flag
+PMMoV CpC 2,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpC 2,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpC 2,WWMeasure,notes,,lab sheet,AV,get_notes
+,,,,,,
+PMMoV CpC 3,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcPMMoV_single_3:str,get_uwwmeasure_id
+PMMoV CpC 3,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpC 3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpC 3,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpC 3,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpC 3,WWMeasure,reporterID,,,,
+PMMoV CpC 3,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpC 3,WWMeasure,reportDate,,,,
+PMMoV CpC 3,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpC 3,WWMeasure,type,,,F,get_gene_type
+PMMoV CpC 3,WWMeasure,unit,gcPMMoV,,,
+PMMoV CpC 3,WWMeasure,unitOther,,,,
+PMMoV CpC 3,WWMeasure,aggregation,single,,,
+PMMoV CpC 3,WWMeasure,aggregationOther,,,,
+PMMoV CpC 3,WWMeasure,index,3,,,
+PMMoV CpC 3,WWMeasure,value,,lab sheet,N;AK,get_cpc_pmmov
+PMMoV CpC 3,WWMeasure,qualityFlag,FALSE,lab sheet,AW,get_quality_flag
+PMMoV CpC 3,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpC 3,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpC 3,WWMeasure,notes,,lab sheet,AW,get_notes
+,,,,,,
+,,,,,,
+PMMoV CpM 1,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcGs_single_1:str,get_uwwmeasure_id
+PMMoV CpM 1,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpM 1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpM 1,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpM 1,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpM 1,WWMeasure,reporterID,,,,
+PMMoV CpM 1,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpM 1,WWMeasure,reportDate,,,,
+PMMoV CpM 1,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpM 1,WWMeasure,type,,,F,get_gene_type
+PMMoV CpM 1,WWMeasure,unit,gcGs,,,
+PMMoV CpM 1,WWMeasure,unitOther,,,,
+PMMoV CpM 1,WWMeasure,aggregation,single,,,
+PMMoV CpM 1,WWMeasure,aggregationOther,,,,
+PMMoV CpM 1,WWMeasure,index,1,,,
+PMMoV CpM 1,WWMeasure,value,,lab sheet,Z,
+PMMoV CpM 1,WWMeasure,qualityFlag,FALSE,lab sheet,AZ,get_quality_flag
+PMMoV CpM 1,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpM 1,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpM 1,WWMeasure,notes,,lab sheet,AZ,get_notes
+,,,,,,
+PMMoV CpM 2,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcGs_single_2:str,get_uwwmeasure_id
+PMMoV CpM 2,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpM 2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpM 2,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpM 2,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpM 2,WWMeasure,reporterID,,,,
+PMMoV CpM 2,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpM 2,WWMeasure,reportDate,,,,
+PMMoV CpM 2,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpM 2,WWMeasure,type,,,F,get_gene_type
+PMMoV CpM 2,WWMeasure,unit,gcGs,,,
+PMMoV CpM 2,WWMeasure,unitOther,,,,
+PMMoV CpM 2,WWMeasure,aggregation,single,,,
+PMMoV CpM 2,WWMeasure,aggregationOther,,,,
+PMMoV CpM 2,WWMeasure,index,2,,,
+PMMoV CpM 2,WWMeasure,value,,lab sheet,AA,
+PMMoV CpM 2,WWMeasure,qualityFlag,FALSE,lab sheet,BA,get_quality_flag
+PMMoV CpM 2,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpM 2,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpM 2,WWMeasure,notes,,lab sheet,BA,get_notes
+,,,,,,
+PMMoV CpM 3,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcGs_single_3:str,get_uwwmeasure_id
+PMMoV CpM 3,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpM 3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpM 3,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpM 3,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpM 3,WWMeasure,reporterID,,,,
+PMMoV CpM 3,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpM 3,WWMeasure,reportDate,,,,
+PMMoV CpM 3,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpM 3,WWMeasure,type,,,F,get_gene_type
+PMMoV CpM 3,WWMeasure,unit,gcGs,,,
+PMMoV CpM 3,WWMeasure,unitOther,,,,
+PMMoV CpM 3,WWMeasure,aggregation,single,,,
+PMMoV CpM 3,WWMeasure,aggregationOther,,,,
+PMMoV CpM 3,WWMeasure,index,3,,,
+PMMoV CpM 3,WWMeasure,value,,lab sheet,AB,
+PMMoV CpM 3,WWMeasure,qualityFlag,FALSE,lab sheet,BB,get_quality_flag
+PMMoV CpM 3,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpM 3,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpM 3,WWMeasure,notes,,lab sheet,BB,get_notes
+,,,,,,
+,,,,,,
+PMMoV CpV 1,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcL_single_1:str,get_uwwmeasure_id
+PMMoV CpV 1,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpV 1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpV 1,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpV 1,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpV 1,WWMeasure,reporterID,,,,
+PMMoV CpV 1,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpV 1,WWMeasure,reportDate,,,,
+PMMoV CpV 1,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpV 1,WWMeasure,type,,,F,get_gene_type
+PMMoV CpV 1,WWMeasure,unit,gcL,,,
+PMMoV CpV 1,WWMeasure,unitOther,,,,
+PMMoV CpV 1,WWMeasure,aggregation,single,,,
+PMMoV CpV 1,WWMeasure,aggregationOther,,,,
+PMMoV CpV 1,WWMeasure,index,1,,,
+PMMoV CpV 1,WWMeasure,value,,lab sheet,Z;X,get_cpl
+PMMoV CpV 1,WWMeasure,qualityFlag,FALSE,lab sheet,BD,get_quality_flag
+PMMoV CpV 1,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpV 1,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpV 1,WWMeasure,notes,,lab sheet,BD,get_notes
+,,,,,,
+PMMoV CpV 2,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcL_single_2:str,get_uwwmeasure_id
+PMMoV CpV 2,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpV 2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpV 2,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpV 2,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpV 2,WWMeasure,reporterID,,,,
+PMMoV CpV 2,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpV 2,WWMeasure,reportDate,,,,
+PMMoV CpV 2,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpV 2,WWMeasure,type,,,F,get_gene_type
+PMMoV CpV 2,WWMeasure,unit,gcL,,,
+PMMoV CpV 2,WWMeasure,unitOther,,,,
+PMMoV CpV 2,WWMeasure,aggregation,single,,,
+PMMoV CpV 2,WWMeasure,aggregationOther,,,,
+PMMoV CpV 2,WWMeasure,index,2,,,
+PMMoV CpV 2,WWMeasure,value,,lab sheet,AA;X,get_cpl
+PMMoV CpV 2,WWMeasure,qualityFlag,FALSE,lab sheet,BE,get_quality_flag
+PMMoV CpV 2,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpV 2,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpV 2,WWMeasure,notes,,lab sheet,BE,get_notes
+,,,,,,
+PMMoV CpV 3,WWMeasure,wwMeasureID,,lab sheet,__labID__;B;A;C;F;E;__const__gcL_single_3:str,get_uwwmeasure_id
+PMMoV CpV 3,WWMeasure,sampleID,,lab sheet,__labID__;B;E,get_sample_id
+PMMoV CpV 3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMoV CpV 3,WWMeasure,assayID,,lab sheet,__labID__;C,get_assay_method_id
+PMMoV CpV 3,WWMeasure,instrumentID,,lab sheet,__labID__;C,get_instrument_id
+PMMoV CpV 3,WWMeasure,reporterID,,,,
+PMMoV CpV 3,WWMeasure,analysisDate,,lab sheet,A,
+PMMoV CpV 3,WWMeasure,reportDate,,,,
+PMMoV CpV 3,WWMeasure,fractionAnalyzed,solid,,,
+PMMoV CpV 3,WWMeasure,type,,,F,get_gene_type
+PMMoV CpV 3,WWMeasure,unit,gcL,,,
+PMMoV CpV 3,WWMeasure,unitOther,,,,
+PMMoV CpV 3,WWMeasure,aggregation,single,,,
+PMMoV CpV 3,WWMeasure,aggregationOther,,,,
+PMMoV CpV 3,WWMeasure,index,3,,,
+PMMoV CpV 3,WWMeasure,value,,lab sheet,AB;X,get_cpl
+PMMoV CpV 3,WWMeasure,qualityFlag,FALSE,lab sheet,BF,get_quality_flag
+PMMoV CpV 3,WWMeasure,accessToPublic,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToAllOrg,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToSelf,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToPHAC,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToLocalHA,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToProvHA,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToOtherProv,TRUE,,,
+PMMoV CpV 3,WWMeasure,accessToDetails,TRUE,,,
+PMMoV CpV 3,WWMeasure,notes,,lab sheet,BF,get_notes

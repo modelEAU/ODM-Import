@@ -2,7 +2,7 @@ import os
 import re
 import pandas as pd
 import datetime as dt
-from wbe_odm.odm_mappers import mcgill_mapper as mcm
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 
 directory = os.path.dirname(__file__)
@@ -137,7 +137,7 @@ def get_wwmeasure_id(
     sample_id = get_sample_id(
         label, end_date, sample_index
     )
-    ana_date = mcm.str_date_from_timestamp(analysis_date)
+    ana_date = CsvMapper.str_date_from_timestamp(analysis_date)
     df = pd.concat([sample_id, ana_date], axis=1)
     df["meas_type"] = get_measure_type(type_)
     df["lab_id"] = lab_id
@@ -148,8 +148,8 @@ def get_wwmeasure_id(
 
 def get_sample_id(label, end_date, sample_index):
     # TODO: Deal with index once it's been implemented in McGill sheet
-    clean_date = mcm.str_date_from_timestamp(end_date)
-    clean_label = label.apply(lambda x: mcm.clean_labels(x))
+    clean_date = CsvMapper.str_date_from_timestamp(end_date)
+    clean_label = label.apply(lambda x: CsvMapper.clean_labels(x))
 
     df = pd.concat([clean_label, clean_date], axis=1)
     df["index_no"] = str(sample_index) \
@@ -183,7 +183,7 @@ processing_functions = {
     "get_start_date": get_cp_start_date,
     "get_end_date": get_end_date,
     "get_sample_type": get_sample_type,
-    "has_quality_flag": mcm.has_quality_flag,
+    "has_quality_flag": CsvMapper.has_quality_flag,
     "get_collection_method": get_collection_method,
     "get_wwmeasure_id": get_wwmeasure_id,
     "get_measure_type": get_measure_type,
@@ -192,24 +192,24 @@ processing_functions = {
 }
 
 
-class ModelEauMapper(mcm.McGillMapper):
+class ModelEauMapper(CsvMapper):
     def read(self, filepath, sheet_name,
              modeleau_map=MODELEAU_MAP_NAME, lab_id="modeleau_lab"):
         lab = pd.read_excel(filepath, sheet_name=sheet_name)
         lab = clean_up(lab)
         lab.columns = [
-            mcm.excel_style(i+1)
+            self.excel_style(i+1)
             for i, _ in enumerate(lab.columns.to_list())
         ]
         mapping = pd.read_csv(modeleau_map)
         mapping.fillna("", inplace=True)
         mapping = mapping.astype(str)
         static_data = self.read_static_data(None)
-        dynamic_tables = mcm.parse_sheet(
+        dynamic_tables = self.parse_sheet(
             mapping,
             static_data,
             lab,
-            processing_functions,
+            self.processing_functions,
             lab_id
         )
         for table_name, table in dynamic_tables.items():
@@ -223,6 +223,6 @@ class ModelEauMapper(mcm.McGillMapper):
 if __name__ == "__main__":
     path = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/COVIDProject_Lab Measurements.xlsx"  # noqa
     sheet_name = "Lab analyses"
-    mapper = ModelEauMapper()
+    mapper = ModelEauMapper(processing_functions=processing_functions)
     mapper.read(path, sheet_name)
     print(mapper.ww_measure)

@@ -303,7 +303,7 @@ class TableWidener:
         df = self.clean_qualifier_columns()
         for qualifier in self.qualifiers:
             df[qualifier] = df[qualifier].astype(str)
-            df[qualifier] = df[qualifier].str.replace("single", f"agg-{agg}")
+            df[qualifier] = df[qualifier].str.replace("single", f"single-to-{agg}")
         df["col_qualifiers"] = df[self.qualifiers].agg("_".join, axis=1)
         unique_col_qualifiers = df["col_qualifiers"].unique()
         for col_qualifier in unique_col_qualifiers:

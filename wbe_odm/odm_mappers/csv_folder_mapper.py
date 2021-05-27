@@ -40,7 +40,7 @@ class CsvFolderMapper(base_mapper.BaseMapper):
             if self.is_valid_file_name(file)]
 
         for file in csv_files:
-            df = pd.read_csv(os.path.join(directory, file))
+            df = pd.read_csv(os.path.join(directory, file), low_memory=False)
             odm_name = self.get_odm_name_from_file_name(file)
 
             df = self.type_cast_table(odm_name, df)

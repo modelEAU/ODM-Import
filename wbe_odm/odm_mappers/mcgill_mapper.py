@@ -559,6 +559,219 @@ def parse_sheet(mapping, static, lab_data, processing_functions, lab_id,):
     return tables
 
 
+class QcChecker:
+    def _find_df_borders(self, sheet_cols, idx_col_pos):
+        pos_of_cols_w_headers = []
+        for i, col in enumerate(sheet_cols):
+            if i==idx_col_pos:
+                continue
+            if 'Unnamed' not in col:
+                pos_of_cols_w_headers.append(i+1)
+        last_sheet_col = len(sheet_cols)
+        pos_of_cols_w_headers.append(last_sheet_col)
+
+        xl_start_cols = []
+        xl_end_cols = []
+
+        pos_of_last_item = len(pos_of_cols_w_headers) - 1
+        for i in range(len(pos_of_cols_w_headers.copy())):
+            if i == pos_of_last_item:
+                #This is the end of the last df, so stop
+                break
+
+            start_pos = pos_of_cols_w_headers[i]
+            
+            if i == pos_of_last_item-1:
+                end_pos = pos_of_cols_w_headers[i+1]
+                
+            else:
+                end_pos = pos_of_cols_w_headers[i+1] -1
+
+
+            start_idx = excel_style(start_pos+1)
+            end_idx = excel_style(end_pos+1)
+            xl_start_cols.append(start_idx)
+            xl_end_cols.append(end_idx)
+        return xl_start_cols, xl_end_cols
+
+
+    def _get_type_codes(self, sheet_df):
+        return sheet_df.iloc[1].dropna().to_list()
+
+
+    def _get_sample_collection(self, type_codes):
+        return type_codes[::3]
+
+
+    def _get_last_dates(self, sheet_df):
+        dates = sheet_df.iloc[2].dropna().to_list()
+        temp_dates =[]
+        for item in dates:
+            try:
+                item = pd.to_datetime(item)
+                temp_dates.append(item)
+            except Exception:
+                continue
+        return temp_dates
+
+
+    def _get_label_ids(self, type_codes):
+        return type_codes[2::3]
+
+
+    def _get_site_ids(self, label_ids):
+        sites = []
+        for item in label_ids:
+            split = item.split("_")[0:2]
+            site = "_".join(split).lower()
+            sites.append(site)
+        return sites
+
+    def _get_values_df(self, path, sheet_name, start, end, header_row_pos):
+        return pd.read_excel(
+                path,
+                sheet_name=sheet_name,
+                header=header_row_pos,
+                usecols =f"{start}:{end}"
+                )
+
+    def _get_index_series(self, path, sheet_name, idx_col, header_row_pos):
+        idx_series = pd.read_excel(
+                path,
+                sheet_name=sheet_name,
+                header=header_row_pos,
+                usecols = idx_col,
+                squeeze=True
+            )
+        idx_series = pd.to_datetime(idx_series).dt.strftime("%Y-%m-%d")
+        return pd.to_datetime(idx_series)
+        
+    def _clean_names(self, df):
+        rejected_col_template = "Rejected by"
+        cols = df.columns
+        renamed_cols = {}
+        incrementer = 0
+        for col in cols:
+            new_col = col
+            if 'rejected' in col.lower():
+                if not incrementer:
+                    new_col = rejected_col_template
+                else:
+                    new_col = rejected_col_template + "." + str(incrementer)
+                incrementer +=1
+            elif re.match(".*\.[0-9]", col):
+                dot_idx = col.find(".")
+                new_col = col[0:dot_idx]
+
+            renamed_cols[col] = new_col
+        return df.rename(columns = renamed_cols) 
+
+    def _extract_dfs(self, path, sheet_name, idx_col_pos=0, header_row_pos=4):
+        sheet_df = pd.read_excel(path, sheet_name=sheet_name, header=0, index_col=0)
+        sheet_cols = [str(col) for col in sheet_df.columns]
+        start_borders, end_borders = self._find_df_borders(sheet_cols, idx_col_pos)
+        idx_col = excel_style(idx_col_pos+1)
+        
+        dfs = []
+        i=0
+        for start, end in zip(start_borders, end_borders):
+            vals = self._get_values_df(path, sheet_name, start, end, header_row_pos)
+            idx = self._get_index_series(path, sheet_name, idx_col, header_row_pos)
+            df = vals.set_index(idx)
+            df = self._clean_names(df)
+            cols_to_keep = ["BRSV (%rec)","Rejected by", "PMMV (gc/ml)","Rejected by.1", "SARS (gc/ml)", "Rejected by.2", "Quality Note"]
+            df = df[cols_to_keep]
+            df = df.dropna(how='all')
+            df.fillna("", inplace=True)
+            dfs.append(df)
+            i += 1
+        return sheet_df, dfs
+
+
+    def _parse_dates(self, df):
+        for col in df.columns:
+            if 'dateTime' in col:
+                df[col] = pd.to_datetime(df[col])
+        return df
+
+
+    def _apply_quality_checks(self, mapper,  v_df, last_date, site_id, sample_collection):
+        charac = {
+            "BRSV (%rec)": {
+                "rejected_col": "Rejected by",
+                "unit": "pctrecovery",
+                "type": "nbrsv",
+            },
+            "PMMV (gc/ml)": {
+                "rejected_col": "Rejected by.1",
+                "unit": "gcml",
+                "type": "npmmov",
+            },
+            "SARS (gc/ml)": {
+                "rejected_col": "Rejected by.2",
+                "unit": "gcml",
+                "type": "covn2",
+            }
+        }
+        
+        samples = mapper.sample
+        samples = self._parse_dates(samples)
+        ww = mapper.ww_measure
+        
+        sample_collection_filt = samples["collection"].str.contains(sample_collection)
+        sample_sites_filt = samples["siteID"].str.lower().str.contains(site_id)
+        for _, row in v_df.iterrows():
+            sample_date_filt1 = samples["dateTimeEnd"].dt.date == pd.to_datetime(row.name).date()
+            sample_date_filt2 = samples["dateTime"].dt.date == pd.to_datetime(row.name).date()
+            sample_date_filt = sample_date_filt1 | sample_date_filt2
+            sample_tot_filt = sample_date_filt & sample_sites_filt & sample_collection_filt
+
+            samples.loc[sample_tot_filt, ["qualityFlag", "notes"]] = [True, row["Quality Note"]]
+
+            sample_list = samples.loc[sample_tot_filt, "sampleID"].drop_duplicates().to_list()
+
+            for col, wwm_info in charac.items():
+                if row[wwm_info["rejected_col"]]:
+                    # print("Applying flag for ", row.name, col, row[wwm_info["rejected_col"]])
+                    ww_type_filt = ww["type"].str.lower().str.contains(wwm_info["type"])
+                    ww_unit_filt = ww["unit"].str.lower().str.contains(wwm_info["unit"])
+                    ww_sample_filt = ww["sampleID"].isin(sample_list)
+                    ww_tot_filt = ww_type_filt & ww_unit_filt & ww_sample_filt
+
+                    ww.loc[ww_tot_filt, ["qualityFlag", "notes"]] = [True, row["Quality Note"]]
+
+        if 'grb' in sample_collection:
+            sample_last_date_filt = samples['dateTime'] > last_date
+        else:
+            sample_last_date_filt = samples['dateTimeEnd'] > last_date
+        
+        unchecked_filt = sample_collection_filt & sample_sites_filt & sample_last_date_filt
+        samples.loc[unchecked_filt, ["qualityFlag", "notes"]] = [True, "Unchecked viral measurements"]
+        
+        unchecked_sample_ids = samples.loc[unchecked_filt, "sampleID"].drop_duplicates().to_list()
+
+        ww_u_type_filt = ww["type"].str.lower().isin([x["type"] for x in charac.values()])
+        ww_u_sample_filt = ww['sampleID'].isin(unchecked_sample_ids)
+        ww.loc[ww_u_type_filt & ww_u_sample_filt, ["qualityFlag", "notes"]] = [True, "Unchecked viral measurement"]
+        
+        mapper.sample = samples
+        mapper.ww_measure = ww
+        return mapper
+
+    def read_validation(self, mapper, path, sheet_name):
+        sheet_df, dfs = self._extract_dfs(path, sheet_name)
+
+        last_dates = self._get_last_dates(sheet_df)
+        type_codes = self._get_type_codes(sheet_df)
+        sample_collections = self._get_sample_collection(type_codes)
+        label_ids = self._get_label_ids(type_codes)
+        site_ids = self._get_site_ids(label_ids)
+
+        for v_df, last_date, site_id, sample_type in zip(dfs, last_dates, site_ids, sample_collections):
+            mapper = self._apply_quality_checks(mapper, v_df, last_date, site_id, sample_type)
+        return mapper
+
+
 class McGillMapper(base_mapper.BaseMapper):
     def get_attr_from_table_name(self, table_name):
         for attr, dico in self.conversion_dict.items():
@@ -642,6 +855,15 @@ class McGillMapper(base_mapper.BaseMapper):
 
 
 if __name__ == "__main__":
+    
+    def add_test_cov(ww):
+        ww["qualityFlag"] = ww["qualityFlag"].fillna(False)
+        type_filt = ww["type"].str.lower() == "covn2"
+        quality_filt = ~ww["qualityFlag"]
+        df = ww.loc[type_filt & quality_filt]
+        return df["wwMeasureID"].to_list()
+    covs = []
+
     mapper = McGillMapper()
     lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
     static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
@@ -654,4 +876,10 @@ if __name__ == "__main__":
                 map_path=MCGILL_MAP_NAME,
                 startdate=None,
                 enddate=None)
-    print(mapper.site)
+    covs.append(add_test_cov(mapper.ww_measure))
+    qual_check = QcChecker()
+    mapper_quality = qual_check.read_validation(mapper, lab_data, "QC_Compil_STEP (int)")
+    covs.append(add_test_cov(mapper_quality.ww_measure))
+    set_ini = set(covs[0])
+    set_final = set(covs[1])
+    # print(set_ini - set_final)

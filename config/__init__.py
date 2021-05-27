@@ -59,6 +59,7 @@ QC_CITY_RAIN_FOLDER = "Qc_rain"
 
 QC_VIRUS_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Quebec_final.xlsx")  # noqa
 QC_VIRUS_SHEET_NAME = "QC Data Daily Samples (McGill)"
+QC_QUALITY_SHEET_NAME = "QC_Compil_STEP (int)"
 QC_VIRUS_LAB = "frigon_lab"
 
 MTL_LAB_DATA = os.path.join(DATA_FOLDER, "CentrEau-COVID_Resultats_Montreal_final.xlsx")  # noqa

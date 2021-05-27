@@ -513,23 +513,26 @@ if __name__ == "__main__":
 
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-cty', '--cities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to load data from')  # noqa
+    parser.add_argument('-scty', '--cities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to load data from')  # noqa
     parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtpmus-wwtpmuc-lagoon", help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
     parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
+    parser.add_argument('-dcty', '--datacities', type=str2list, default="qc", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
+    
     parser.add_argument('-web', '--website', type=str2bool, default=False, help='build geojson files for website (default=False)')  # noqa
     args = parser.parse_args()
 
 
-    cities = args.cities
+    source_cities = args.cities
     sitetypes = args.sitetypes
     publichealth = args.publichealth
     generate = args.generate
     website = args.website
     reload = args.reload
     generate = args.generate
+    dataset_cities = args.datacities
     short = args.short
 
     if not os.path.exists(CSV_FOLDER):
@@ -537,13 +540,15 @@ if __name__ == "__main__":
             "CSV folder does not exist. Please modify config file.")
 
     store = odm.Odm()
-    print(cities)
+    print(source_cities)
     if reload:
-        if "qc" in cities:
+        if "qc" in source_cities:
             print("Importing data from Quebec City...")
             print("Importing viral data from Quebec City...")
             qc_lab = mcgill_mapper.McGillMapper()
             qc_lab.read(QC_VIRUS_DATA, STATIC_DATA, QC_VIRUS_SHEET_NAME, QC_VIRUS_LAB)  # noqa
+            quality_checker = mcgill_mapper.QcChecker()
+            qc_lab = quality_checker.read_validation(qc_lab, QC_VIRUS_DATA, QC_QUALITY_SHEET_NAME)
             store.append_from(qc_lab)
             print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
@@ -567,7 +572,7 @@ if __name__ == "__main__":
                 vdq_plant.read(os.path.join(subfolder, file))
                 store.append_from(vdq_plant)
 
-        if "mtl" in cities:
+        if "mtl" in source_cities:
             print("Importing data from Montreal...")
             mcgill_lab = mcgill_mapper.McGillMapper()
             poly_lab = mcgill_mapper.McGillMapper()
@@ -578,16 +583,16 @@ if __name__ == "__main__":
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
         
-        if "bsl" in cities:
+        if "bsl" in source_cities:
             print(f"BSL cities found in config file are {BSL_CITIES}")
-            cities.remove("bsl")
-            cities.extend(BSL_CITIES)
+            source_cities.remove("bsl")
+            source_cities.extend(BSL_CITIES)
             print("Importing data from Bas St-Laurent...")
             bsl_lab = mcgill_mapper.McGillMapper()
             bsl_lab.read(BSL_LAB_DATA, STATIC_DATA, BSL_SHEET_NAME, BSL_VIRUS_LAB)  # noqa
             store.append_from(bsl_lab)
 
-        if "lvl" in cities:
+        if "lvl" in source_cities:
             print("Importing data from Laval...")
             lvl_lab = mcgill_mapper.McGillMapper()
             lvl_lab.read(LVL_LAB_DATA, STATIC_DATA, LVL_SHEET_NAME, LVL_VIRUS_LAB)  # noqa
@@ -635,7 +640,7 @@ if __name__ == "__main__":
                     break
         if combined_path is None:
             combined = pd.DataFrame()
-        combined = pd.read_csv(os.path.join(CSV_FOLDER, f))
+        combined = pd.read_csv(os.path.join(CSV_FOLDER, f), low_memory=False)
         combined = utilities.typecast_wide_table(combined)
 
     if website:
@@ -647,7 +652,7 @@ if __name__ == "__main__":
         site_type_filt = sites["type"].str.lower().str.contains('|'.join(sitetypes))
         sites = sites.loc[site_type_filt]
 
-        city_filt = sites["siteID"].str.contains('|'.join(cities))
+        city_filt = sites["siteID"].str.contains('|'.join(source_cities))
         sites = sites.loc[city_filt]
 
         get_site_geoJSON(
@@ -667,7 +672,7 @@ if __name__ == "__main__":
         date = datetime.now().strftime("%Y-%m-%d")
         print("Generating ML Dataset...")
         sites = store.site
-        for city in cities:
+        for city in dataset_cities:
             filt_city = sites["siteID"].str.contains(city)
             site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
             city_sites = sites.loc[filt_city & site_type_filt, "siteID"].dropna().unique()
@@ -675,4 +680,5 @@ if __name__ == "__main__":
                 print(f"Generating dataset for {city_site}")
                 dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
+                dataset = dataset["2021-02-01":]
                 dataset.to_csv(os.path.join(CITY_OUTPUT_DIR, f"{city_site}.csv"))

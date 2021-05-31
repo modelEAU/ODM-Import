@@ -389,7 +389,7 @@ def clean_labels_y(cols):
         if table_name == "Sample":
             clean_label = col
         if table_name == "SiteMeasure":
-            param, unit, _, _ = col.split_"_")[1:]
+            param, unit, _, _ = col.split("_")[1:]
             unit = unit.replace("-", "/")
             clean_label = f"{table_name} {param} ({unit})"
 

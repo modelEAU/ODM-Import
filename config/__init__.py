@@ -3,7 +3,7 @@ COLORS = {
     0: {
         "french": "Pas de données",
         "english": "No Data",
-        "color": None},
+        "color": "#ececec"},
     1: {
         "french": "Très faible",
         "english": "Very Low",
@@ -26,7 +26,7 @@ COLORS = {
         "color": "#c13525"},
 }
 
-
+LOGO_PATH = "/Users/jeandavidt/dev/jeandavidt/ODM Import/Data/images/graph_logos.png"
 STR_YES = [
     'y',
     'yes',

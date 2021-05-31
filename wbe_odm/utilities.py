@@ -257,6 +257,7 @@ def get_primary_key(table_name=None):
 
 
 def build_site_specific_dataset(df, site_id):
+    idx_col = "Calculated_timestamp"
     if df.empty:
         return df
     filt_site1 = df["Site_siteID"] == site_id
@@ -266,6 +267,7 @@ def build_site_specific_dataset(df, site_id):
     else:
         filt_site = filt_site1
     df1 = df[filt_site]
+    df1.set_index(idx_col, inplace=True)
 
     filt_cphd_df = df.loc[filt_site1, "Calculated_polygonIDForCPHD"]
     if not filt_cphd_df.empty:
@@ -274,11 +276,11 @@ def build_site_specific_dataset(df, site_id):
         poly_filt = df["CPHD_polygonID"]\
             .fillna("").str.lower().str.match(cphd_poly_id)
         df2 = df[poly_filt]
+        df2.set_index(idx_col, inplace=True)
         dataset = pd.concat([df1, df2], axis=0)
     else:
         dataset = df1
 
-    dataset = dataset.set_index(["Calculated_timestamp"])
     dataset.sort_index()
     return dataset.reindex(sorted(dataset.columns), axis=1)
 

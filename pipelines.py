@@ -1,4 +1,5 @@
 import argparse
+import base64
 import json
 import logging
 import os
@@ -7,6 +8,10 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from plotly.express import colors as pc
+
 
 from config import *
 from wbe_odm import odm, utilities
@@ -54,6 +59,11 @@ def get_latest_sample_date(df):
 
 
 def get_cm_to_plot(samples, thresh_n):
+    if isinstance(samples, pd.DataFrame):
+        if samples.empty:
+            return None
+    elif not samples:
+        return None
     # the type to plot depends on:
     # 1) What is the latest collection method for samples at that site
     # 2) How many samples of that cm there are
@@ -93,7 +103,7 @@ def get_site_list(sites):
 
 
 def get_last_sunday(date):
-    if date is None:
+    if pd.isna(date):
         date = pd.to_datetime("01-01-2020")
     date = date.to_pydatetime()
     offset = (date.weekday() - 6) % 7
@@ -134,6 +144,11 @@ def get_samples_of_collection_method(samples, cm):
 
 
 def get_viral_timeseries(samples):
+    if isinstance(samples, pd.DataFrame):
+        if samples.empty:
+            return None
+    elif not samples:
+        return None
     table = "WWMeasure"
     unit = 'gcml'
     agg_method = 'single-to-mean'
@@ -184,7 +199,7 @@ def get_color_ts(viral,
     dateStart = pd.to_datetime(dateStart)
     weekly = None
     if viral is not None:
-        viral["last_sunday"] = viral["Calculated_timestamp"].apply(get_last_sunday)
+        viral["last_sunday"] = viral.index.map(get_last_sunday)
         weekly = viral.resample("W", on="last_sunday").median()
 
     date_range_start = get_last_sunday(dateStart)
@@ -316,13 +331,12 @@ def get_website_type(types):
     return types.str.lower().map(site_types)
 
 
-def get_website_name(names):
-    sitename_lang_map = {
-        "quebec station est":{
+sitename_lang_map = {
+        "québec station est":{
             "french": "Québec Station Est",
             "english": "Québec East WRRF",
         },
-        "quebec station ouest":{
+        "québec station ouest":{
             "french": "Québec Station Ouest",
             "english": "Québec West WRRF",
         },
@@ -375,11 +389,10 @@ def get_website_name(names):
             "english": "La Pinière WRRF",
         },
     }
-    return names.map(sitename_lang_map)
+def get_website_name(name):
+    return sitename_lang_map[name]
 
-
-def get_municipality(ids):
-    municipalities = {
+municipalities = {
         "qc": "Québec",
         "mtl": "Montréal",
         "lvl": "Laval",
@@ -390,14 +403,13 @@ def get_municipality(ids):
         "rdl": "Rivière-du-Loup",
         "stak": "Saint-Alexandre-de-Kamouraska",
         "3p": "Trois-Pistoles",
-        "mtn": "Matane"
+        "mtne": "Matane"
     }
-    city_id = ids.str.lower().apply(lambda x: x.split("_")[0])
-    return city_id.map(municipalities)
+def get_municipality(id):
+    city_id = str(id).lower().split("_")[0]
+    return municipalities[city_id]
 
-
-def website_collection_method(cm):
-    collection = {
+collection = {
         "cp": {
             "french": "Composite",
             "english": "Composite"},
@@ -409,12 +421,137 @@ def website_collection_method(cm):
             "english": "Passive"
         }
     }
-    return cm.map(collection)
+def website_collection_method(cm):
+    return collection.get(cm, "")
+
+poly_names = {
+    "qc_01_swrcat": {
+        'french': "Bassin versant de la station Québec Est",
+        "english": "Sewershed of Québec East WRRF",
+    },
+    "qc_02_swrcat": {
+        'french': "Bassin Versant de la station Québec Ouest",
+        "english": "Sewershed of Québec West WRRF",
+    },
+    "prov_qc_hlthreg_laval": {
+        'french': "Laval",
+        "english": "Laval",
+    },
+    "prov_qc_hlthreg_chaudiere-appalaches": {
+        'french': "Chaudière-Appalaches",
+        "english": "Chaudière-Appalaches",
+    },
+    "prov_qc_hlthreg_nord-du-quebec": {
+        'french': "Nord-du-Québec",
+        "english": "Nord-du=Québec",
+    },
+    "prov_qc_hlthreg_estrie": {
+        'french': "Estrie",
+        "english": "Estrie",
+    },
+    "prov_qc_hlthreg_capitale-nationale": {
+        'french': "Capitale-Nationale",
+        "english": "Capitale-Nationale",
+    },
+    "prov_qc_hlthreg_mauricie-centre-du-quebec": {
+        'french': "Mauricie - Centre-du-Québec",
+        "english": "Mauricie - Centre-du-Québec",
+    },
+    "prov_qc_hlthreg_monteregie": {
+        'french': "Montérégie",
+        "english": "Montérégie",
+    },
+    "prov_qc_hlthreg_abitibi-temiscamingue": {
+        'french': "Abitibi - Témiscamingue",
+        "english": "Abitibi - Témiscamingue",
+    },
+    "prov_qc_hlthreg_outaouais": {
+        'french': "Outaouais",
+        "english": "Outaouais",
+    },
+    "prov_qc_hlthreg_bas-saint-laurent": {
+        'french': "Bas-Saint-Laurent",
+        "english": "Bas-Saint-Laurent",
+    },
+    "prov_qc_hlthreg_cote-nord": {
+        'french': "Côte-Nord",
+        "english": "Côte-Nord",
+    },
+    "prov_qc_hlthreg_montreal": {
+        'french': "Montréal",
+        "english": "Montréal",
+    },
+    "prov_qc_hlthreg_laurentides": {
+        'french': "Laurentides",
+        "english": "Laurentides",
+    },
+    "prov_qc_hlthreg_lanaudiere": {
+        'french': "Lanaudière",
+        "english": "Lanaudière",
+    },
+    "prov_qc_hlthreg_saguenay-lac-saint-jean": {
+        'french': "Saguenay - Lac-Saint-Jean",
+        "english": "Saguenay - Lac-Saint-Jean",
+    },
+    "prov_qc_hlthreg_gaspesie-iles-de-la-madeleine": {
+        'french': "Gaspésie - Îles-de-la-Madeleine",
+        "english": "Gaspésie - Îles-de-la-Madeleine",
+    },
+    "mtl_01_swrcat": {
+        'french': "Bassin versant de l'intercepteur Nord de Montréal",
+        "english": "Montréal North Intercepter Sewer Catchment",
+    },
+    "mtl_02_swrcat": {
+        'french': "Bassin versant de l'intercepteur Sud de Montréal",
+        "english": "Montréal South Intercepter Sewer Catchment",
+    },
+    "riki_01_swrcat": {
+        'french': "Bassin versant des égouts de Rimouski",
+        "english": "Rimouski WRRF sewershed",
+    },
+    "mtne_01_swrcat": {
+        'french': "Bassin versant des égouts de Matane",
+        "english": "Matane WRRF sewershed",
+    },
+    "3p_01_swrcat": {
+        'french': "Bassin versant des égouts de Trois-Pistoles",
+        "english": "Trois-Pistoles WRRF sewershed",
+    },
+    "rdl_01_swrcat": {
+        'french': "Bassin versant des égouts de Rivière-du-Loup",
+        "english": "Rivière-du-Loup WRRF sewershed",
+    },
+    "stak_01_swrcat": {
+        'french': "Bassin versant des égouts de St-Alexandre-de-Kamouraska",
+        "english": "St-Alexandre-de-Kamouraska WRRF sewershed",
+    },
+    "lvl_01_swrcat": {
+        'french': "Bassin versant des égouts de la Station Auteuil",
+        "english": "Auteuil WRRF sewershed",
+    },
+    "lvl_02_swrcat": {
+        'french': "Bassin versant des égouts de la station Fabreville",
+        "english": "Fabreville WRRF sewershed",
+    },
+    "lvl_03_swrcat": {
+        'french': "Bassin versant de Ste-Dorothée",
+        "english": "Ste-Dorothée sewershed",
+    },
+    "LVL_04_swrCat": {
+        'french': "Bassin versant des égouts de Bertrand",
+        "english": "Bertand sewershed",
+    },
+    "lvl_05_swrcat": {
+        'french': "Bassin versant des égouts de la Pinière",
+        "english": "La Pinière sewershed",
+    },
+}
+def clean_polygon_name(poly_id):
+    return poly_names[poly_id]
 
 
-def get_samples_to_plot(site_id, combined, dateStart=None, dateEnd=None):
-    samples_for_site = utilities.build_site_specific_dataset(combined, site_id)
-    samples_in_range = get_samples_in_interval(samples_for_site, dateStart, dateEnd)
+def get_samples_to_plot(site_dataset, dateStart=None, dateEnd=None):
+    samples_in_range = get_samples_in_interval(site_dataset, dateStart, dateEnd)
     collection_method = get_cm_to_plot(samples_in_range, thresh_n=7)
     samples_to_plot = get_samples_of_collection_method(samples_in_range, collection_method)
     return samples_to_plot
@@ -429,23 +566,28 @@ def get_site_geoJSON(
         dateStart=None,
         dateEnd=None):
 
-    sites["samples"] = sites.apply(
-        lambda row: get_samples_to_plot(row["siteID"], combined, dateStart, dateEnd),
+    sites["dataset"] = sites.apply(
+        lambda row: utilities.build_site_specific_dataset(combined, row["siteID"]),
+        axis=1)
+    sites["dataset"] = sites.apply(
+        lambda row: utilities.resample_per_day(row['dataset']),
+        axis=1)
+    sites['samples'] = sites.apply(
+        lambda row: get_samples_to_plot(row['dataset'], dateStart, dateEnd),
         axis=1)
     sites["viral"] = sites.apply(
-        lambda row: get_viral_timeseries(row['samples'], axis=1)
-    )
+        lambda row: get_viral_timeseries(row['samples']),
+        axis=1)
     sites["date_color"] = sites.apply(
         lambda row: get_color_ts(
             row["viral"], colorscale, dateStart, dateEnd),
         axis=1)
 
     sites["clean_type"] = get_website_type(sites["type"])
-    sites["municipality"] = get_municipality(sites["siteID"])
-    sites["name"] = get_website_name(sites["name"])
-
-    sites["collection_method"] = website_collection_method(
-        sites["collection_method"])
+    sites["municipality"] = sites['siteID'].apply(lambda x: get_municipality(x))
+    sites["name"] = sites['name'].apply(lambda x: get_website_name(x))
+    sites['collection_method'] = sites.apply( lambda row: get_cm_to_plot(row['samples'], thresh_n=7), axis=1)
+    sites["collection_method"] = sites["collection_method"].apply(lambda x: website_collection_method(x))
     cols_to_keep = [
         "siteID",
         "name",
@@ -502,26 +644,174 @@ def get_data_excerpt(origin_folder):
             sep=",", index=False)
 
 
-def get_cases_for_site(combined, site_id):
-    cases = utilities.build_site_specific_dataset(combined, site_id)
-    cases = cases[['CPHD_conf_report_value']]
-    return cases
+def get_info_from_col(col, df):
+    found = df[col].value_counts().index.to_list()
+    if found:
+        return found[0]
+    return None
 
 
-def centreau_website_plot(combined, site_id, dateStart, dateEnd=None):
-    samples = get_samples_to_plot(site, combined, dateStart, dateEnd)
+def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
+    site_dataset = utilities.build_site_specific_dataset(combined, site_id)
+    site_dataset = utilities.resample_per_day(site_dataset)
+    samples = get_samples_to_plot(site_dataset, dateStart, dateEnd)
     viral = get_viral_timeseries(samples)
+    if isinstance(viral, pd.DataFrame):
+        if viral.empty:
+            return None, None
+    elif not viral:
+        return None, None    
     sars_col = [col for col in viral.columns if 'covn2' in col][0]
     pmmv_col = [col for col in viral.columns if 'npmmov' in col][0]
     norm_col = 'norm'
-
+    cases_col = 'CPHD_conf_report_value'
     
-    cases = get_cases_for_site(combined, site_id)
-    df = pd.concat([viral, cases], axis=1)
-
-
+    poly_id = get_info_from_col('CPHD-Polygon_polygonID', samples)
+    site_name = get_info_from_col('Site_name', samples)
     
-    pass
+    df = pd.concat([viral, site_dataset[cases_col]], axis=1)
+    df = df[dateStart:]
+    df.rename(columns={
+        sars_col:'sars',
+        pmmv_col: 'pmmv',
+        norm_col:'norm',
+        cases_col: 'cases',
+    }, inplace=True)
+    metadata = {
+        'poly_name': clean_polygon_name(poly_id),
+        'site_id': site_id,
+        'site_name': get_website_name(site_name),
+    }
+    return df, metadata 
+
+def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'english']):
+    plot_titles = {
+        'french': f'Surveillance SRAS-CoV-2 via les eaux usées<br>{metadata["site_name"]["french"]}',
+        'english': f'SARS-CoV-2 surveilance in wastewater<br>{metadata["site_name"]["english"]}'
+    }
+    axes_titles = {
+        1: {
+            'french': 'Nouveaux cas',
+            'english': 'New cases',
+        },
+        2: {
+            'french': 'Signal viral normalisé (gc/gc)',
+            'english': 'Normalized viral signal (gc/gc)'
+        },
+        3: {
+            'french': 'Signal viral (gc/ml)',
+            'english': 'Viral signal (gc/ml)',
+        }
+    }
+    col_names = {
+        'sars': {
+            'french': 'SRAS (gc/ml)',
+            'english': 'SARS (gc/ml)'
+        },
+        'pmmv': {
+            'french': 'PMMoV (gc/ml)',
+            'english': 'PMMoV (gc/ml)'
+        },
+        'norm': {
+            'french': 'SRAS/PMMoV (gc/gc)',
+            'english': 'SARS/PMMoV (gc/gc)'
+        },
+        'cases': {
+            "french": f'Cas journaliers {metadata["poly_name"]["french"]}',
+            "english": f'Daily cases {metadata["poly_name"]["english"]}',
+        }
+    }
+    first_sunday = get_last_sunday(pd.to_datetime(dateStart))
+    for lang in langs:
+        fig = make_subplots(rows=1, cols=1,
+                        specs=[[{"secondary_y": True}]])
+        colors = pc.qualitative.Plotly
+        line_colors = [color for i, color in enumerate(colors) if i != 2]
+        bar_color = colors[2]
+
+        for i, col in enumerate([col for col in data.columns if 'case' not in col]):
+            trace = go.Scatter(
+                x=data.index,
+                y=data[col],
+                name=col_names[col][lang],
+                mode="lines+markers",
+                marker=dict(color=line_colors[i%len(line_colors)]),
+                connectgaps=True,
+                visible='legendonly' if 'norm' not in col else True,
+                yaxis = "y3" if 'norm' not in col else "y2",
+                hovertemplate=' %{y:.3f}'
+            )
+            fig.add_trace(trace)
+            
+        
+
+        cases_trace = go.Bar(
+            x=data.index,
+            y=data['cases'],
+            name=col_names['cases'][lang],
+            marker=dict(
+                opacity=0.3,
+                color=bar_color
+            ),
+            hovertemplate=' %{y}<extra>Nouveaux cas</extra>'
+        )
+        fig.add_trace(cases_trace)
+
+        fig.update_layout(
+            xaxis_title="Date",
+            xaxis_tick0=first_sunday,
+            xaxis_dtick=7 * 24 * 3600000,
+            xaxis_tickformat="%d-%m-%Y",
+            xaxis_tickangle=30, plot_bgcolor="white",
+            xaxis_gridcolor="rgba(100,100,100,0.10)",
+            yaxis_gridcolor="rgba(0,0,0,0)",
+            xaxis_ticks="outside",
+
+            hovermode = 'x unified',  # To compare on hover
+            title=plot_titles[lang],
+            legend=dict(yanchor="top", xanchor="left", orientation="h", y=1.05, x=0),
+            xaxis=dict(
+                domain=[0.12, 1]
+            ),
+            yaxis=dict(
+                title=axes_titles[1][lang],
+                side="right",
+                domain=[0, 0.9],
+            ),
+            yaxis2=dict(
+                title=dict(
+                    text=axes_titles[2][lang],
+                    standoff=0.01,
+                ),
+                side="left",
+                anchor="x",
+            ),
+            yaxis3=dict(
+                title=dict(
+                    text=axes_titles[3][lang],
+                    standoff=0.01,
+                ),
+                overlaying="y",
+                side="left",
+                position=0
+            ),
+        )
+        encoded_image = base64.b64encode(open(LOGO_PATH, 'rb').read())
+        fig.add_layout_image(
+        dict(
+            source='data:image/png;base64,{}'.format(encoded_image.decode()),
+            xref="paper", yref="paper",
+            x=1.125, y=1.00,
+            sizex=0.5, sizey=0.25,
+            xanchor="right", yanchor="bottom"
+            )
+        )
+        if langs == ['french']:
+            fig.write_html(f"{SITE_OUTPUT_DIR}/{metadata['site_id']}.html")
+        else:
+            fig.write_html(f"{SITE_OUTPUT_DIR}/{metadata['site_id']}_{lang}.html")
+    return
+
 
 if __name__ == "__main__":
 
@@ -534,19 +824,20 @@ if __name__ == "__main__":
     parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
     parser.add_argument('-dcty', '--datacities', type=str2list, default="qc", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
-    
-    parser.add_argument('-web', '--website', type=str2bool, default=False, help='build geojson files for website (default=False)')  # noqa
+    parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
+    parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
     args = parser.parse_args()
 
 
     source_cities = args.cities
     sitetypes = args.sitetypes
     publichealth = args.publichealth
-    generate = args.generate
-    website = args.website
     reload = args.reload
     generate = args.generate
+    website = args.website
+    generate = args.generate
     dataset_cities = args.datacities
+    web_cities = args.webcities
     short = args.short
 
     if not os.path.exists(CSV_FOLDER):
@@ -555,6 +846,8 @@ if __name__ == "__main__":
 
     store = odm.Odm()
     print(source_cities)
+    
+    
     if reload:
         if "qc" in source_cities:
             print("Importing data from Quebec City...")
@@ -657,9 +950,14 @@ if __name__ == "__main__":
         if combined_path is None:
             combined = pd.DataFrame()
         combined = pd.read_csv(os.path.join(CSV_FOLDER, f), low_memory=False)
+        combined = combined.replace('nan', np.nan)
         combined = utilities.typecast_wide_table(combined)
 
     if website:
+        if "bsl" in web_cities:
+            print(f"BSL cities found in config file are {BSL_CITIES}")
+            web_cities.remove("bsl")
+            web_cities.extend(BSL_CITIES)
         print("Generating website files...")
         sites = store.site
         sites["siteID"] = sites["siteID"].str.lower()
@@ -668,9 +966,9 @@ if __name__ == "__main__":
         site_type_filt = sites["type"].str.lower().str.contains('|'.join(sitetypes))
         sites = sites.loc[site_type_filt]
 
-        city_filt = sites["siteID"].str.contains('|'.join(source_cities))
+        city_filt = sites["siteID"].str.contains('|'.join(web_cities))
         sites = sites.loc[city_filt]
-
+        print("building site geojson...")
         get_site_geoJSON(
             sites,
             combined,
@@ -678,14 +976,20 @@ if __name__ == "__main__":
             SITE_NAME,
             COLORS,
             dateStart=DEFAULT_START_DATE)
-
+        print("building polygon geojson...")
         poly_list = sites["polygonID"].to_list()
         build_polygon_geoJSON(
             store, poly_list, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
 
-        for site in sites:
-            fig = centreau_website_plot(combined, site, ['fr', 'en'], DEFAULT_START_DATE)
-            fig.write_html(f"{SITE_OUTPUT_DIR}/{site}.html")
+        for site_id in sites['siteID'].to_list():
+            print("building website plots for ", site_id, "...")
+            plot_data, metadata = centreau_website_data(combined, site_id, DEFAULT_START_DATE)
+            if isinstance(plot_data, pd.DataFrame):
+                if plot_data.empty:
+                    continue
+            elif not plot_data:
+                continue
+            plot_web(plot_data, metadata, dateStart=DEFAULT_START_DATE, langs=['french'])
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")

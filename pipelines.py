@@ -72,7 +72,7 @@ def get_cm_to_plot(samples, thresh_n):
     n_samples = []
     for cm in possible_cms:
         samples_of_type = samples.loc[
-            samples["Sample_collection"].str.contains(cm)
+            samples["Sample_collection"].str.contains(cm, na=False)
         ]
         n_samples.append(len(samples_of_type))
         last_dates.append(get_latest_sample_date(samples_of_type))
@@ -140,7 +140,7 @@ def get_samples_of_collection_method(samples, cm):
     if pd.isna(cm):
         return None
     return samples.loc[
-        samples["Sample_collection"].str.contains(cm)]
+        samples["Sample_collection"].str.contains(cm, na=False)]
 
 
 def get_viral_timeseries(samples):
@@ -402,7 +402,7 @@ municipalities = {
         "riki": "Rimouski",
         "rdl": "Rivière-du-Loup",
         "stak": "Saint-Alexandre-de-Kamouraska",
-        "3p": "Trois-Pistoles",
+        "trpis": "Trois-Pistoles",
         "mtne": "Matane"
     }
 def get_municipality(id):
@@ -513,7 +513,7 @@ poly_names = {
         'french': "Bassin versant des égouts de Matane",
         "english": "Matane WRRF sewershed",
     },
-    "3p_01_swrcat": {
+    "trpis_01_swrcat": {
         'french': "Bassin versant des égouts de Trois-Pistoles",
         "english": "Trois-Pistoles WRRF sewershed",
     },
@@ -854,9 +854,10 @@ if __name__ == "__main__":
             print("Importing viral data from Quebec City...")
             qc_lab = mcgill_mapper.McGillMapper()
             qc_lab.read(QC_VIRUS_DATA, STATIC_DATA, QC_VIRUS_SHEET_NAME, QC_VIRUS_LAB)  # noqa
-            print("Adding Quality Checks...")
-            quality_checker = mcgill_mapper.QcChecker()
-            qc_lab = quality_checker.read_validation(qc_lab, QC_VIRUS_DATA, QC_QUALITY_SHEET_NAME)
+            print("Adding Quality Checks for Qc...")
+            qc_quality_checker = mcgill_mapper.QcChecker()
+            qc_lab = qc_quality_checker.read_validation(qc_lab, QC_VIRUS_DATA, QC_QUALITY_SHEET_NAME)
+
             store.append_from(qc_lab)
             print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
@@ -888,9 +889,14 @@ if __name__ == "__main__":
             mcgill_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_MCGILL_SHEET_NAME, MCGILL_VIRUS_LAB)  # noqa
             print("Importing viral data from Poly...")
             poly_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
+            print("Adding Quality Checks for mtl...")
+            mtl_quality_checker = mcgill_mapper.QcChecker()
+            
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
-        
+            store = mtl_quality_checker.read_validation(store, MTL_LAB_DATA, MTL_QUALITY_SHEET_NAME)
+
+
         if "bsl" in source_cities:
             print(f"BSL cities found in config file are {BSL_CITIES}")
             source_cities.remove("bsl")
@@ -898,12 +904,18 @@ if __name__ == "__main__":
             print("Importing data from Bas St-Laurent...")
             bsl_lab = mcgill_mapper.McGillMapper()
             bsl_lab.read(BSL_LAB_DATA, STATIC_DATA, BSL_SHEET_NAME, BSL_VIRUS_LAB)  # noqa
+            print("Adding Quality Checks for BSL...")
+            bsl_quality_check = mcgill_mapper.QcChecker()
+            bsl_quality_check.read_validation(bsl_lab, BSL_LAB_DATA, BSL_QUALITY_SHEET_NAME)
             store.append_from(bsl_lab)
 
         if "lvl" in source_cities:
             print("Importing data from Laval...")
             lvl_lab = mcgill_mapper.McGillMapper()
             lvl_lab.read(LVL_LAB_DATA, STATIC_DATA, LVL_SHEET_NAME, LVL_VIRUS_LAB)  # noqa
+            print("Adding Quality Checks for Laval...")
+            lvl_quality_checker = mcgill_mapper.QcChecker()
+            lvl_quality_checker.read_validation(lvl_lab, LVL_LAB_DATA, LVL_QUALITY_SHEET_NAME)
             store.append_from(lvl_lab)
 
         if publichealth:

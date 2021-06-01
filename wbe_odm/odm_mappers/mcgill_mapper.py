@@ -611,7 +611,7 @@ class QcChecker:
                 item = pd.to_datetime(item)
                 temp_dates.append(item)
             except Exception:
-                continue
+                temp_dates.append(pd.NaT)
         return temp_dates
 
 
@@ -694,7 +694,10 @@ class QcChecker:
                 df[col] = pd.to_datetime(df[col])
         return df
 
-
+    def _validation_has_started(self, last_date):
+        # If there is no 'last checked date', then validation isn't happening at this site, but the data shouldn't be removed
+        return not pd.isna(pd.to_datetime(last_date))
+    
     def _apply_quality_checks(self, mapper,  v_df, last_date, site_id, sample_collection):
         charac = {
             "BRSV (%rec)": {
@@ -762,12 +765,15 @@ class QcChecker:
         sheet_df, dfs = self._extract_dfs(path, sheet_name)
 
         last_dates = self._get_last_dates(sheet_df)
+        
         type_codes = self._get_type_codes(sheet_df)
         sample_collections = self._get_sample_collection(type_codes)
         label_ids = self._get_label_ids(type_codes)
         site_ids = self._get_site_ids(label_ids)
 
         for v_df, last_date, site_id, sample_type in zip(dfs, last_dates, site_ids, sample_collections):
+            if not self._validation_has_started(last_date):
+                continue
             mapper = self._apply_quality_checks(mapper, v_df, last_date, site_id, sample_type)
         return mapper
 

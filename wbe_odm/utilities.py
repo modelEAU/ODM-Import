@@ -212,6 +212,13 @@ def convert_wkt_to_geojson(s):
     return geojson_feature
 
 
+def rank_polygons_by_desc_area(poly_df):
+    df = poly_df.copy()
+    df['area'] = df['wkt'].apply(lambda x: shapely.wkt.loads(x).area)
+    df['order'] = df['area'].rank(ascending=False)
+    return df['order']
+
+
 def get_data_types():
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)

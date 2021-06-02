@@ -140,6 +140,7 @@ class Odm:
                 self_attrs[key] = new_df.drop_duplicates(
                     keep="first", ignore_index=True)
 
+    
     def get_polygon_geoJSON(self, types=None) -> dict:
         """[summary]
 
@@ -154,7 +155,8 @@ class Odm:
             "type": "FeatureCollection",
             "features": []
         }
-        polygon_df = self.polygon
+        polygon_df = self.polygon.sort_values('polygonID')
+        polygon_df['z'] = utilities.rank_polygons_by_desc_area(polygon_df)
         if types is not None:
             if isinstance(types, str):
                 types = [types]

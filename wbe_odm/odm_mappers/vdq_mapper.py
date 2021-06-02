@@ -89,12 +89,16 @@ def limoilou_s_flow(flow):
     return pd.to_numeric(flow, errors="coerce") * 2/3 * 24
 
 
+def m3h_to_m3d(flow):
+    return flow * 24
+
 sensor_funcs = {
     "get_qc_sensor_site_measure_id": get_qc_lab_site_measure_id,
     "maizerets_from_height": maizerets_from_height,
     "charlesbourg_flow": charlesbourg_flow,
     "limoilou_n_flow": limoilou_n_flow,
     "limoilou_s_flow": limoilou_s_flow,
+    "m3h_to_m3d": m3h_to_m3d,
 }
 
 

@@ -11,7 +11,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.express import colors as pc
-
+import shapely.wkt
 
 from config import *
 from wbe_odm import odm, utilities
@@ -823,7 +823,7 @@ if __name__ == "__main__":
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
     parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
-    parser.add_argument('-dcty', '--datacities', type=str2list, default="qc", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
+    parser.add_argument('-dcty', '--datacities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
     parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
     args = parser.parse_args()
@@ -1006,6 +1006,10 @@ if __name__ == "__main__":
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")
         print("Generating ML Dataset...")
+        if "bsl" in dataset_cities:
+            print(f"BSL cities found in config file are {BSL_CITIES}")
+            dataset_cities.remove("bsl")
+            dataset_cities.extend(BSL_CITIES)
         sites = store.site
         for city in dataset_cities:
             filt_city = sites["siteID"].str.contains(city)
@@ -1015,5 +1019,5 @@ if __name__ == "__main__":
                 print(f"Generating dataset for {city_site}")
                 dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
-                dataset = dataset["2021-02-01":]
+                # dataset = dataset["2021-01-01":]
                 dataset.to_csv(os.path.join(CITY_OUTPUT_DIR, f"{city_site}.csv"))

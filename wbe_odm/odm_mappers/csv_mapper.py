@@ -543,6 +543,8 @@ class CsvMapper(base_mapper.BaseMapper):
         -------
             The formatted file name.
         """
+        if not file:
+            return None
         d = self.start_time.strftime("%Y-%m-%d")
         t = self.start_time.strftime("%H-%M-%S")
         dt = f"{d}_{t}"
@@ -601,6 +603,8 @@ class CsvMapper(base_mapper.BaseMapper):
         str
             The path of the output file.
         """
+        if not file:
+            return None
         file = self.format_file_name(file)
         print(f"Saving to '{file}'")
         attr_suffix = attr_suffix or ""
@@ -647,6 +651,8 @@ class CsvMapper(base_mapper.BaseMapper):
             loaded for the sheet. Only the sheets specified in the config file's static_tables array
             are kept.
         """
+        if not staticdata_path:
+            return None
         staticdata_path = self.format_file_name(staticdata_path)
 
         # Get the static data

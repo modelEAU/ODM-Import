@@ -1,5 +1,5 @@
 ﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
-Precip,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__envRnF:str,get_qc_lab_site_measure_id
+Precip,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__envRnF:str,get_qc_city_site_measure_id
 Precip,SiteMeasure,siteID,,lab sheet,location,
 Precip,SiteMeasure,instrumentID,,,,
 Precip,SiteMeasure,sampleID,,,,
@@ -18,7 +18,7 @@ Precip,SiteMeasure,accessToProvHA,FALSE,,,
 Precip,SiteMeasure,accessToOtherProv,FALSE,,,
 Precip,SiteMeasure,accessToDetails,FALSE,,,
 Precip,SiteMeasure,notes,,lab sheet,K,
-Water temp,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwTemp:str,get_qc_lab_site_measure_id
+Water temp,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwTemp:str,get_qc_city_site_measure_id
 Water temp,SiteMeasure,siteID,,lab sheet,location,
 Water temp,SiteMeasure,instrumentID,,,,
 Water temp,SiteMeasure,sampleID,,,,
@@ -37,7 +37,7 @@ Water temp,SiteMeasure,accessToProvHA,FALSE,,,
 Water temp,SiteMeasure,accessToOtherProv,FALSE,,,
 Water temp,SiteMeasure,accessToDetails,FALSE,,,
 Water temp,SiteMeasure,notes,,lab sheet,K,
-pH,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwPh:str,get_qc_lab_site_measure_id
+pH,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwPh:str,get_qc_city_site_measure_id
 pH,SiteMeasure,siteID,,lab sheet,location,
 pH,SiteMeasure,instrumentID,,,,
 pH,SiteMeasure,sampleID,,,,
@@ -56,7 +56,7 @@ pH,SiteMeasure,accessToProvHA,FALSE,,,
 pH,SiteMeasure,accessToOtherProv,FALSE,,,
 pH,SiteMeasure,accessToDetails,FALSE,,,
 pH,SiteMeasure,notes,,lab sheet,K,
-Flow,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwFlow:str,get_qc_lab_site_measure_id
+Flow,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwFlow:str,get_qc_city_site_measure_id
 Flow,SiteMeasure,siteID,,lab sheet,location,
 Flow,SiteMeasure,instrumentID,,,,
 Flow,SiteMeasure,sampleID,,,,
@@ -75,7 +75,7 @@ Flow,SiteMeasure,accessToProvHA,FALSE,,,
 Flow,SiteMeasure,accessToOtherProv,FALSE,,,
 Flow,SiteMeasure,accessToDetails,FALSE,,,
 Flow,SiteMeasure,notes,,lab sheet,K,
-COD,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwCOD:str,get_qc_lab_site_measure_id
+COD,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwCOD:str,get_qc_city_site_measure_id
 COD,SiteMeasure,siteID,,lab sheet,location,
 COD,SiteMeasure,instrumentID,,,,
 COD,SiteMeasure,sampleID,,,,
@@ -94,7 +94,7 @@ COD,SiteMeasure,accessToProvHA,FALSE,,,
 COD,SiteMeasure,accessToOtherProv,FALSE,,,
 COD,SiteMeasure,accessToDetails,FALSE,,,
 COD,SiteMeasure,notes,,lab sheet,K,
-BOD5,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwBOD5c:str,get_qc_lab_site_measure_id
+BOD5,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwBOD5c:str,get_qc_city_site_measure_id
 BOD5,SiteMeasure,siteID,,lab sheet,location,
 BOD5,SiteMeasure,instrumentID,,,,
 BOD5,SiteMeasure,sampleID,,,,
@@ -113,7 +113,7 @@ BOD5,SiteMeasure,accessToProvHA,FALSE,,,
 BOD5,SiteMeasure,accessToOtherProv,FALSE,,,
 BOD5,SiteMeasure,accessToDetails,FALSE,,,
 BOD5,SiteMeasure,notes,,lab sheet,K,
-TSS,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwTSS:str,get_qc_lab_site_measure_id
+TSS,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwTSS:str,get_qc_city_site_measure_id
 TSS,SiteMeasure,siteID,,lab sheet,location,
 TSS,SiteMeasure,instrumentID,,,,
 TSS,SiteMeasure,sampleID,,,,
@@ -132,7 +132,7 @@ TSS,SiteMeasure,accessToProvHA,FALSE,,,
 TSS,SiteMeasure,accessToOtherProv,FALSE,,,
 TSS,SiteMeasure,accessToDetails,FALSE,,,
 TSS,SiteMeasure,notes,,lab sheet,K,
-Ptot,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwPtot:str,get_qc_lab_site_measure_id
+Ptot,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwPtot:str,get_qc_city_site_measure_id
 Ptot,SiteMeasure,siteID,,lab sheet,location,
 Ptot,SiteMeasure,instrumentID,,,,
 Ptot,SiteMeasure,sampleID,,,,
@@ -151,7 +151,7 @@ Ptot,SiteMeasure,accessToProvHA,FALSE,,,
 Ptot,SiteMeasure,accessToOtherProv,FALSE,,,
 Ptot,SiteMeasure,accessToDetails,FALSE,,,
 Ptot,SiteMeasure,notes,,lab sheet,K,
-NH4,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwNH4N:str,get_qc_lab_site_measure_id
+NH4,SiteMeasure,siteMeasureID,,lab sheet,location;A;__const__wwNH4N:str,get_qc_city_site_measure_id
 NH4,SiteMeasure,siteID,,lab sheet,location,
 NH4,SiteMeasure,instrumentID,,,,
 NH4,SiteMeasure,sampleID,,,,

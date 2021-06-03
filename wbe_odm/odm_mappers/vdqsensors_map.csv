@@ -1,5 +1,5 @@
 ﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
-EastTemp,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_01:str;C;__const__wwTemp:str,get_qc_sensor_site_measure_id
+EastTemp,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_01:str;C;__const__wwTemp:str,get_qc_city_site_measure_id
 EastTemp,SiteMeasure,siteID,QC_01,,,
 EastTemp,SiteMeasure,instrumentID,QUETPTE.STEST.E1TIT100,,,
 EastTemp,SiteMeasure,sampleID,,,,
@@ -18,7 +18,7 @@ EastTemp,SiteMeasure,accessToProvHA,FALSE,,,
 EastTemp,SiteMeasure,accessToOtherProv,FALSE,,,
 EastTemp,SiteMeasure,accessToDetails,FALSE,,,
 EastTemp,SiteMeasure,notes,,,,
-EastpH,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_01:str;C;__const__wwPh:str,get_qc_sensor_site_measure_id
+EastpH,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_01:str;C;__const__wwPh:str,get_qc_city_site_measure_id
 EastpH,SiteMeasure,siteID,QC_01,,,
 EastpH,SiteMeasure,instrumentID,QUETPTE.STEST.E1AIT100,,,
 EastpH,SiteMeasure,sampleID,,,,
@@ -37,7 +37,7 @@ EastpH,SiteMeasure,accessToProvHA,FALSE,,,
 EastpH,SiteMeasure,accessToOtherProv,FALSE,,,
 EastpH,SiteMeasure,accessToDetails,FALSE,,,
 EastpH,SiteMeasure,notes,,,,
-EastFlow,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_01:str;C;__const__wwFlow:str,get_qc_sensor_site_measure_id
+EastFlow,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_01:str;C;__const__wwFlow:str,get_qc_city_site_measure_id
 EastFlow,SiteMeasure,siteID,QC_01,,,
 EastFlow,SiteMeasure,instrumentID,QUETPTE.STEST.E1FI202,,,
 EastFlow,SiteMeasure,sampleID,,,,
@@ -56,7 +56,7 @@ EastFlow,SiteMeasure,accessToProvHA,FALSE,,,
 EastFlow,SiteMeasure,accessToOtherProv,FALSE,,,
 EastFlow,SiteMeasure,accessToDetails,FALSE,,,
 EastFlow,SiteMeasure,notes,,,,
-MaizeretsFlowlFlow,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_05:str;C;__const__wwFlow:str,get_qc_sensor_site_measure_id
+MaizeretsFlowlFlow,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_05:str;C;__const__wwFlow:str,get_qc_city_site_measure_id
 MaizeretsFlowlFlow,SiteMeasure,siteID,QC_05,,,
 MaizeretsFlowlFlow,SiteMeasure,instrumentID,QUETPTE.VDQCTR.U450_R_LI_001,,,
 MaizeretsFlowlFlow,SiteMeasure,sampleID,,,,
@@ -75,7 +75,7 @@ MaizeretsFlowlFlow,SiteMeasure,accessToProvHA,FALSE,,,
 MaizeretsFlowlFlow,SiteMeasure,accessToOtherProv,FALSE,,,
 MaizeretsFlowlFlow,SiteMeasure,accessToDetails,FALSE,,,
 MaizeretsFlowlFlow,SiteMeasure,notes,,,,
-CharlesbourgFlow,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_04:str;C;__const__wwFlow:str,get_qc_sensor_site_measure_id
+CharlesbourgFlow,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_04:str;C;__const__wwFlow:str,get_qc_city_site_measure_id
 CharlesbourgFlow,SiteMeasure,siteID,QC_04,,,
 CharlesbourgFlow,SiteMeasure,instrumentID,QUETPTE.STEST.EAFI001,,,
 CharlesbourgFlow,SiteMeasure,sampleID,,,,
@@ -94,7 +94,7 @@ CharlesbourgFlow,SiteMeasure,accessToProvHA,FALSE,,,
 CharlesbourgFlow,SiteMeasure,accessToOtherProv,FALSE,,,
 CharlesbourgFlow,SiteMeasure,accessToDetails,FALSE,,,
 CharlesbourgFlow,SiteMeasure,notes,,,,
-Limoilou Nord,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_10:str;C;__const__wwFlow:str,get_qc_sensor_site_measure_id
+Limoilou Nord,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_10:str;C;__const__wwFlow:str,get_qc_city_site_measure_id
 Limoilou Nord,SiteMeasure,siteID,QC_10,,,
 Limoilou Nord,SiteMeasure,instrumentID,QUETPTE.STEST.EBFI101,,,
 Limoilou Nord,SiteMeasure,sampleID,,,,
@@ -113,7 +113,7 @@ Limoilou Nord,SiteMeasure,accessToProvHA,FALSE,,,
 Limoilou Nord,SiteMeasure,accessToOtherProv,FALSE,,,
 Limoilou Nord,SiteMeasure,accessToDetails,FALSE,,,
 Limoilou Nord,SiteMeasure,notes,This is an approximation of this sector's contribution based on a 1/3 - 2/3 split of the total weir flow,,,
-Limoilou Sud,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_11:str;C;__const__wwFlow:str,get_qc_sensor_site_measure_id
+Limoilou Sud,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_11:str;C;__const__wwFlow:str,get_qc_city_site_measure_id
 Limoilou Sud,SiteMeasure,siteID,QC_11,,,
 Limoilou Sud,SiteMeasure,instrumentID,QUETPTE.STEST.EBFI101,,,
 Limoilou Sud,SiteMeasure,sampleID,,,,
@@ -132,7 +132,7 @@ Limoilou Sud,SiteMeasure,accessToProvHA,FALSE,,,
 Limoilou Sud,SiteMeasure,accessToOtherProv,FALSE,,,
 Limoilou Sud,SiteMeasure,accessToDetails,FALSE,,,
 Limoilou Sud,SiteMeasure,notes,This is an approximation of this sector's contribution based on a 1/3 - 2/3 split of the total weir flow,,,
-Temp Ouest,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_02:str;C;__const__wwTemp:str,get_qc_sensor_site_measure_id
+Temp Ouest,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_02:str;C;__const__wwTemp:str,get_qc_city_site_measure_id
 Temp Ouest,SiteMeasure,siteID,QC_02,,,
 Temp Ouest,SiteMeasure,instrumentID,QUETPTE.STOUS.W1TIT100,,,
 Temp Ouest,SiteMeasure,sampleID,,,,
@@ -151,7 +151,7 @@ Temp Ouest,SiteMeasure,accessToProvHA,FALSE,,,
 Temp Ouest,SiteMeasure,accessToOtherProv,FALSE,,,
 Temp Ouest,SiteMeasure,accessToDetails,FALSE,,,
 Temp Ouest,SiteMeasure,notes,,,,
-pH Ouest,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_02:str;C;__const__wwpH:str,get_qc_sensor_site_measure_id
+pH Ouest,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_02:str;C;__const__wwpH:str,get_qc_city_site_measure_id
 pH Ouest,SiteMeasure,siteID,QC_02,,,
 pH Ouest,SiteMeasure,instrumentID,QUETPTE.STOUS.W1AIT100,,,
 pH Ouest,SiteMeasure,sampleID,,,,
@@ -170,7 +170,7 @@ pH Ouest,SiteMeasure,accessToProvHA,FALSE,,,
 pH Ouest,SiteMeasure,accessToOtherProv,FALSE,,,
 pH Ouest,SiteMeasure,accessToDetails,FALSE,,,
 pH Ouest,SiteMeasure,notes,,,,
-Flow Ouest,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_02:str;C;__const__wwFlow:str,get_qc_sensor_site_measure_id
+Flow Ouest,SiteMeasure,siteMeasureID,,lab sheet,__const__QC_02:str;C;__const__wwFlow:str,get_qc_city_site_measure_id
 Flow Ouest,SiteMeasure,siteID,QC_02,,,
 Flow Ouest,SiteMeasure,instrumentID,QUETPTE.STOUS.W0FI001,,,
 Flow Ouest,SiteMeasure,sampleID,,,,

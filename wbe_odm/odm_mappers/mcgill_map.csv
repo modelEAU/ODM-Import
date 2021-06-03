@@ -16,7 +16,7 @@ Assay,AssayMethod,methodPCR,,lab sheet,BM,
 Assay,AssayMethod,qualityAssQC,,,,
 Assay,AssayMethod,inhibition,,,,
 Assay,AssayMethod,surrogateRecovery,,lab sheet,AB,
-Assay,AssayMethod,notes,,lab sheet,AA;AH,write_assay_notes
+Assay,AssayMethod,notes,,lab sheet,AA;AH,
 single,Sample,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 single,Sample,siteID,,lab sheet,D,get_site_id
 single,Sample,instrumentID,,,,

@@ -1,0 +1,13 @@
+#
+# Ottawa CsvMapper config
+#
+
+lab_id: "ottawa_lab"
+
+worksheet_name: "Stacked QPCR Data"
+first_data_row: 1
+data_types_row: 0
+usecols: ""
+
+sample_date_col: "B"
+remove_null_rows_cols: "A"

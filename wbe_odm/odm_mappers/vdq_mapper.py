@@ -1,10 +1,11 @@
+#%%
 import os
 import pandas as pd
 import numpy as np
 from wbe_odm.odm_mappers import (
-    mcgill_mapper as mcm,
     base_mapper as bm
 )
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 
 directory = os.path.dirname(__file__)
@@ -39,70 +40,58 @@ site_map = {
     "Données station Ouest": "QC_02"
 }
 
+class MapperFuncs:
+    @classmethod
+    def get_qc_city_site_measure_id(cls, site_id, date, type_):
+        df = pd.DataFrame(pd.to_datetime(date))
+        df["type"] = type_
+        df["site_id"] = site_id
+        df.columns = ["dates", "type", "site_id"]
+        df["formattedDates"] = df["dates"]\
+            .dt.strftime("%Y-%m-%dT%H:%M:%S")\
+            .fillna('').str.replace("T00:00:00", "")
+        df = df[["site_id", "type", "formattedDates"]]
+        return df.agg("_".join, axis=1)
 
-def get_qc_lab_site_measure_id(site_id, date, type_):
-    df = pd.DataFrame(pd.to_datetime(date))
-    df["type"] = type_
-    df["site_id"] = site_id
-    df.columns = ["dates", "type", "site_id"]
-    df["formattedDates"] = df["dates"]\
-        .dt.strftime("%Y-%m-%dT%H:%M:%S")\
-        .fillna('').str.replace("T00:00:00", "")
-    df = df[["site_id", "type", "formattedDates"]]
-    return df.agg("_".join, axis=1)
+    @classmethod
+    def get_date(cls, dates):
+        return pd.to_datetime(dates)
 
+    @classmethod
+    def maizerets_from_height(cls, height, is_open):
+        calib = ST_PASCAL_CURVE
+        df = pd.concat([height, is_open], axis=1)
+        df.columns = ["height", "is_open"]
+        # convert to mm
+        df["height"] = df["height"] / 1000
+        df["maizerets"] = df["height"].apply(
+            lambda x: np.interp(x, calib["height(m)"], calib["flowrate"])
+        )
+        df["maizerets"] = pd.to_numeric(df["maizerets"], errors="coerce")
+        df["is_open"] = pd.to_numeric(df["is_open"], errors="coerce")
+        df.loc[df["is_open"].isna(), "maizerets"] = 0
+        df["m3/d"] = df["maizerets"] * 3600 * 24 / 1000
+        return df["m3/d"]
 
-lab_funcs = {
-    "get_qc_lab_site_measure_id": get_qc_lab_site_measure_id,
-    "get_date": lambda x: pd.to_datetime(x)
-}
+    @classmethod
+    def charlesbourg_flow(cls, tot_flow, height, is_open):
+        maizerets = pd.to_numeric(
+            cls.maizerets_from_height(height, is_open),
+            errors="coerce")
+        return pd.to_numeric(tot_flow, errors="coerce") - maizerets
 
+    @classmethod
+    def limoilou_n_flow(cls, flow):
+        return pd.to_numeric(flow, errors="coerce")/3 * 24
 
-def maizerets_from_height(height, is_open):
-    calib = ST_PASCAL_CURVE
-    df = pd.concat([height, is_open], axis=1)
-    df.columns = ["height", "is_open"]
-    # convert to mm
-    df["height"] = df["height"] / 1000
-    df["maizerets"] = df["height"].apply(
-        lambda x: np.interp(x, calib["height(m)"], calib["flowrate"])
-    )
-    df["maizerets"] = pd.to_numeric(df["maizerets"], errors="coerce")
-    df["is_open"] = pd.to_numeric(df["is_open"], errors="coerce")
-    df.loc[df["is_open"].isna(), "maizerets"] = 0
-    df["m3/d"] = df["maizerets"] * 3600 * 24 / 1000
-    return df["m3/d"]
+    @classmethod
+    def limoilou_s_flow(cls, flow):
+        return pd.to_numeric(flow, errors="coerce") * 2/3 * 24
 
+class VdQPlantMapper(CsvMapper):
+    def __init__(self, processing_functions=MapperFuncs):
+        super().__init__(processing_functions=processing_functions)
 
-def charlesbourg_flow(tot_flow, height, is_open):
-    maizerets = pd.to_numeric(
-        maizerets_from_height(height, is_open),
-        errors="coerce")
-    return pd.to_numeric(tot_flow, errors="coerce") - maizerets
-
-
-def limoilou_n_flow(flow):
-    return pd.to_numeric(flow, errors="coerce")/3 * 24
-
-
-def limoilou_s_flow(flow):
-    return pd.to_numeric(flow, errors="coerce") * 2/3 * 24
-
-
-def m3h_to_m3d(flow):
-    return flow * 24
-
-sensor_funcs = {
-    "get_qc_sensor_site_measure_id": get_qc_lab_site_measure_id,
-    "maizerets_from_height": maizerets_from_height,
-    "charlesbourg_flow": charlesbourg_flow,
-    "limoilou_n_flow": limoilou_n_flow,
-    "limoilou_s_flow": limoilou_s_flow,
-    "m3h_to_m3d": m3h_to_m3d,
-}
-
-
-class VdQPlantMapper(mcm.McGillMapper):
     def read(self, lab_path, lab_map=VDQ_LAB_MAP_NAME):
         sheet_names = ["Données station Est", "Données station Ouest"]
         static_data = self.read_static_data(None)
@@ -116,12 +105,12 @@ class VdQPlantMapper(mcm.McGillMapper):
         site_measure_dfs = []
         for sheet_name, df in xls.items():
             df.columns = [
-                mcm.excel_style(i+1)
+                self.excel_style(i+1)
                 for i, _ in enumerate(df.columns.to_list())
             ]
             df["location"] = site_map[sheet_name]
-            dynamic_tables = mcm.parse_sheet(
-                mapping, static_data, df, lab_funcs, lab_id
+            dynamic_tables = self.parse_sheet(
+                mapping, static_data, df, self.processing_functions, lab_id
             )
             site_measure_dfs.append(dynamic_tables["SiteMeasure"])
 
@@ -133,7 +122,10 @@ class VdQPlantMapper(mcm.McGillMapper):
         return
 
 
-class VdQSensorsMapper(mcm.McGillMapper):
+class VdQSensorsMapper(CsvMapper):
+    def __init__(self, processing_functions=MapperFuncs):
+        super().__init__(processing_functions=processing_functions)
+
     def read(self, sensors_path, sensors_map=VDQ_SENSOR_MAP_NAME):
         static_data = self.read_static_data(None)
         df = pd.read_excel(sensors_path, header=8, usecols="A:N")
@@ -142,7 +134,7 @@ class VdQSensorsMapper(mcm.McGillMapper):
         mapping = mapping.astype(str)
         lab_id = None
         df.columns = [
-            mcm.excel_style(i+1)
+            self.excel_style(i+1)
             for i, _ in enumerate(df.columns.to_list())
         ]
         df = df.loc[
@@ -153,8 +145,8 @@ class VdQSensorsMapper(mcm.McGillMapper):
         numeric_cols = [col for col in df.columns if col not in date_cols]
         for col in numeric_cols:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-        dynamic_tables = mcm.parse_sheet(
-            mapping, static_data, df, sensor_funcs, lab_id
+        dynamic_tables = self.parse_sheet(
+            mapping, static_data, df, self.processing_functions, lab_id
         )
         site_measure = dynamic_tables["SiteMeasure"]
         site_measure.drop_duplicates(keep="first", inplace=True)

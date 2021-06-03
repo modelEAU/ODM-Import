@@ -31,7 +31,7 @@ Measures,WWMeasure,type,,lab sheet,A,get_measure_type
 Measures,WWMeasure,value,,lab sheet,G,validate_value
 Measures,WWMeasure,unit,,,H,
 Measures,WWMeasure,aggregation,single,,,
-Measures,WWMeasure,index,,,,get_measure_index
+Measures,WWMeasure,index,,,,
 Measures,WWMeasure,qualityFlag,TRUE,lab sheet,,
 Measures,WWMeasure,accessToPublic,TRUE,lab sheet,,
 Measures,WWMeasure,accessToAllOrg,TRUE,lab sheet,,

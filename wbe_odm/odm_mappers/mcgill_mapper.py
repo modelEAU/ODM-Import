@@ -538,7 +538,7 @@ def parse_sheet(mapping, static, lab_data, processing_functions, lab_id,):
     mapping["final_inputs"] = mapping.apply(
         lambda row: get_all_inputs(row), axis=1)
     mapping["func"] = mapping["processingFunction"].apply(
-        lambda x: processing_functions.get(x, pass_raw))
+        lambda x: processing_functions.get(x, CsvMapper.pass_raw))
 
     mapping["columnName"] = mapping[
         ["table", "elementName", "variableName"]].agg("_".join, axis=1)
@@ -597,8 +597,8 @@ class QcChecker:
                 end_pos = pos_of_cols_w_headers[i+1] -1
 
 
-            start_idx = excel_style(start_pos+1)
-            end_idx = excel_style(end_pos+1)
+            start_idx = CsvMapper.excel_style(start_pos+1)
+            end_idx = CsvMapper.excel_style(end_pos+1)
             xl_start_cols.append(start_idx)
             xl_end_cols.append(end_idx)
         return xl_start_cols, xl_end_cols
@@ -679,7 +679,7 @@ class QcChecker:
         sheet_df = pd.read_excel(path, sheet_name=sheet_name, header=0, index_col=0)
         sheet_cols = [str(col) for col in sheet_df.columns]
         start_borders, end_borders = self._find_df_borders(sheet_cols, idx_col_pos)
-        idx_col = excel_style(idx_col_pos+1)
+        idx_col = CsvMapper.excel_style(idx_col_pos+1)
         
         dfs = []
         i=0

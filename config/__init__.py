@@ -26,7 +26,7 @@ COLORS = {
         "color": "#c13525"},
 }
 
-LOGO_PATH = "/Users/jeandavidt/dev/jeandavidt/ODM Import/Data/images/graph_logos.png"
+LOGO_PATH = "/Users/jeandavidt/dev/modelEAU/ODM Import/Data/images/graph_logos.png"
 STR_YES = [
     'y',
     'yes',

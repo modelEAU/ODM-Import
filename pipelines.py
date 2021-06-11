@@ -553,8 +553,7 @@ def clean_polygon_name(poly_id):
 def get_samples_to_plot(site_dataset, dateStart=None, dateEnd=None):
     samples_in_range = get_samples_in_interval(site_dataset, dateStart, dateEnd)
     collection_method = get_cm_to_plot(samples_in_range, thresh_n=7)
-    samples_to_plot = get_samples_of_collection_method(samples_in_range, collection_method)
-    return samples_to_plot
+    return get_samples_of_collection_method(samples_in_range, collection_method)
     
 
 def get_site_geoJSON(
@@ -656,19 +655,21 @@ def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
     site_dataset = utilities.resample_per_day(site_dataset)
     samples = get_samples_to_plot(site_dataset, dateStart, dateEnd)
     viral = get_viral_timeseries(samples)
-    if isinstance(viral, pd.DataFrame):
-        if viral.empty:
-            return None, None
-    elif not viral:
-        return None, None    
+    if (
+        isinstance(viral, pd.DataFrame)
+        and viral.empty
+        or not isinstance(viral, pd.DataFrame)
+        and not viral
+    ):
+        return None, None
     sars_col = [col for col in viral.columns if 'covn2' in col][0]
     pmmv_col = [col for col in viral.columns if 'npmmov' in col][0]
     norm_col = 'norm'
     cases_col = 'CPHD_conf_report_value'
-    
+
     poly_id = get_info_from_col('CPHD-Polygon_polygonID', samples)
     site_name = get_info_from_col('Site_name', samples)
-    
+
     df = pd.concat([viral, site_dataset[cases_col]], axis=1)
     df = df[dateStart:]
     df.rename(columns={
@@ -684,12 +685,15 @@ def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
     }
     return df, metadata 
 
-def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'english']):
-    plot_titles = {
+
+def get_plot_titles(metadata):
+    return {
         'french': f'Surveillance SRAS-CoV-2 via les eaux usées<br>{metadata["site_name"]["french"]}',
         'english': f'SARS-CoV-2 surveilance in wastewater<br>{metadata["site_name"]["english"]}'
     }
-    axes_titles = {
+
+def get_axes_titles():
+    return {
         1: {
             'french': 'Nouveaux cas',
             'english': 'New cases',
@@ -703,7 +707,9 @@ def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'eng
             'english': 'Viral signal (gc/ml)',
         }
     }
-    col_names = {
+
+def get_column_names(metadata):
+    return {
         'sars': {
             'french': 'SRAS (gc/ml)',
             'english': 'SARS (gc/ml)'
@@ -721,6 +727,69 @@ def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'eng
             "english": f'Daily cases {metadata["poly_name"]["english"]}',
         }
     }
+
+
+def update_webplot_layout(fig, x0, lang, plot_titles, axes_titles):
+    fig.update_layout(
+        xaxis_title="Date",
+        xaxis_tick0=x0,
+        xaxis_dtick=7 * 24 * 3600000,
+        xaxis_tickformat="%d-%m-%Y",
+        xaxis_tickangle=30, plot_bgcolor="white",
+        xaxis_gridcolor="rgba(100,100,100,0.10)",
+        yaxis_gridcolor="rgba(0,0,0,0)",
+        xaxis_ticks="outside",
+
+        hovermode = 'x unified',  # To compare on hover
+        title=plot_titles[lang],
+        legend=dict(yanchor="top", xanchor="left", orientation="h", y=1.05, x=0),
+        xaxis=dict(
+            domain=[0.12, 1]
+        ),
+        yaxis=dict(
+            title=axes_titles[1][lang],
+            side="right",
+            domain=[0, 0.9],
+        ),
+        yaxis2=dict(
+            title=dict(
+                text=axes_titles[2][lang],
+                standoff=0.01,
+            ),
+            side="left",
+            anchor="x",
+        ),
+        yaxis3=dict(
+            title=dict(
+                text=axes_titles[3][lang],
+                standoff=0.01,
+            ),
+            overlaying="y",
+            side="left",
+            position=0
+        ),
+    )
+    return fig
+
+
+def add_logo_to_plot(fig, path):
+    encoded_image = base64.b64encode(open(path, 'rb').read())
+    fig.add_layout_image(
+        dict(
+            source='data:image/png;base64,{}'.format(encoded_image.decode()),
+            xref="paper", yref="paper",
+            x=1.125, y=1.00,
+            sizex=0.5, sizey=0.25,
+            xanchor="right", yanchor="bottom"
+            )
+    )
+    return fig
+
+
+def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'english']):
+    plot_titles = get_plot_titles(metadata)
+    axes_titles = get_axes_titles()
+    col_names = get_column_names(metadata)
     first_sunday = get_last_sunday(pd.to_datetime(dateStart))
     for lang in langs:
         fig = make_subplots(rows=1, cols=1,
@@ -729,7 +798,7 @@ def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'eng
         line_colors = [color for i, color in enumerate(colors) if i != 2]
         bar_color = colors[2]
 
-        for i, col in enumerate([col for col in data.columns if 'case' not in col]):
+        for i, col in enumerate(col for col in data.columns if 'case' not in col):
             trace = go.Scatter(
                 x=data.index,
                 y=data[col],
@@ -742,8 +811,6 @@ def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'eng
                 hovertemplate=' %{y:.3f}'
             )
             fig.add_trace(trace)
-            
-        
 
         cases_trace = go.Bar(
             x=data.index,
@@ -757,55 +824,10 @@ def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'eng
         )
         fig.add_trace(cases_trace)
 
-        fig.update_layout(
-            xaxis_title="Date",
-            xaxis_tick0=first_sunday,
-            xaxis_dtick=7 * 24 * 3600000,
-            xaxis_tickformat="%d-%m-%Y",
-            xaxis_tickangle=30, plot_bgcolor="white",
-            xaxis_gridcolor="rgba(100,100,100,0.10)",
-            yaxis_gridcolor="rgba(0,0,0,0)",
-            xaxis_ticks="outside",
-
-            hovermode = 'x unified',  # To compare on hover
-            title=plot_titles[lang],
-            legend=dict(yanchor="top", xanchor="left", orientation="h", y=1.05, x=0),
-            xaxis=dict(
-                domain=[0.12, 1]
-            ),
-            yaxis=dict(
-                title=axes_titles[1][lang],
-                side="right",
-                domain=[0, 0.9],
-            ),
-            yaxis2=dict(
-                title=dict(
-                    text=axes_titles[2][lang],
-                    standoff=0.01,
-                ),
-                side="left",
-                anchor="x",
-            ),
-            yaxis3=dict(
-                title=dict(
-                    text=axes_titles[3][lang],
-                    standoff=0.01,
-                ),
-                overlaying="y",
-                side="left",
-                position=0
-            ),
-        )
-        encoded_image = base64.b64encode(open(LOGO_PATH, 'rb').read())
-        fig.add_layout_image(
-        dict(
-            source='data:image/png;base64,{}'.format(encoded_image.decode()),
-            xref="paper", yref="paper",
-            x=1.125, y=1.00,
-            sizex=0.5, sizey=0.25,
-            xanchor="right", yanchor="bottom"
-            )
-        )
+        fig = update_webplot_layout(fig, first_sunday, lang, plot_titles, axes_titles)
+        
+        fig = add_logo_to_plot(fig, LOGO_PATH)
+        
         if langs == ['french']:
             fig.write_html(f"{SITE_OUTPUT_DIR}/{metadata['site_id']}.html")
         else:
@@ -846,8 +868,8 @@ if __name__ == "__main__":
 
     store = odm.Odm()
     print(source_cities)
-    
-    
+
+
     if reload:
         if "qc" in source_cities:
             print("Importing data from Quebec City...")
@@ -891,7 +913,7 @@ if __name__ == "__main__":
             poly_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
             print("Adding Quality Checks for mtl...")
             mtl_quality_checker = mcgill_mapper.QcChecker()
-            
+
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
             store = mtl_quality_checker.read_validation(store, MTL_LAB_DATA, MTL_QUALITY_SHEET_NAME)
@@ -996,10 +1018,12 @@ if __name__ == "__main__":
         for site_id in sites['siteID'].to_list():
             print("building website plots for ", site_id, "...")
             plot_data, metadata = centreau_website_data(combined, site_id, DEFAULT_START_DATE)
-            if isinstance(plot_data, pd.DataFrame):
-                if plot_data.empty:
-                    continue
-            elif not plot_data:
+            if (
+                isinstance(plot_data, pd.DataFrame)
+                and plot_data.empty
+                or not isinstance(plot_data, pd.DataFrame)
+                and not plot_data
+            ):
                 continue
             plot_web(plot_data, metadata, dateStart=DEFAULT_START_DATE, langs=['french'])
 

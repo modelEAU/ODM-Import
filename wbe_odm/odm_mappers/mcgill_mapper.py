@@ -142,7 +142,7 @@ class MapperFuncs:
     @classmethod
     def get_collection_method(cls, collection):
         def check_collection_method(x):
-            if re.match(r"cp[tf]p[0-9]+h", x) or x == "grb":
+            if re.match(r"cp[tf]p[0-9]+h", x) or x == "grb" or re.match(r"ps[0-9]+h", x):
                 return x
             elif "grb" in collection:
                 added_bit = collection[len("grb"):]

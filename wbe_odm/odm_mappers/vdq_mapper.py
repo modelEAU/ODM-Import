@@ -87,6 +87,10 @@ class MapperFuncs:
     @classmethod
     def limoilou_s_flow(cls, flow):
         return pd.to_numeric(flow, errors="coerce") * 2/3 * 24
+    
+    @classmethod
+    def m3h_to_m3d(cls, flow):
+        return flow * 24
 
 class VdQPlantMapper(CsvMapper):
     def __init__(self, processing_functions=MapperFuncs):

@@ -122,14 +122,14 @@ class MapperFuncs:
     @classmethod
     def get_measure_type(cls, measures):
         measure_dico = {
-            "Conductivity": "wqCond",
-            "Turbidity": "wqTurb",
-            "NH4": "wqNH4N",
-            "TS": "wqTS",
-            "TSS": "wqTSS",
-            "pH": "wqPh"
+            "conductivity": "wqCond",
+            "turbidity": "wqTurb",
+            "nh4": "wqNH4N",
+            "ts": "wqTS",
+            "tss": "wqTSS",
+            "ph": "wqPh"
         }
-        return measures.map(measure_dico)
+        return measures.str.lower().map(measure_dico)
 
     @classmethod
     def get_wwmeasure_id(
@@ -216,7 +216,7 @@ class ModelEauMapper(CsvMapper):
 
 
 if __name__ == "__main__":
-    path = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/COVIDProject_Lab Measurements.xlsx"  # noqa
+    path = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/COVIDProject_Lab Measurements.xlsx"  # noqa
     sheet_name = "Lab analyses"
     mapper = ModelEauMapper()
     mapper.read(path, sheet_name)

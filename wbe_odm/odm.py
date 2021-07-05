@@ -1,11 +1,13 @@
 import json
 import os
 import sqlite3
+from typing import Optional, Union, List
 
 import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Point
+
 
 from wbe_odm import utilities
 from wbe_odm.odm_mappers import base_mapper, csv_folder_mapper, mcgill_mapper
@@ -19,30 +21,29 @@ class Odm:
     """Data class that holds the contents of the
     tables defined in the Ottawa Data Model (ODM).
     The tables are stored as pandas DataFrames. Utility
-    functions are provided to manipulate the data for further analysis.
+    methods are provided to manipulate the data for further analysis.
     """
-    def __init__(
-        self,
-        sample=pd.DataFrame(
-            columns=utilities.get_table_fields("Sample")),
-        ww_measure=pd.DataFrame(
-            columns=utilities.get_table_fields("WWMeasure")),
-        site=pd.DataFrame(
-            columns=utilities.get_table_fields("Site")),
-        site_measure=pd.DataFrame(
-            columns=utilities.get_table_fields("SiteMeasure")),
-        reporter=pd.DataFrame(
-            columns=utilities.get_table_fields("Reporter")),
-        lab=pd.DataFrame(
-            columns=utilities.get_table_fields("Lab")),
-        assay_method=pd.DataFrame(
-            columns=utilities.get_table_fields("AssayMethod")),
-        instrument=pd.DataFrame(
-            columns=utilities.get_table_fields("Instrument")),
-        polygon=pd.DataFrame(
-            columns=utilities.get_table_fields("Polygon")),
-        cphd=pd.DataFrame(
-            columns=utilities.get_table_fields("CPHD")),
+    def __init__(self,
+                 sample=pd.DataFrame(
+                     columns=utilities.get_table_fields("Sample")),
+                 ww_measure=pd.DataFrame(
+                     columns=utilities.get_table_fields("WWMeasure")),
+                 site=pd.DataFrame(
+                     columns=utilities.get_table_fields("Site")),
+                 site_measure=pd.DataFrame(
+                     columns=utilities.get_table_fields("SiteMeasure")),
+                 reporter=pd.DataFrame(
+                     columns=utilities.get_table_fields("Reporter")),
+                 lab=pd.DataFrame(
+                     columns=utilities.get_table_fields("Lab")),
+                 assay_method=pd.DataFrame(
+                     columns=utilities.get_table_fields("AssayMethod")),
+                 instrument=pd.DataFrame(
+                     columns=utilities.get_table_fields("Instrument")),
+                 polygon=pd.DataFrame(
+                     columns=utilities.get_table_fields("Polygon")),
+                 cphd=pd.DataFrame(
+                     columns=utilities.get_table_fields("CPHD")),
             ) -> None:
 
         self.sample = sample
@@ -59,7 +60,7 @@ class Odm:
     def _default_value_by_dtype(
         self, dtype: str
             ):
-        """gets you a default value of the correct data type to create new
+        """Gets you a default value of the correct data type to create new
         columns in a pandas DataFrame
 
         Parameters
@@ -80,17 +81,26 @@ class Odm:
         }
         return null_values.get(dtype, np.nan)
 
-    def combine_table_instances(self, table_name, df1, df2):
+    def combine_table_instances(self, table_name: str, df1:pd.DataFrame, df2:pd.DataFrame) -> pd.DataFrame:
+        """Merges two instances of an ODM table.
+
+        Args:
+            table_name (str): The ODM name of tables you want to combine
+            df1 (pd.DataFrame): The first instance of the table
+            df2 (pd.DataFrame): The second instance
+
+        Returns:
+            pd.DataFrame: The merged table with dupicate rows dropped
+        """
         primary_key = utilities.get_primary_key(table_name)
         df = df1.append(df2)
         # This is way too slow, I'll have to find something else...
         # df = df.groupby(primary_key).agg(utilities.reduce_with_warnings).reset_index()
         df = df.drop_duplicates(subset=[primary_key])
         return df
-    
-    def append_from(self, mapper) -> None:
-        """Concatenates the Odm object's current data with
-        that of a mapper.
+
+    def append_from(self, mapper) -> None:              
+        """Loads data from a mapper into the current ODM object.
 
         Parameters
         ----------
@@ -142,15 +152,19 @@ class Odm:
 
     
     def get_polygon_geoJSON(self, types=None) -> dict:
-        """[summary]
+        """Transforms the Polygon table from the ODM into a geoJSON-like dict
 
-        Args:
-            types ([type], optional): The types of polygons we want to plot.
+        Parameters
+        ----------
+        types : Optional[Union[list, str]], optional
+            The types of polygons we want to plot.
             Defaults to None, which actually takes everything.
-
-        Returns:
-            dict: [description]
+        Returns
+        -------
+        dict
+            geoJSON-formatted dict with the polygon data
         """
+
         geo = {
             "type": "FeatureCollection",
             "features": []
@@ -185,11 +199,19 @@ class Odm:
                 geo["features"].append(new_feature)
         return geo
 
-    def to_sqlite3(
-        self,
-        filepath,
-        attrs_to_save: list = None,
-            ) -> None:
+    def to_sqlite3(self,
+                   filepath: str,
+                   attrs_to_save: list = None,
+                ) -> None:
+        """Stores the contents of the ODM object into a SQLite instance.
+
+        Parameters
+        ----------
+        filepath : [str]
+            Path to the SQLite instance
+        attrs_to_save : list, optional
+            The attributes of the ODM object to save to the database (each attribute representing a table). If None, all the tables are saved.
+        """
         if attrs_to_save is None:
             attrs = self.__dict__
             attrs_to_save = [
@@ -222,19 +244,29 @@ class Odm:
             con.close()
         return
 
-    def to_csv(
-        self,
-        path: str,
-        file_prefix: str,
-        attrs_to_save: list = None
-    ) -> None:
+    def to_csv(self,
+               path: str,
+               file_prefix: str = None,
+               attrs_to_save: list = None
+            ) -> None:
+        """Saves the contents of the ODM object to CSV files.
+
+        Parameters
+        ----------
+        path : str
+            The path to the directory where files will be saved.
+        file_prefix : str, optional
+            The desired prefix that will go in front of the Table name in the .csv file name.
+        attrs_to_save : list, optional
+            The attributes of the ODM object to save to file (each attribute representing a table). If None, all the tables are saved.
+        """
         if attrs_to_save is None:
-            attrs_to_save = []
             attrs = self.__dict__
-            for name, df in attrs.items():
-                if df is None or df.empty:
-                    continue
-                attrs_to_save.append(name)
+            attrs_to_save = [
+                name
+                for name, df in attrs.items()
+                if df is not None and not df.empty
+            ]
 
         conversion_dict = base_mapper.BaseMapper.conversion_dict
         if not os.path.exists(path):
@@ -249,7 +281,14 @@ class Odm:
             df.to_csv(complete_path+".csv", sep=",", index=False)
         return
 
-    def append_odm(self, other_odm):
+    def append_odm(self, other_odm) -> None:
+        """ Joins the data inside another Odm instance to this one.
+
+        Parameters
+        ----------
+        other_odm : [Odm]
+            The Odm instance to join to the current one.
+        """
         for attribute in self.__dict__:
             other_value = getattr(other_odm, attribute)
             self.add_to_attr(attribute, other_value)
@@ -258,20 +297,45 @@ class Odm:
     def add_to_attr(self, attribute, other_value):
         raise NotImplementedError()
 
-    def combine_dataset(self):
+    def combine_dataset(self) -> pd.DataFrame:
+        """Creates a Wide table out the data contained in the Odm object.
+
+        Returns
+        -------
+        [pd.DataFrame]
+            The combined data.
+        """
         return TableCombiner(self).combine_per_sample()
 
 
 class TableWidener:
     wide = None
 
-    def __init__(self, df, features, qualifiers):
+    def __init__(self, df: pd.DataFrame, features: List[str], qualifiers):
+        """Creates the widener object and sets which columns are qualifiers and which are features
+
+        Parameters
+        ----------
+        df : [type]
+            The table to widen
+        features : [type]
+            [description]
+        qualifiers : [type]
+            [description]
+        """
         self.raw_df = df
         self.features = features
         self.qualifiers = qualifiers
         self.wide = None
 
     def clean_qualifier_columns(self):
+        """[summary]
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
         qualifiers = self.qualifiers
         df = self.raw_df
         if df.empty:

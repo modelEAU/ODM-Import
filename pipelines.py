@@ -945,6 +945,11 @@ if __name__ == "__main__":
             public_health = inspq_mapper.INSPQ_mapper()
             public_health.read(INSPQ_DATA)
             store.append_from(public_health)
+            print("Importing vaccine data from INSPQ...")
+            vacc = inspq_mapper.INSPQVaccineMapper()
+            vacc.read(INSPQ_VACCINE_DATA)
+            store.append_from(vacc)
+            
 
         print("Removing older dataset...")
         for root, dirs, files in os.walk(CSV_FOLDER):

@@ -1,4 +1,5 @@
 import os
+from wbe_odm.odm_mappers.inspq_mapper import INSPQ_VACCINE_DATASET_URL
 COLORS = {
     0: {
         "french": "Pas de données",
@@ -48,6 +49,7 @@ CSV_FOLDER = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/
 STATIC_DATA = os.path.join(DATA_FOLDER, "CentrEAU-COVID_Static_Data.xlsx")  # noqa
 
 INSPQ_DATA = os.path.join(DATA_FOLDER, "INSPQ/covid19-hist.csv")
+INSPQ_VACCINE_DATA = os.path.join(DATA_FOLDER, "INSPQ/vaccination.csv")
 
 QC_LAB_DATA = os.path.join(DATA_FOLDER, "COVIDProject_Lab Measurements.xlsx")  # noqa
 QC_SHEET_NAME = "Lab analyses"

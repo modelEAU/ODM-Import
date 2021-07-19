@@ -198,7 +198,7 @@ def reduce_by_type(series):
     if "object" in data_type:
         return reduce(reduce_text, series)
 
-    if data_type in ["float64", "int"]:
+    if data_type in {"float64", "int"}:
         return reduce(reduce_nums, series)
     else:
         raise TypeError(f"could not parse series of dtype {name}")

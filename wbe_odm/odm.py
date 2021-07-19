@@ -273,7 +273,7 @@ class Odm:
             os.mkdir(path)
         for attr in attrs_to_save:
             odm_name = conversion_dict[attr]["odm_name"]
-            filename = file_prefix + "_" + odm_name
+            filename = file_prefix + "_" + odm_name if file_prefix else odm_name
             df = getattr(self, attr)
             if df is None or df.empty:
                 continue

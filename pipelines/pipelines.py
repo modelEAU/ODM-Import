@@ -4,31 +4,30 @@ import json
 import logging
 import os
 import shutil
+import yaml
 from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from plotly.express import colors as pc
 import shapely.wkt
+from easydict import EasyDict
+from plotly.express import colors as pc
+from plotly.subplots import make_subplots
 
-from config import *
+# from config import *
 from wbe_odm import odm, utilities
-from wbe_odm.odm_mappers import (
-    csv_folder_mapper,
-    inspq_mapper,
-    mcgill_mapper,
-    modeleau_mapper,
-    vdq_mapper
-)
+from wbe_odm.odm_mappers import (csv_folder_mapper, inspq_mapper,
+                                 mcgill_mapper, modeleau_mapper, vdq_mapper)
 
 
 def str2bool(arg):
+    str_yes = {'y', 'yes', 't', 'true'}
+    str_no = {'n', 'no', 'f', 'false'}
     value = arg.lower()
-    if value in STR_YES:
+    if value in str_yes:
         return True
-    elif value in STR_NO:
+    elif value in str_no:
         return False
     else:
         raise argparse.ArgumentError('Unrecognized boolean value.')
@@ -194,7 +193,7 @@ def get_n_bins(series, all_colors):
 
 def get_color_ts(viral,
                  colorscale,
-                 dateStart=DEFAULT_START_DATE,
+                 dateStart="2021-01-01",
                  dateEnd=None):
     dateStart = pd.to_datetime(dateStart)
     weekly = None
@@ -562,7 +561,7 @@ def get_site_geoJSON(
         site_output_dir,
         site_name,
         colorscale,
-        dateStart=None,
+        dateStart,
         dateEnd=None):
 
     sites["dataset"] = sites.apply(
@@ -786,7 +785,7 @@ def add_logo_to_plot(fig, path):
     return fig
 
 
-def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'english']):
+def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english']):
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
     col_names = get_column_names(metadata)
@@ -826,12 +825,12 @@ def plot_web(data, metadata, dateStart=DEFAULT_START_DATE, langs=['french', 'eng
 
         fig = update_webplot_layout(fig, first_sunday, lang, plot_titles, axes_titles)
         
-        fig = add_logo_to_plot(fig, LOGO_PATH)
+        fig = add_logo_to_plot(fig, config.logo_path)
         
         if langs == ['french']:
-            fig.write_html(f"{SITE_OUTPUT_DIR}/{metadata['site_id']}.html")
+            fig.write_html(f"{output_dir}/{metadata['site_id']}.html")
         else:
-            fig.write_html(f"{SITE_OUTPUT_DIR}/{metadata['site_id']}_{lang}.html")
+            fig.write_html(f"{output_dir}/{metadata['site_id']}_{lang}.html")
     return
 
 
@@ -848,6 +847,7 @@ if __name__ == "__main__":
     parser.add_argument('-dcty', '--datacities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
     parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
+    parser.add_argument('-con', '--config', type=str, default='pipelines.yaml', help="Config file where all the paths are defined")
     args = parser.parse_args()
 
 
@@ -861,33 +861,41 @@ if __name__ == "__main__":
     dataset_cities = args.datacities
     web_cities = args.webcities
     short = args.short
+    config = args.config
 
-    if not os.path.exists(CSV_FOLDER):
+    if config:
+        with open(config, "r") as f:
+            config = EasyDict(yaml.safe_load(f))
+    
+    if not os.path.exists(config.csv_folder):
         raise ValueError(
             "CSV folder does not exist. Please modify config file.")
 
     store = odm.Odm()
     print(source_cities)
 
-
+    static_path = os.path.join(config.data_folder, config.static_data)
     if reload:
         if "qc" in source_cities:
             print("Importing data from Quebec City...")
             print("Importing viral data from Quebec City...")
             qc_lab = mcgill_mapper.McGillMapper()
-            qc_lab.read(QC_VIRUS_DATA, STATIC_DATA, QC_VIRUS_SHEET_NAME, QC_VIRUS_LAB)  # noqa
+            virus_path = os.path.join(config.data_folder, config.qc_virus_data)
+            
+            qc_lab.read(virus_path, static_path, config.qc_virus_sheet_name, config.qc_virus_lab)  # noqa
             print("Adding Quality Checks for Qc...")
             qc_quality_checker = mcgill_mapper.QcChecker()
-            qc_lab = qc_quality_checker.read_validation(qc_lab, QC_VIRUS_DATA, QC_QUALITY_SHEET_NAME)
+            qc_lab = qc_quality_checker.read_validation(qc_lab, virus_path, config.qc_quality_sheet_name)
 
             store.append_from(qc_lab)
             print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
-            modeleau.read(QC_LAB_DATA, QC_SHEET_NAME, lab_id=QC_LAB)
+            path = os.path.join(config.data_folder, config.qc_lab_data)
+            modeleau.read(path, config.qc_sheet_name, lab_id=config.qc_lab)
             store.append_from(modeleau)
             print("Importing Quebec city sensor data...")
             subfolder = os.path.join(
-                os.path.join(DATA_FOLDER, QC_CITY_SENSOR_FOLDER))
+                os.path.join(config.data_folder, config.qc_city_sensor_folder))
             files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_sensors = vdq_mapper.VdQSensorsMapper()
@@ -895,7 +903,7 @@ if __name__ == "__main__":
                 vdq_sensors.read(os.path.join(subfolder, file))
                 store.append_from(vdq_sensors)
             print("Importing Quebec city lab data...")
-            subfolder = os.path.join(DATA_FOLDER, QC_CITY_PLANT_FOLDER)
+            subfolder = os.path.join(config.data_folder, config.qc_city_plant_folder)
             files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_plant = vdq_mapper.VdQPlantMapper()
@@ -908,95 +916,99 @@ if __name__ == "__main__":
             mcgill_lab = mcgill_mapper.McGillMapper()
             poly_lab = mcgill_mapper.McGillMapper()
             print("Importing viral data from McGill...")
-            mcgill_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_MCGILL_SHEET_NAME, MCGILL_VIRUS_LAB)  # noqa
+            virus_path = os.path.join(config.data_folder, config.mtl_lab_data)
+            mcgill_lab.read(virus_path, static_path, config.mtl_mcgill_sheet_name, config.mcgill_virus_lab)  # noqa
             print("Importing viral data from Poly...")
-            poly_lab.read(MTL_LAB_DATA, STATIC_DATA, MTL_POLY_SHEET_NAME, POLY_VIRUS_LAB)  # noqa
+            poly_lab.read(virus_path, static_path, config.mtl_poly_sheet_name, config.poly_virus_lab)  # noqa
             print("Adding Quality Checks for mtl...")
             mtl_quality_checker = mcgill_mapper.QcChecker()
 
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
-            store = mtl_quality_checker.read_validation(store, MTL_LAB_DATA, MTL_QUALITY_SHEET_NAME)
+            store = mtl_quality_checker.read_validation(store, virus_path, config.mtl_quality_sheet_name)
 
 
         if "bsl" in source_cities:
-            print(f"BSL cities found in config file are {BSL_CITIES}")
+            print(f"BSL cities found in config file are {config.bsl_cities}")
             source_cities.remove("bsl")
-            source_cities.extend(BSL_CITIES)
+            source_cities.extend(config.bsl_cities)
             print("Importing data from Bas St-Laurent...")
             bsl_lab = mcgill_mapper.McGillMapper()
-            bsl_lab.read(BSL_LAB_DATA, STATIC_DATA, BSL_SHEET_NAME, BSL_VIRUS_LAB)  # noqa
+            virus_path = os.path.join(config.data_folder, config.bsl_lab_data)
+            bsl_lab.read(virus_path, static_path, config.bsl_sheet_name, config.bsl_virus_lab)  # noqa
             print("Adding Quality Checks for BSL...")
             bsl_quality_check = mcgill_mapper.QcChecker()
-            bsl_quality_check.read_validation(bsl_lab, BSL_LAB_DATA, BSL_QUALITY_SHEET_NAME)
+            bsl_quality_check.read_validation(bsl_lab, virus_path, config.bsl_quality_sheet_name)
             store.append_from(bsl_lab)
 
         if "lvl" in source_cities:
             print("Importing data from Laval...")
             lvl_lab = mcgill_mapper.McGillMapper()
-            lvl_lab.read(LVL_LAB_DATA, STATIC_DATA, LVL_SHEET_NAME, LVL_VIRUS_LAB)  # noqa
+            virus_path = os.path.join(config.data_folder, config.lvl_lab_data)
+            lvl_lab.read(virus_path, static_path, config.lvl_sheet_name, config.lvl_virus_lab)  # noqa
             print("Adding Quality Checks for Laval...")
             lvl_quality_checker = mcgill_mapper.QcChecker()
-            lvl_quality_checker.read_validation(lvl_lab, LVL_LAB_DATA, LVL_QUALITY_SHEET_NAME)
+            lvl_quality_checker.read_validation(lvl_lab, virus_path, config.lvl_quality_sheet_name)
             store.append_from(lvl_lab)
 
         if publichealth:
             print("Importing case data from INSPQ...")
             public_health = inspq_mapper.INSPQ_mapper()
-            public_health.read(INSPQ_DATA)
+            path = os.path.join(config.data_folder, config.inspq_data)
+            public_health.read(path)
             store.append_from(public_health)
             print("Importing vaccine data from INSPQ...")
             vacc = inspq_mapper.INSPQVaccineMapper()
-            vacc.read(INSPQ_VACCINE_DATA)
+            path = os.path.join(config.data_folder, config.inspq_vaccine_data)
+            vacc.read(path)
             store.append_from(vacc)
             
 
         print("Removing older dataset...")
-        for root, dirs, files in os.walk(CSV_FOLDER):
+        for root, dirs, files in os.walk(config.csv_folder):
             for f in files:
                 os.unlink(os.path.join(root, f))
             for d in dirs:
                 shutil.rmtree(os.path.join(root, d))
 
         print("Saving dataset...")
-        prefix = datetime.now().strftime("%Y-%m-%d")
-        store.to_csv(CSV_FOLDER, prefix)
-        print(f"Saved to folder {CSV_FOLDER} with prefix \"{prefix}\"")
+        store.to_csv(config.csv_folder)
+        print(f"Saved to folder {config.csv_folder}")
 
         if short:
-            get_data_excerpt(CSV_FOLDER)
+            get_data_excerpt(config.csv_folder)
         print("Saving combined dataset...")
 
         combined = store.combine_dataset()
         combined = utilities.typecast_wide_table(combined)
-        combined_path = os.path.join(CSV_FOLDER, prefix+"_"+"combined.csv")
+        combined_path = os.path.join(config.csv_folder, "_"+"combined.csv")
         combined.to_csv(combined_path, sep=",", index=False)
-        print(f"Saved Combined dataset to folder {CSV_FOLDER}.")
+        print(f"Saved Combined dataset to folder {config.csv_folder}.")
 
     if not reload:
         print("Reading data back from csv...")
         store = odm.Odm()
         from_csv = csv_folder_mapper.CsvFolderMapper()
-        from_csv.read(CSV_FOLDER)
+        from_csv.read(config.csv_folder)
         store.append_from(from_csv)
 
         print("Reading combined data back from csv...")
-        for root, dirs, files in os.walk(CSV_FOLDER):
+        for root, dirs, files in os.walk(config.csv_folder):
             for f in files:
                 if "combined" in f:
                     combined_path = f
                     break
         if combined_path is None:
             combined = pd.DataFrame()
-        combined = pd.read_csv(os.path.join(CSV_FOLDER, f), low_memory=False)
+        combined = pd.read_csv(os.path.join(config.csv_folder, f), low_memory=False)
         combined = combined.replace('nan', np.nan)
         combined = utilities.typecast_wide_table(combined)
 
     if website:
         if "bsl" in web_cities:
-            print(f"BSL cities found in config file are {BSL_CITIES}")
+            print(f"BSL cities found in config file are {config.bsl_cities}")
             web_cities.remove("bsl")
-            web_cities.extend(BSL_CITIES)
+            web_cities.extend(config.bsl_cities)
         print("Generating website files...")
         sites = store.site
         sites["siteID"] = sites["siteID"].str.lower()
@@ -1011,18 +1023,18 @@ if __name__ == "__main__":
         get_site_geoJSON(
             sites,
             combined,
-            SITE_OUTPUT_DIR,
-            SITE_NAME,
-            COLORS,
-            dateStart=DEFAULT_START_DATE)
+            config.site_output_dir,
+            config.site_name,
+            config.colors,
+            config.default_start_date)
         print("building polygon geojson...")
         poly_list = sites["polygonID"].to_list()
         build_polygon_geoJSON(
-            store, poly_list, POLYGON_OUTPUT_DIR, POLY_NAME, POLYS_TO_EXTRACT)
+            store, poly_list, config.polygon_output_dir, config.poly_name, config.polys_to_extract)
 
         for site_id in sites['siteID'].to_list():
             print("building website plots for ", site_id, "...")
-            plot_data, metadata = centreau_website_data(combined, site_id, DEFAULT_START_DATE)
+            plot_data, metadata = centreau_website_data(combined, site_id, config.default_start_date)
             if (
                 isinstance(plot_data, pd.DataFrame)
                 and plot_data.empty
@@ -1030,15 +1042,15 @@ if __name__ == "__main__":
                 and not plot_data
             ):
                 continue
-            plot_web(plot_data, metadata, dateStart=DEFAULT_START_DATE, langs=['french'])
+            plot_web(plot_data, metadata, config.default_start_date, config.plot_output_dir, langs=config.plot_langs)
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")
         print("Generating ML Dataset...")
         if "bsl" in dataset_cities:
-            print(f"BSL cities found in config file are {BSL_CITIES}")
+            print(f"BSL cities found in config file are {config.bsl_cities}")
             dataset_cities.remove("bsl")
-            dataset_cities.extend(BSL_CITIES)
+            dataset_cities.extend(config.bsl_cities)
         sites = store.site
         for city in dataset_cities:
             filt_city = sites["siteID"].str.contains(city)
@@ -1049,4 +1061,4 @@ if __name__ == "__main__":
                 dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
                 # dataset = dataset["2021-01-01":]
-                dataset.to_csv(os.path.join(CITY_OUTPUT_DIR, f"{city_site}.csv"))
+                dataset.to_csv(os.path.join(config.city_output_dir, f"{city_site}.csv"))

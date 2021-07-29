@@ -367,7 +367,7 @@ class CsvMapper(base_mapper.BaseMapper):
             func = processing_functions.get(function_name, None)
         else:
             func = getattr(processing_functions, function_name, None)
-        if func == None:
+        if func is None:
             func = cls.pass_raw
             if function_name:
                 print(f"WARNING: Could not find processing function named {function_name}")
@@ -468,9 +468,8 @@ class CsvMapper(base_mapper.BaseMapper):
         for table_name, table in tables.items():
             attr = self.get_attr_from_table_name(table_name)
             if attr and table is not None:
-                if attr:
-                    attr = f"{attr}{attr_suffix}"
-                    setattr(self, attr, table)
+                attr = f"{attr}{attr_suffix}"
+                setattr(self, attr, table)
 
     def get_attr_from_table_name(self, table_name) -> str:
         """Get the ODM attribute name from the specified table name.
@@ -613,15 +612,15 @@ class CsvMapper(base_mapper.BaseMapper):
 
         tables = [{"table_name" : table_name, "table" : getattr(self, f"{table_name}{attr_suffix}", None)} for table_name in self.conversion_dict.keys()]
         tables = [t for t in tables if t["table"] is not None]
-        if len(tables) == 0:
+        if not tables:
             tables = [{"table_name" : "empty", "table" : pd.DataFrame()}]
-        if len(tables) > 0:
+        if tables:
             with pd.ExcelWriter(file) as writer:
                 for info in tables:
                     table = info["table"]
                     table_name = info["table_name"]
                     table.to_excel(writer, sheet_name=table_name, index=False, freeze_panes=(1, 0))
-        
+
         return file
 
     def validates(self):

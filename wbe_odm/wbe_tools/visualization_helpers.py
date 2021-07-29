@@ -111,10 +111,9 @@ def find_neighbours(value, df, colname):
     exactmatch = df[df[colname] == value]
     if not exactmatch.empty:
         return exactmatch.index
-    else:
-        lowerneighbour_ind = df[df[colname] < value][colname].idxmax()
-        upperneighbour_ind = df[df[colname] > value][colname].idxmin()
-        return [lowerneighbour_ind, upperneighbour_ind]
+    lowerneighbour_ind = df[df[colname] < value][colname].idxmax()
+    upperneighbour_ind = df[df[colname] > value][colname].idxmin()
+    return [lowerneighbour_ind, upperneighbour_ind]
 
 
 def get_zoom_level(geo_json, map_height_px):
@@ -137,8 +136,7 @@ def get_zoom_level(geo_json, map_height_px):
 
     mapbox_lat_low = math.floor(abs(center_lat)/20) * 20
     mapbox_lat_high = math.ceil(abs(center_lat)/20) * 20
-    if mapbox_lat_high > 80:
-        mapbox_lat_high = 80
+    mapbox_lat_high = min(mapbox_lat_high, 80)
     mapbox_zoom = pd.read_csv(
         "./wbe_odm/wbe_tools/mapbox_zoom.csv",
         index_col="Zoom level"
@@ -156,8 +154,7 @@ def get_zoom_level(geo_json, map_height_px):
     y1, y2 = zoom_max, zoom_min
     x1 = mapbox_zoom["calc"].iloc[zoom_max]
     x2 = mapbox_zoom["calc"].iloc[zoom_min]
-    zoom_level = interpolate(
+    return interpolate(
         x1, x2, y1, y2,
         required_pixel_density
     )
-    return zoom_level

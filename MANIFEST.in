@@ -1,2 +1,3 @@
 include README.md
 include wbe_odm/odm_mappers/*.csv
+include wbe_odm/wbe_tools/*.csv

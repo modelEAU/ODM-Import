@@ -452,10 +452,9 @@ class TableCombiner(Odm):
             "unit",
             "aggregation",
         ]
-        wide = TableWidener(df, features, qualifiers).widen()
-
-        wide = wide.add_prefix("SiteMeasure_")
-        return wide
+        return self.widen(
+            df, features, qualifiers, "SiteMeasure_"
+        )
 
     def parse_sample(self, df) -> pd.DataFrame:
         if df.empty:
@@ -502,9 +501,11 @@ class TableCombiner(Odm):
         df = self.remove_access(df)
         features = ["value"]
         qualifiers = ["type", "dateType"]
-        wide = TableWidener(df, features, qualifiers).widen()
+        return self.widen(df, features, qualifiers, "CPHD_")
 
-        wide = wide.add_prefix("CPHD_")
+    def widen(self, df, features, qualifiers, table_name):
+        wide = TableWidener(df, features, qualifiers).widen()
+        wide = wide.add_prefix(table_name)
         return wide
 
     def agg_ww_measure_per_sample(self, ww: pd.DataFrame) -> pd.DataFrame:
@@ -748,19 +749,3 @@ def destroy_db(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
 
-
-if __name__ == "__main__":
-    mapper = mcgill_mapper.McGillMapper()
-    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
-    sheet_name = "QC Data Daily Samples (McGill)"
-    lab_id = "frigon_lab"
-    mapper.read(lab_data,
-                static_data,
-                sheet_name,
-                lab_id)
-    print(mapper.site)
-    store = Odm()
-    store.load_from(mapper)
-    samples = store.combine_dataset()
-    print("?")

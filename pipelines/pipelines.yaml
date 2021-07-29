@@ -87,4 +87,4 @@ plot_langs:
   - "french"
 
 plot_output_dir: "/Users/jeandavidt/OneDrive - Université Laval/COVID/Website figures"
-city_output_dir: "/Users/jeandavidt/OneDrive - Université Laval/COVID/ML_Cities"
+city_output_dir: "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/wide tables"

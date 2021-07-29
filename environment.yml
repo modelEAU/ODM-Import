@@ -26,4 +26,4 @@ dependencies:
   - pip:
     - geojson-rewind
     - geomet
-prefix: /Users/jeandavidt/miniconda3/envs/covid
+

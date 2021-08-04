@@ -239,11 +239,12 @@ class MapperFuncs:
     def get_children_samples(cls, pooled, sample_date):
         def make_children_ids(row):
             split_pooled = row["pooled"].split(",")if "," in pooled else ""
-            children_ids = []
-            for item in split_pooled:
-                if re.match(LABEL_REGEX, item):
-                    child_id = "_".join([item, row["clean_date"]])
-                    children_ids.append(child_id)
+            children_ids = [
+                "_".join([item, row["clean_date"]])
+                for item in split_pooled
+                if re.match(LABEL_REGEX, item)
+            ]
+
             if not children_ids:
                 return ""
             else:
@@ -383,30 +384,6 @@ class MapperFuncs:
         raise TypeError(f"What is this lab_id?: {lab_id}")
 
 
-# processing_functions = {
-#     "get_grab_date": get_grab_date,
-#     "get_start_date": get_cp_start_date,
-#     "get_collection_method": get_collection_method,
-#     "get_sample_type": get_sample_type,
-#     "get_assay_method_id": get_assay_method_id,
-#     "get_assay_instrument": get_assay_instrument,
-#     "get_assay_name": get_assay_name,
-#     "write_concentration_method": write_concentration_method,
-#     "get_site_id": get_site_id,
-#     "sample_is_pooled": sample_is_pooled,
-#     "get_children_samples": get_children_samples,
-#     "get_sample_id": get_sample_id,
-#     "get_wwmeasure_id": get_wwmeasure_id,
-#     "get_reporter_id": get_reporter_id,
-#     "has_quality_flag": CsvMapper.has_quality_flag,
-#     "grant_access": grant_access,
-#     "get_sample_volume": get_sample_volume,
-#     "get_field_sample_temp": get_field_sample_temp,
-#     "get_shipped_on_ice": get_shipped_on_ice,
-#     "validate_fraction_analyzed": validate_fraction_analyzed,
-#     "validate_value": validate_value,
-
-# }
 def append_new_entry(new_entry, current_table_data):
     if current_table_data is None:
         new_entry = {0: new_entry}
@@ -417,7 +394,7 @@ def append_new_entry(new_entry, current_table_data):
 
 
 def get_lod(lab, label_col_name, spike_col_name, lod_value_col):
-    new_cols = ['LOD', 'LOQ']
+    new_cols = ['LOD']
     filt = lab[label_col_name] == "negative"
     cols_to_keep = [
         label_col_name,
@@ -439,25 +416,9 @@ def get_lod(lab, label_col_name, spike_col_name, lod_value_col):
     return lab
 
 
-# def filter_by_date(df, date_col, start, end):
-#     if start is not None:
-#         startdate = pd.to_datetime(start)
-#         start_filt = (df[date_col] > startdate)
-#     else:
-#         start_filt = None
-#     if end is not None:
-#         enddate = pd.to_datetime(end)
-#         end_filt = (df[date_col] < enddate)
-#     else:
-#         end_filt = None
-#     if start_filt is None and end_filt is None:
-#         return df
-#     elif start_filt is None:
-#         return df[end_filt]
-#     elif end_filt is None:
-#         return df[start_filt]
-#     else:
-#         return df[start_filt & end_filt]
+def get_loq(lab):
+    lab['LOQ'] = np.nan
+    return lab
 
 
 def validate_date_text(date_text):
@@ -680,20 +641,18 @@ class QcChecker:
         sheet_cols = [str(col) for col in sheet_df.columns]
         start_borders, end_borders = self._find_df_borders(sheet_cols, idx_col_pos)
         idx_col = CsvMapper.excel_style(idx_col_pos+1)
-        
+
         dfs = []
-        i=0
-        for start, end in zip(start_borders, end_borders):
+        cols_to_keep = ["BRSV (%rec)","Rejected by", "PMMV (gc/ml)","Rejected by.1", "SARS (gc/ml)", "Rejected by.2", "Quality Note"]
+        for i, (start, end) in enumerate(zip(start_borders, end_borders)):
             vals = self._get_values_df(path, sheet_name, start, end, header_row_pos)
             idx = self._get_index_series(path, sheet_name, idx_col, header_row_pos)
             df = vals.set_index(idx)
             df = self._clean_names(df)
-            cols_to_keep = ["BRSV (%rec)","Rejected by", "PMMV (gc/ml)","Rejected by.1", "SARS (gc/ml)", "Rejected by.2", "Quality Note"]
             df = df[cols_to_keep]
             df = df.dropna(how='all')
             df.fillna("", inplace=True)
             dfs.append(df)
-            i += 1
         return sheet_df, dfs
 
 
@@ -938,6 +897,7 @@ class McGillMapper(CsvMapper):
         lod_value_col = "BI"  # sars-cov-2 gc/rxn
         sample_date_col = "B"  # end date
         lab = get_lod(lab, label_col_name, spike_col_name, lod_value_col)
+        lab = get_loq(lab)
         lab = self.filter_by_date(lab, sample_date_col, startdate, enddate)
         static_data = self.read_static_data(staticdata_path)
         dynamic_tables = self.parse_sheet(
@@ -956,8 +916,7 @@ class McGillMapper(CsvMapper):
     def validates(self):
         return True
 
-
-if __name__ == "__main__":
+def debug():
     mapper = McGillMapper(processing_functions=MapperFuncs)
     lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
     static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
@@ -972,4 +931,6 @@ if __name__ == "__main__":
                 map_path=MCGILL_MAP_NAME,
                 startdate=None,
                 enddate=None)
-    
+
+if __name__ == "__main__":
+    debug()

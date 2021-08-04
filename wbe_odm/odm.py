@@ -311,7 +311,7 @@ class Odm:
 class TableWidener:
     wide = None
 
-    def __init__(self, df: pd.DataFrame, features: List[str], qualifiers):
+    def __init__(self, df: pd.DataFrame, features: List[str], qualifiers: List[str]):
         """Creates the widener object and sets which columns are qualifiers and which are features
 
         Parameters
@@ -394,6 +394,19 @@ class TableCombiner(Odm):
         self.cphd = self.parse_cphd(source_odm.cphd)
         self.polygon = self.parse_polygon(source_odm.polygon)
         self.site = self.parse_site(source_odm.site)
+
+    def typecast_combined(self, df: pd.DataFrame) -> pd.DataFrame:
+        for col_name in df.columns:
+            last_part = '_'.split(col_name)[-1].lower()
+            if last_part in ['value', 'pop', 'temp', 'size']:
+                df[col_name] = df[col_name].astype(np.float32)
+            elif 'timestamp' in last_part or 'date' in last_part:
+                df[col_name] = pd.to_datetime(df[col_name])
+            elif 'flag' in col_name or 'pooled' in col_name or 'shippedOnIce' in col_name:
+                df[col_name] = df[col_name].replace('', False).astype(bool)
+            else:
+                df[col_name] = df[col_name].fillna("").astype(str)
+        return df
 
     def remove_access(self, df: pd.DataFrame) -> pd.DataFrame:
         """removes all columns that set access rights
@@ -496,6 +509,7 @@ class TableCombiner(Odm):
         return df
 
     def parse_cphd(self, df) -> pd.DataFrame:
+        
         if df.empty:
             return df
         df = self.remove_access(df)
@@ -677,6 +691,7 @@ class TableCombiner(Odm):
         pd.DataFrame
             DataFrame with each row representing a sample
         """
+
         agg_ww_measure = self.agg_ww_measure_per_sample(self.ww_measure)
 
         samples = self.combine_ww_measure_and_sample(
@@ -707,7 +722,8 @@ class TableCombiner(Odm):
 
         merged_s_sm_pp_cphd.drop_duplicates(keep="first", inplace=True)
         self.combined = merged_s_sm_pp_cphd
-        return merged_s_sm_pp_cphd
+        self.combined = self.typecast_combined(self.combined)
+        return self.combined
 
 
 class OdmEncoder(json.JSONEncoder):

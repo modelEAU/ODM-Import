@@ -375,7 +375,7 @@ class TableWidener:
         for col_qualifier in unique_col_qualifiers:
             for feature in self.features:
                 col_name = "_".join([col_qualifier, feature])
-                df[col_name] = np.nan
+                df[col_name] = pd.Series()
                 filt = df["col_qualifiers"] == col_qualifier
                 df.loc[filt, col_name] = df.loc[filt, feature]
         df.drop(columns=self.features+self.qualifiers, inplace=True)

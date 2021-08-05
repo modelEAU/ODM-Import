@@ -27,6 +27,7 @@ colors:
       english: "Very high"
       color: "#c13525"
 
+lod: 0.5
 
 logo_path:  "/Users/jeandavidt/dev/modelEAU/ODM Import/Data/images/graph_logos.png"
 

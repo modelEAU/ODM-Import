@@ -785,7 +785,7 @@ def add_logo_to_plot(fig, path):
     return fig
 
 
-def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english'], lod):
+def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'english']):
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
     col_names = get_column_names(metadata)
@@ -798,14 +798,19 @@ def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english'],
         bar_color = colors[2]
 
         for i, col in enumerate(col for col in data.columns if 'case' not in col):
-            
-            colors = data[col].apply(lambda x: )
+            marker_color=line_colors[i]
+            if 'norm' not in col:
+                marker_colors = data[col].apply(
+                    lambda x: utilities.hex_color_adder(marker_color, '#7d7d7d') if x < lod else marker_color
+                )
+            else:
+                marker_colors = marker_color
             trace = go.Scatter(
                 x=data.index,
                 y=data[col],
                 name=col_names[col][lang],
                 mode="lines+markers",
-                marker=dict(color=line_colors[i%len(line_colors)]),
+                marker=dict(color=marker_colors),
                 connectgaps=True,
                 visible='legendonly' if 'norm' not in col else True,
                 yaxis = "y3" if 'norm' not in col else "y2",
@@ -837,10 +842,10 @@ def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english'],
 
 
 if __name__ == "__main__":
-
+# default="qc-mtl-lvl-bsl"
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-scty', '--cities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to load data from')  # noqa
+    parser.add_argument('-scty', '--cities', type=str2list, default="qc", help='Cities to load data from')  # noqa
     parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtpmus-wwtpmuc-lagoon", help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
@@ -848,7 +853,7 @@ if __name__ == "__main__":
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
     parser.add_argument('-dcty', '--datacities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
-    parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
+    parser.add_argument('-wcty', '--webcities', type=str2list, default="qc", help='Cities to display on the website')  # noqa
     parser.add_argument('-con', '--config', type=str, default='pipelines.yaml', help="Config file where all the paths are defined")
     args = parser.parse_args()
 
@@ -1044,7 +1049,7 @@ if __name__ == "__main__":
                 and not plot_data
             ):
                 continue
-            plot_web(plot_data, metadata, config.default_start_date, config.plot_output_dir, langs=config.plot_langs)
+            plot_web(plot_data, metadata, config.default_start_date, config.plot_output_dir, lod=config.lod, langs=config.plot_langs)
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")

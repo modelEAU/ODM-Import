@@ -338,5 +338,3 @@ def reduce_with_warnings(series):
         mismatched_values = series.loc[~series.duplicated()]
         warnings.warn(f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}")
     return list(values)[0]
-
-print(hex_color_adder("#ff00aa", "#111111"))

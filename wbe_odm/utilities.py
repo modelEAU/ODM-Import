@@ -11,6 +11,37 @@ import geomet.wkt
 
 UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
+def hex_color_adder(color1: str, color2: str) -> str:
+    """Takes two hex color representations, 
+    and adds the hex numbers together, and returns 
+    the string representation of the resulting color.
+
+    Parameters
+    ----------
+    color1 : str
+        "#xxxxxx"
+    color2 : str
+        "#xxxxxx"
+
+    Returns
+    -------
+    str
+        the resulting color between "#000000" and "#FFFFFF"
+    """
+    hex_pattern = re.compile("^#([A-F]|[0-9]){6}$", flags=re.I)
+    if not re.search(hex_pattern, color1) or not re.search(hex_pattern, color2):
+        raise Exception(f"color strings are not valid: {color1}, {color2}")
+    reds = (int(color1[1:3], 16), int(color2[1:3], 16))
+    greens = (int(color1[3:5], 16), int(color2[3:5], 16))
+    blues = (int(color1[5:], 16), int(color2[5:], 16))
+    final_color = ['#']
+    for channel in [reds, greens, blues]:
+        sum_channel = min(int(0xff), sum(channel))
+        str_sum = hex(sum_channel)[2:]
+        final_color.append(str_sum)
+    return ''.join(final_color)
+
+
 def typecast_wide_table(df):
     for col in df.columns:
         name = df[col].name
@@ -307,3 +338,5 @@ def reduce_with_warnings(series):
         mismatched_values = series.loc[~series.duplicated()]
         warnings.warn(f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}")
     return list(values)[0]
+
+print(hex_color_adder("#ff00aa", "#111111"))

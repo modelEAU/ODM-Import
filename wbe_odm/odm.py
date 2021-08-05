@@ -403,7 +403,7 @@ class TableCombiner(Odm):
             elif 'timestamp' in last_part or 'date' in last_part:
                 df[col_name] = pd.to_datetime(df[col_name])
             elif 'flag' in col_name or 'pooled' in col_name or 'shippedOnIce' in col_name:
-                df[col_name] = df[col_name].replace('', False).astype(bool)
+                df[col_name] = df[col_name].astype(np.bool)
             else:
                 df[col_name] = df[col_name].fillna("").astype(str)
         return df

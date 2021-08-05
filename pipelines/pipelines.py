@@ -785,7 +785,7 @@ def add_logo_to_plot(fig, path):
     return fig
 
 
-def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english']):
+def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english'], lod):
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
     col_names = get_column_names(metadata)
@@ -798,6 +798,8 @@ def plot_web(data, metadata, dateStart, output_dir, langs=['french', 'english'])
         bar_color = colors[2]
 
         for i, col in enumerate(col for col in data.columns if 'case' not in col):
+            
+            colors = data[col].apply(lambda x: )
             trace = go.Scatter(
                 x=data.index,
                 y=data[col],

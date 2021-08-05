@@ -842,7 +842,6 @@ def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'eng
 
 
 if __name__ == "__main__":
-# default="qc-mtl-lvl-bsl"
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-scty', '--cities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to load data from')  # noqa

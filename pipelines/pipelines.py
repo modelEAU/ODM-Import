@@ -786,6 +786,7 @@ def add_logo_to_plot(fig, path):
 
 
 def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'english']):
+    # sourcery no-metrics
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
     col_names = get_column_names(metadata)
@@ -812,7 +813,7 @@ def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'eng
                 mode="lines+markers",
                 marker=dict(color=marker_colors),
                 connectgaps=True,
-                visible='legendonly' if 'norm' not in col else True,
+                visible='legendonly' if 'sars' not in col else True,
                 yaxis = "y3" if 'norm' not in col else "y2",
                 hovertemplate=' %{y:.3f}'
             )

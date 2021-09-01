@@ -1,6 +1,7 @@
 import pandas as pd
 from wbe_odm.odm_mappers import base_mapper as bm
-
+import requests
+import io
 
 poly_names = {
     '13 - Laval': "prov_qc_hlthReg_laval",
@@ -82,6 +83,12 @@ def build_cphd_ids(reporter, region, type_, datetype, date):
     df = pd.concat([reporter, region, type_, datetype, date], axis=1)
     return df.agg("_".join, axis=1)
 
+def df_from_req(url):
+    req = requests.get(url)
+    if not req:
+        raise requests.HTTPError(f'could not get data from {url}')
+    content = req.content
+    return pd.read_csv(io.StringIO(content.decode('utf-8')))
 
 INSPQ_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/donnees/covid19-hist.csv?randNum=27002747"
 INSPQ_VACCINE_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/donnees/vaccination.csv?randNum=27002747"
@@ -89,8 +96,9 @@ INSPQ_VACCINE_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/d
 class INSPQ_mapper(bm.BaseMapper):
     def read(self, filepath=None):
         if filepath is None:
-            filepath = INSPQ_DATASET_URL
-        hist = pd.read_csv(filepath)
+            hist = df_from_req(INSPQ_DATASET_URL)
+        else:
+            hist = pd.read_csv(filepath)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
         hist = hist.dropna(subset=["Date"])
@@ -122,10 +130,11 @@ class INSPQ_mapper(bm.BaseMapper):
         return True
 
 class INSPQVaccineMapper(bm.BaseMapper):
-    def read(self, filepath):
+    def read(self, filepath=None):
         if filepath is None:
-            filepath = INSPQ_VACCINE_DATASET_URL
-        hist = pd.read_csv(filepath)
+            hist = df_from_req(INSPQ_VACCINE_DATASET_URL)
+        else:
+            hist = pd.read_csv(filepath)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
         hist = hist.dropna(subset=["Date"])
@@ -160,7 +169,9 @@ class INSPQVaccineMapper(bm.BaseMapper):
 if __name__ == "__main__":
     filepath = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/INSPQ/covid19-hist.csv"  # noqa
     vac_path = "/Users/jeandavidt/Desktop/vaccination.csv"
-    mapper = INSPQVaccineMapper()
-    mapper.read(vac_path)
+    # print(df_from_req(INSPQ_VACCINE_DATASET_URL))
+
+    mapper = INSPQ_mapper()
+    mapper.read()
     print(mapper.cphd.head())
     

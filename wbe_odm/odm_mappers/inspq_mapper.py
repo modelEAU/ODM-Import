@@ -95,10 +95,7 @@ INSPQ_VACCINE_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/d
 
 class INSPQ_mapper(bm.BaseMapper):
     def read(self, filepath=None):
-        if filepath is None:
-            hist = df_from_req(INSPQ_DATASET_URL)
-        else:
-            hist = pd.read_csv(filepath)
+        hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
         hist = hist.dropna(subset=["Date"])
@@ -131,10 +128,7 @@ class INSPQ_mapper(bm.BaseMapper):
 
 class INSPQVaccineMapper(bm.BaseMapper):
     def read(self, filepath=None):
-        if filepath is None:
-            hist = df_from_req(INSPQ_VACCINE_DATASET_URL)
-        else:
-            hist = pd.read_csv(filepath)
+        hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
         hist = hist.dropna(subset=["Date"])

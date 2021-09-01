@@ -961,12 +961,18 @@ if __name__ == "__main__":
         if publichealth:
             print("Importing case data from INSPQ...")
             public_health = inspq_mapper.INSPQ_mapper()
-            path = os.path.join(config.data_folder, config.inspq_data)
+            if not config.inspq_data:
+                path=None
+            else:
+                path = os.path.join(config.data_folder, config.inspq_data)
             public_health.read(path)
             store.append_from(public_health)
             print("Importing vaccine data from INSPQ...")
             vacc = inspq_mapper.INSPQVaccineMapper()
-            path = os.path.join(config.data_folder, config.inspq_vaccine_data)
+            if not config.inspq_vaccine_data:
+                path=None
+            else:
+                path = os.path.join(config.data_folder, config.inspq_vaccine_data)
             vacc.read(path)
             store.append_from(vacc)
             

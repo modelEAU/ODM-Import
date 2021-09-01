@@ -37,8 +37,8 @@ data_folder: "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/
 csv_folder: "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"
 static_data: "CentrEAU-COVID_Static_Data.xlsx"
 
-inspq_data: "INSPQ/covid19-hist.csv"
-inspq_vaccine_data: "INSPQ/vaccination.csv"
+inspq_data: ""
+inspq_vaccine_data: ""
 
 qc_lab_data: "COVIDProject_Lab Measurements.xlsx"
 qc_sheet_name: "Lab analyses"

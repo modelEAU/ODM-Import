@@ -1040,14 +1040,15 @@ if __name__ == "__main__":
             config.site_name,
             config.colors,
             config.default_start_date)
-        print("building polygon geojson...")
+        print("Building polygon geojson...")
         poly_list = sites["polygonID"].to_list()
         build_polygon_geoJSON(
             store, poly_list, config.polygon_output_dir, config.poly_name, config.polys_to_extract)
 
         for site_id in sites['siteID'].to_list():
             print("building website plots for ", site_id, "...")
-            plot_data, metadata = centreau_website_data(combined, site_id, config.default_start_date)
+            plot_start_date = config.lvl_start_date if 'lvl' in site_id.lower() else config.default_start_date
+            plot_data, metadata = centreau_website_data(combined, site_id, plot_start_date)
             if (
                 isinstance(plot_data, pd.DataFrame)
                 and plot_data.empty
@@ -1055,7 +1056,8 @@ if __name__ == "__main__":
                 and not plot_data
             ):
                 continue
-            plot_web(plot_data, metadata, config.default_start_date, config.plot_output_dir, lod=config.lod, langs=config.plot_langs)
+            
+            plot_web(plot_data, metadata, plot_start_date, config.plot_output_dir, lod=config.lod, langs=config.plot_langs)
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")

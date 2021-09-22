@@ -1,6 +1,7 @@
 import pandas as pd
 from wbe_odm.odm_mappers import base_mapper as bm
 import requests
+import warnings
 import io
 
 poly_names = {
@@ -95,7 +96,9 @@ INSPQ_VACCINE_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/d
 
 class INSPQ_mapper(bm.BaseMapper):
     def read(self, filepath=None):
-        hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
         hist = hist.dropna(subset=["Date"])
@@ -128,7 +131,9 @@ class INSPQ_mapper(bm.BaseMapper):
 
 class INSPQVaccineMapper(bm.BaseMapper):
     def read(self, filepath=None):
-        hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
         hist = hist.dropna(subset=["Date"])

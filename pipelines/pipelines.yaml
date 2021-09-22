@@ -32,6 +32,7 @@ lod: 0.5
 logo_path:  "/Users/jeandavidt/dev/modelEAU/ODM Import/Data/images/graph_logos.png"
 
 default_start_date: "2021-01-01"
+lvl_start_date: "2020-10-01"
 
 data_folder: "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input" 
 csv_folder: "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/odm_csv"

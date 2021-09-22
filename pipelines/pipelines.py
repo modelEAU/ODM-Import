@@ -254,7 +254,7 @@ def get_website_type(types):
             "french": "Avion",
             "english": "Airplane"
             },        
-        "corFcil": {
+        "corfcil": {
             "french": "Prison",
             "english": "Correctional facility"
             },
@@ -270,31 +270,31 @@ def get_website_type(types):
             "french": "Refuge",
             "english": "Shelter"
             },
-        "swgTrck": {
+        "swgtrck": {
             "french": "Camion de vidange",
             "english": "Sewage truck"
             },
-        "uCampus": {
+        "ucampus": {
             "french": "Campus universitaire",
             "english": "University campus"
             },
-        "mSwrPpl": {
+        "mswrppl": {
             "french": "Collecteur d'égouts",
             "english": "Sewer main collector"
             },
-        "holdTnk": {
+        "holdtnk": {
             "french": "Bassin de stockage",
             "english": "Holding tank"
             },
-        "retPond": {
+        "retpond": {
             "french": "Bassin de rétention",
             "english": "Retention tank"
             },
-        "wwtpMuS": {
+        "wwtpmus": {
             "french": "StaRRE municipale pour égouts sanitaires",  # noqa
             "english": "Municipal WRRF for sanitary sewers"
             },
-        "wwtpInd": {
+        "wwtpind": {
             "french": "StaRRE eaux industrielles",
             "english": "WWRF for industrial waters"
             },
@@ -302,7 +302,7 @@ def get_website_type(types):
             "french": "Étang aéré",
             "english": "Aerated lagoon"
             },
-        "septTnk": {
+        "septtnk": {
             "french": "Fosse septique",
             "english": "Septic tank"
             },

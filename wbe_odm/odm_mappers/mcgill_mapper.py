@@ -570,7 +570,7 @@ class QcChecker:
 
 
     def _get_sample_collection(self, type_codes):
-        return type_codes[::3]
+        return [str(x).lower() for x in type_codes[::3]]
 
 
     def _get_last_dates(self, sheet_df):
@@ -598,21 +598,25 @@ class QcChecker:
         return sites
 
     def _get_values_df(self, path, sheet_name, start, end, header_row_pos):
-        return pd.read_excel(
-                path,
-                sheet_name=sheet_name,
-                header=header_row_pos,
-                usecols =f"{start}:{end}"
-                )
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            return pd.read_excel(
+                    path,
+                    sheet_name=sheet_name,
+                    header=header_row_pos,
+                    usecols =f"{start}:{end}"
+                    )
 
     def _get_index_series(self, path, sheet_name, idx_col, header_row_pos):
-        idx_series = pd.read_excel(
-                path,
-                sheet_name=sheet_name,
-                header=header_row_pos,
-                usecols = idx_col,
-                squeeze=True
-            )
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            idx_series = pd.read_excel(
+                    path,
+                    sheet_name=sheet_name,
+                    header=header_row_pos,
+                    usecols = idx_col,
+                    squeeze=True
+                )
         idx_series = pd.to_datetime(idx_series).dt.strftime("%Y-%m-%d")
         return pd.to_datetime(idx_series)
         
@@ -637,7 +641,9 @@ class QcChecker:
         return df.rename(columns = renamed_cols) 
 
     def _extract_dfs(self, path, sheet_name, idx_col_pos=0, header_row_pos=4):
-        sheet_df = pd.read_excel(path, sheet_name=sheet_name, header=0, index_col=0)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action="ignore")
+            sheet_df = pd.read_excel(path, sheet_name=sheet_name, header=0, index_col=0)
         sheet_cols = [str(col) for col in sheet_df.columns]
         start_borders, end_borders = self._find_df_borders(sheet_cols, idx_col_pos)
         idx_col = CsvMapper.excel_style(idx_col_pos+1)
@@ -689,7 +695,7 @@ class QcChecker:
         samples = self._parse_dates(samples)
         ww = mapper.ww_measure
         
-        sample_collection_filt = samples["collection"].str.contains(sample_collection)
+        sample_collection_filt = samples["collection"].str.lower().str.contains(sample_collection)
         sample_sites_filt = samples["siteID"].str.lower().str.contains(site_id)
         for _, row in v_df.iterrows():
             sample_date_filt1 = samples["dateTimeEnd"].dt.date == pd.to_datetime(row.name).date()

@@ -1,35 +1,33 @@
 # McGill Lab Sheet Mapper
 
-The McGill Lab sheet was developped by Pr. Dominic Frigon's Laboratory. It is used to collect data about wastewater samples thoughout the analysis process for the detection of SARS-CoV-2.
-
-This sheet and the data model were initially developped independently, thus a fair bit of reconciliation between the lab sheet info and what can should be stored in the ODM model needs to happen in code.
+The csv mapper is used to collect data about any component of the data model contained in data that is in a tabular format in Excel.
 
 ## How it works
 
-The McGill Lab Sheet is built in Excel. We therefore need to point the mapper to the correct `workbook`and `worksheet`.
-The data in the lab sheet is constantly updated as more samples are analyzed. There are, however, other pieces of imformation that don't chanfge as often, e.g., the characteristics of the sites being analyzed, their polygons, the names of the reporters, etc. Since the different tables in the data model are linked with foreign keys, we need to keep this `static` data handy so that we can link the `dynamic` data of the lab sheet to the correct `static` info. The static data is stored in the format if the Ottawa Data Model Excel Template.
+The Csv Mapper expects two data files:
 
-Once we have access to the table containing the lab data and the static data, we need a way to indicate to the  mapper object how it should transform the data contained in one or several columns of the lab sheet into fields of the data model.This is where `mcgill_map.csv` comes in.
+* A data file that contains data that is constantly updated with new samples and new measurements.
+* A static file that defines contants used in the lab file (data about the sites where samples are collected, for example.) The Mapper expects the static file to be in the ODM format.
 
-### The `mcgil_map` file
+### The `csv_map` file
 
-The mapper file is made up of rows that each represent a piece of information that needs to be added to ODM tables for each row of the lab sheet.
+The mapper file is made up of rows that each represent a piece of information that needs to be added to ODM tables for each row of the data file.
 
-Each row of the Lab sheet contains information about (at least) the following things:
+Each row of the a lab file may contain information about any of the following things:
 
 1. Changes to the Assay Method for SARS detection
 1. The names of the reporters performing collection and analysis
 1. The sample information
 1. The information for each measurement being performed on a given sample
 
-For each of these items, a new row could potentially be generated in the corresponding table of the Data Model. Each of these fields are filled in with info of the static sheet, the lab sheet, or some constant value that applies to a whole sheet (i.e., the ID of the lab that maintains the data sheet).
+For each of these items, a new row could potentially be generated in the corresponding table of the ODM. Each of these fields are filled in with info of the static file, the lab file, or some constant value that applies to a whole sheet.
 
 For each map row, the corresponding information is present:
 
-* `elementName`: A unique name for the group of mapfile rows that create a new row in the ODM.
-* `table`: The ODM where a new wntry will be created.
+* `elementName`: A unique name for a group of mapfile rows that together create a complete row in the ODM.
+* `table`: The ODM where new entries will be created.
 * `variableName`: The name of the ODM table column where new information will be placed.
-* `defaultValue`: Contains a value for that field.
+* `defaultValue`: Contains a default value for that field.
 * `inputSources`: This defines where the mapper object should look for inputs to create the final value that will be placed in the ODM table. The following options are available:
   * `static [ODM table name]`: The info will be found in static data file, in the table whose name is inserted after the word `static`.
   * `lab sheet`: The info will be found in the lab file itself.
@@ -46,10 +44,11 @@ For each map row, the corresponding information is present:
 
 ## How to use the mapper
 
-At its core, the McGill mapper can be used like any other ODM mapper - by using the `.read()` method.
+At its core, the csv mapper can be used like any other ODM mapper - by using the `.read()` method.
 
 ```python
 # Instantiate the mapper
+# McGillMapper is a class derived from csv mapper
 mapper = McGillMapper()
 
 #Link to the files you want to use.

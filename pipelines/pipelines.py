@@ -1,7 +1,6 @@
 import argparse
 import base64
 import json
-import logging
 import os
 import shutil
 import yaml
@@ -10,7 +9,6 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import shapely.wkt
 from easydict import EasyDict
 from plotly.express import colors as pc
 from plotly.subplots import make_subplots
@@ -96,7 +94,6 @@ def get_samples_for_site(site_id, df):
     return df.loc[sample_filter1].copy()
 
 
-
 def get_site_list(sites):
     return sites["siteID"].dropna().unique().to_list()
 
@@ -115,8 +112,8 @@ def combine_viral_cols(viral):
     for col in viral.columns:
         if "timestamp" in col:
             continue
-        table, virus, unit, agg, var = desc = col.lower().split("_")
-        
+        table, virus, unit, agg, var = col.lower().split("_")
+
         if "cov" in virus:
             sars.append(col)
         elif "pmmov" in virus:
@@ -131,8 +128,8 @@ def get_samples_in_interval(samples, dateStart, dateEnd):
     elif pd.isna(dateStart):
         return samples.loc[: dateEnd]
     elif pd.isna(dateEnd):
-        return samples.loc[dateStart: ]
-    return samples.loc[dateStart : dateEnd]
+        return samples.loc[dateStart:]
+    return samples.loc[dateStart: dateEnd]
 
 
 def get_samples_of_collection_method(samples, cm):
@@ -253,7 +250,7 @@ def get_website_type(types):
         "airpln": {
             "french": "Avion",
             "english": "Airplane"
-            },        
+            },
         "corfcil": {
             "french": "Prison",
             "english": "Correctional facility"
@@ -261,7 +258,7 @@ def get_website_type(types):
         "school": {
             "french": "École",
             "english": "School"
-            },        
+            },
         "hosptl": {
             "french": "Hôpital",
             "english": "Hospital"
@@ -331,19 +328,19 @@ def get_website_type(types):
 
 
 sitename_lang_map = {
-        "québec station est":{
+        "québec station est": {
             "french": "Québec Station Est",
             "english": "Québec East WRRF",
         },
-        "québec station ouest":{
+        "québec station ouest": {
             "french": "Québec Station Ouest",
             "english": "Québec West WRRF",
         },
-        "montréal intercepteur nord":{
+        "montréal intercepteur nord": {
             "french": "Montréal Intercepteur Nord",
             "english": "Montreal North Intercepter",
         },
-        "montréal intercepteur sud":{
+        "montréal intercepteur sud": {
             "french": "Montréal Intercepteur Sud",
             "english": "Montreal South Intercepter",
         },
@@ -388,8 +385,11 @@ sitename_lang_map = {
             "english": "La Pinière WRRF",
         },
     }
+
+
 def get_website_name(name):
     return sitename_lang_map[name]
+
 
 municipalities = {
         "qc": "Québec",
@@ -404,9 +404,12 @@ municipalities = {
         "trpis": "Trois-Pistoles",
         "mtne": "Matane"
     }
+
+
 def get_municipality(id):
     city_id = str(id).lower().split("_")[0]
     return municipalities[city_id]
+
 
 collection = {
         "cp": {
@@ -420,8 +423,11 @@ collection = {
             "english": "Passive"
         }
     }
+
+
 def website_collection_method(cm):
     return collection.get(cm, "")
+
 
 poly_names = {
     "qc_01_swrcat": {
@@ -545,15 +551,19 @@ poly_names = {
         "english": "La Pinière sewershed",
     },
 }
+
+
 def clean_polygon_name(poly_id):
     return poly_names[poly_id]
 
 
 def get_samples_to_plot(site_dataset, dateStart=None, dateEnd=None):
-    samples_in_range = get_samples_in_interval(site_dataset, dateStart, dateEnd)
+    samples_in_range = get_samples_in_interval(
+        site_dataset, dateStart, dateEnd)
     collection_method = get_cm_to_plot(samples_in_range, thresh_n=7)
-    return get_samples_of_collection_method(samples_in_range, collection_method)
-    
+    return get_samples_of_collection_method(
+        samples_in_range, collection_method)
+
 
 def get_site_geoJSON(
         sites,
@@ -565,7 +575,8 @@ def get_site_geoJSON(
         dateEnd=None):
 
     sites["dataset"] = sites.apply(
-        lambda row: utilities.build_site_specific_dataset(combined, row["siteID"]),
+        lambda row: utilities.build_site_specific_dataset(
+            combined, row["siteID"]),
         axis=1)
     sites["dataset"] = sites.apply(
         lambda row: utilities.resample_per_day(row['dataset']),
@@ -582,10 +593,14 @@ def get_site_geoJSON(
         axis=1)
 
     sites["clean_type"] = get_website_type(sites["type"])
-    sites["municipality"] = sites['siteID'].apply(lambda x: get_municipality(x))
-    sites["name"] = sites['name'].apply(lambda x: get_website_name(x))
-    sites['collection_method'] = sites.apply( lambda row: get_cm_to_plot(row['samples'], thresh_n=7), axis=1)
-    sites["collection_method"] = sites["collection_method"].apply(lambda x: website_collection_method(x))
+    sites["municipality"] = sites['siteID'].apply(
+        lambda x: get_municipality(x))
+    sites["name"] = sites['name'].apply(
+        lambda x: get_website_name(x))
+    sites['collection_method'] = sites.apply(
+        lambda row: get_cm_to_plot(row['samples'], thresh_n=7), axis=1)
+    sites["collection_method"] = sites["collection_method"].apply(
+        lambda x: website_collection_method(x))
     cols_to_keep = [
         "siteID",
         "name",
@@ -671,10 +686,11 @@ def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
 
     df = pd.concat([viral, site_dataset[cases_col]], axis=1)
     df = df[dateStart:]
+
     df.rename(columns={
-        sars_col:'sars',
+        sars_col: 'sars',
         pmmv_col: 'pmmv',
-        norm_col:'norm',
+        norm_col: 'norm',
         cases_col: 'cases',
     }, inplace=True)
     metadata = {
@@ -682,14 +698,15 @@ def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
         'site_id': site_id,
         'site_name': get_website_name(site_name),
     }
-    return df, metadata 
+    return df, metadata
 
 
 def get_plot_titles(metadata):
     return {
-        'french': f'Surveillance SRAS-CoV-2 via les eaux usées<br>{metadata["site_name"]["french"]}',
-        'english': f'SARS-CoV-2 surveilance in wastewater<br>{metadata["site_name"]["english"]}'
+        'french': f'Surveillance SRAS-CoV-2 via les eaux usées<br>{metadata["site_name"]["french"]}',  # noqa
+        'english': f'SARS-CoV-2 surveilance in wastewater<br>{metadata["site_name"]["english"]}'  # noqa
     }
+
 
 def get_axes_titles():
     return {
@@ -706,6 +723,7 @@ def get_axes_titles():
             'english': 'Viral signal (gc/ml)',
         }
     }
+
 
 def get_column_names(metadata):
     return {
@@ -732,16 +750,22 @@ def update_webplot_layout(fig, x0, lang, plot_titles, axes_titles):
     fig.update_layout(
         xaxis_title="Date",
         xaxis_tick0=x0,
-        xaxis_dtick=7 * 24 * 3600000,
+        xaxis_dtick=14 * 24 * 3600000,
         xaxis_tickformat="%d-%m-%Y",
         xaxis_tickangle=30, plot_bgcolor="white",
         xaxis_gridcolor="rgba(100,100,100,0.10)",
         yaxis_gridcolor="rgba(0,0,0,0)",
         xaxis_ticks="outside",
 
-        hovermode = 'x unified',  # To compare on hover
+        hovermode='x unified',  # To compare on hover
         title=plot_titles[lang],
-        legend=dict(yanchor="top", xanchor="left", orientation="h", y=1.05, x=0),
+        legend=dict(
+            yanchor="top",
+            xanchor="left",
+            orientation="h",
+            y=1.05,
+            x=0
+        ),
         xaxis=dict(
             domain=[0.12, 1]
         ),
@@ -785,24 +809,34 @@ def add_logo_to_plot(fig, path):
     return fig
 
 
-def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'english']):
+def plot_web(data,
+             metadata,
+             dateStart,
+             output_dir,
+             lod=0,
+             langs=['french', 'english']):
     # sourcery no-metrics
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
     col_names = get_column_names(metadata)
     first_sunday = get_last_sunday(pd.to_datetime(dateStart))
     for lang in langs:
-        fig = make_subplots(rows=1, cols=1,
-                        specs=[[{"secondary_y": True}]])
+        fig = make_subplots(
+            rows=1,
+            cols=1,
+            specs=[[{"secondary_y": True}]])
         colors = pc.qualitative.Plotly
         line_colors = [color for i, color in enumerate(colors) if i != 2]
         bar_color = colors[2]
 
-        for i, col in enumerate(col for col in data.columns if 'case' not in col):
-            marker_color=line_colors[i]
+        for i, col in enumerate(
+                col for col in data.columns if 'case' not in col):
+            marker_color = line_colors[i]
             if 'norm' not in col:
                 marker_colors = data[col].apply(
-                    lambda x: utilities.hex_color_adder(marker_color, '#7d7d7d') if x < lod else marker_color
+                    lambda x: utilities.hex_color_adder(
+                        marker_color, '#7d7d7d')
+                    if x < lod else marker_color
                 )
             else:
                 marker_colors = marker_color
@@ -814,7 +848,7 @@ def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'eng
                 marker=dict(color=marker_colors),
                 connectgaps=True,
                 visible='legendonly' if 'sars' not in col else True,
-                yaxis = "y3" if 'norm' not in col else "y2",
+                yaxis="y3" if 'norm' not in col else "y2",
                 hovertemplate=' %{y:.3f}'
             )
             fig.add_trace(trace)
@@ -831,10 +865,13 @@ def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=['french', 'eng
         )
         fig.add_trace(cases_trace)
 
-        fig = update_webplot_layout(fig, first_sunday, lang, plot_titles, axes_titles)
-        
+        fig = update_webplot_layout(fig,
+                                    first_sunday,
+                                    lang,
+                                    plot_titles,
+                                    axes_titles)
+
         fig = add_logo_to_plot(fig, config.logo_path)
-        
         if langs == ['french']:
             fig.write_html(f"{output_dir}/{metadata['site_id']}.html")
         else:
@@ -854,9 +891,8 @@ if __name__ == "__main__":
     parser.add_argument('-dcty', '--datacities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
     parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
-    parser.add_argument('-con', '--config', type=str, default='pipelines.yaml', help="Config file where all the paths are defined")
+    parser.add_argument('-con', '--config', type=str, default='pipelines.yaml', help="Config file where all the paths are defined")  # noqa
     args = parser.parse_args()
-
 
     source_cities = args.cities
     sitetypes = args.sitetypes
@@ -873,7 +909,7 @@ if __name__ == "__main__":
     if config:
         with open(config, "r") as f:
             config = EasyDict(yaml.safe_load(f))
-    
+
     if not os.path.exists(config.csv_folder):
         raise ValueError(
             "CSV folder does not exist. Please modify config file.")
@@ -888,11 +924,14 @@ if __name__ == "__main__":
             print("Importing viral data from Quebec City...")
             qc_lab = mcgill_mapper.McGillMapper()
             virus_path = os.path.join(config.data_folder, config.qc_virus_data)
-            
+
             qc_lab.read(virus_path, static_path, config.qc_virus_sheet_name, config.qc_virus_lab)  # noqa
             print("Adding Quality Checks for Qc...")
             qc_quality_checker = mcgill_mapper.QcChecker()
-            qc_lab = qc_quality_checker.read_validation(qc_lab, virus_path, config.qc_quality_sheet_name)
+            qc_lab = qc_quality_checker.read_validation(
+                qc_lab,
+                virus_path,
+                config.qc_quality_sheet_name)
 
             store.append_from(qc_lab)
             print("Importing Wastewater lab data from Quebec City...")
@@ -910,7 +949,9 @@ if __name__ == "__main__":
                 vdq_sensors.read(os.path.join(subfolder, file))
                 store.append_from(vdq_sensors)
             print("Importing Quebec city lab data...")
-            subfolder = os.path.join(config.data_folder, config.qc_city_plant_folder)
+            subfolder = os.path.join(
+                config.data_folder,
+                config.qc_city_plant_folder)
             files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_plant = vdq_mapper.VdQPlantMapper()
@@ -932,8 +973,10 @@ if __name__ == "__main__":
 
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
-            store = mtl_quality_checker.read_validation(store, virus_path, config.mtl_quality_sheet_name)
-
+            store = mtl_quality_checker.read_validation(
+                store,
+                virus_path,
+                config.mtl_quality_sheet_name)
 
         if "bsl" in source_cities:
             print(f"BSL cities found in config file are {config.bsl_cities}")
@@ -945,24 +988,34 @@ if __name__ == "__main__":
             bsl_lab.read(virus_path, static_path, config.bsl_sheet_name, config.bsl_virus_lab)  # noqa
             print("Adding Quality Checks for BSL...")
             bsl_quality_check = mcgill_mapper.QcChecker()
-            bsl_quality_check.read_validation(bsl_lab, virus_path, config.bsl_quality_sheet_name)
+            bsl_quality_check.read_validation(
+                bsl_lab,
+                virus_path,
+                config.bsl_quality_sheet_name)
             store.append_from(bsl_lab)
 
         if "lvl" in source_cities:
             print("Importing data from Laval...")
             lvl_lab = mcgill_mapper.McGillMapper()
             virus_path = os.path.join(config.data_folder, config.lvl_lab_data)
-            lvl_lab.read(virus_path, static_path, config.lvl_sheet_name, config.lvl_virus_lab)  # noqa
+            lvl_lab.read(
+                virus_path,
+                static_path,
+                config.lvl_sheet_name,
+                config.lvl_virus_lab)  # noqa
             print("Adding Quality Checks for Laval...")
             lvl_quality_checker = mcgill_mapper.QcChecker()
-            lvl_quality_checker.read_validation(lvl_lab, virus_path, config.lvl_quality_sheet_name)
+            lvl_quality_checker.read_validation(
+                lvl_lab,
+                virus_path,
+                config.lvl_quality_sheet_name)
             store.append_from(lvl_lab)
 
         if publichealth:
             print("Importing case data from INSPQ...")
             public_health = inspq_mapper.INSPQ_mapper()
             if not config.inspq_data:
-                path=None
+                path = None
             else:
                 path = os.path.join(config.data_folder, config.inspq_data)
             public_health.read(path)
@@ -970,12 +1023,13 @@ if __name__ == "__main__":
             print("Importing vaccine data from INSPQ...")
             vacc = inspq_mapper.INSPQVaccineMapper()
             if not config.inspq_vaccine_data:
-                path=None
+                path = None
             else:
-                path = os.path.join(config.data_folder, config.inspq_vaccine_data)
+                path = os.path.join(
+                    config.data_folder,
+                    config.inspq_vaccine_data)
             vacc.read(path)
             store.append_from(vacc)
-            
 
         print("Removing older dataset...")
         for root, dirs, files in os.walk(config.csv_folder):
@@ -1013,7 +1067,8 @@ if __name__ == "__main__":
                     break
         if combined_path is None:
             combined = pd.DataFrame()
-        combined = pd.read_csv(os.path.join(config.csv_folder, f), low_memory=False)
+        combined = pd.read_csv(
+            os.path.join(config.csv_folder, f), low_memory=False)
         combined = combined.replace('nan', np.nan)
         combined = utilities.typecast_wide_table(combined)
 
@@ -1027,7 +1082,8 @@ if __name__ == "__main__":
         sites["siteID"] = sites["siteID"].str.lower()
         sites = sites.drop_duplicates(subset=["siteID"], keep="first").copy()
 
-        site_type_filt = sites["type"].str.lower().str.contains('|'.join(sitetypes))
+        site_type_filt = sites["type"]\
+            .str.lower().str.contains('|'.join(sitetypes))
         sites = sites.loc[site_type_filt]
 
         city_filt = sites["siteID"].str.contains('|'.join(web_cities))
@@ -1043,12 +1099,21 @@ if __name__ == "__main__":
         print("Building polygon geojson...")
         poly_list = sites["polygonID"].to_list()
         build_polygon_geoJSON(
-            store, poly_list, config.polygon_output_dir, config.poly_name, config.polys_to_extract)
+            store,
+            poly_list,
+            config.polygon_output_dir,
+            config.poly_name,
+            config.polys_to_extract)
 
         for site_id in sites['siteID'].to_list():
             print("building website plots for ", site_id, "...")
-            plot_start_date = config.lvl_start_date if 'lvl' in site_id.lower() else config.default_start_date
-            plot_data, metadata = centreau_website_data(combined, site_id, plot_start_date)
+            plot_start_date = config.lvl_start_date\
+                if 'lvl' in site_id.lower()\
+                else config.default_start_date
+            plot_data, metadata = centreau_website_data(
+                combined,
+                site_id,
+                plot_start_date)
             if (
                 isinstance(plot_data, pd.DataFrame)
                 and plot_data.empty
@@ -1056,8 +1121,13 @@ if __name__ == "__main__":
                 and not plot_data
             ):
                 continue
-            
-            plot_web(plot_data, metadata, plot_start_date, config.plot_output_dir, lod=config.lod, langs=config.plot_langs)
+            plot_web(
+                plot_data,
+                metadata,
+                plot_start_date,
+                config.plot_output_dir,
+                od=config.lod,
+                langs=config.plot_langs)
 
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")
@@ -1070,10 +1140,14 @@ if __name__ == "__main__":
         for city in dataset_cities:
             filt_city = sites["siteID"].str.contains(city)
             site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
-            city_sites = sites.loc[filt_city & site_type_filt, "siteID"].dropna().unique()
+            city_sites = sites.loc[
+                    filt_city & site_type_filt, "siteID"]\
+                .dropna().unique()
             for city_site in city_sites:
                 print(f"Generating dataset for {city_site}")
-                dataset = utilities.build_site_specific_dataset(combined, city_site)
+                dataset = utilities.build_site_specific_dataset(
+                    combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
                 # dataset = dataset["2021-01-01":]
-                dataset.to_csv(os.path.join(config.city_output_dir, f"{city_site}.csv"))
+                dataset.to_csv(
+                    os.path.join(config.city_output_dir, f"{city_site}.csv"))

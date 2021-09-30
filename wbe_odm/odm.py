@@ -1,16 +1,15 @@
 import json
 import os
 import sqlite3
-from typing import Optional, Union, List
+from wbe_odm.odm_mappers import base_mapper
 
 import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Point
 
-
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, csv_folder_mapper, mcgill_mapper
+
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
 # instead of on the data itself.
@@ -44,7 +43,7 @@ class Odm:
                      columns=utilities.get_table_fields("Polygon")),
                  cphd=pd.DataFrame(
                      columns=utilities.get_table_fields("CPHD")),
-            ) -> None:
+                 ) -> None:
 
         self.sample = sample
         self.ww_measure = ww_measure
@@ -81,7 +80,11 @@ class Odm:
         }
         return null_values.get(dtype, np.nan)
 
-    def combine_table_instances(self, table_name: str, df1:pd.DataFrame, df2:pd.DataFrame) -> pd.DataFrame:
+    def combine_table_instances(
+            self, table_name: str,
+            df1: pd.DataFrame,
+            df2: pd.DataFrame
+                                ) -> pd.DataFrame:
         """Merges two instances of an ODM table.
 
         Args:
@@ -94,12 +97,10 @@ class Odm:
         """
         primary_key = utilities.get_primary_key(table_name)
         df = df1.append(df2)
-        # This is way too slow, I'll have to find something else...
-        # df = df.groupby(primary_key).agg(utilities.reduce_with_warnings).reset_index()
         df = df.drop_duplicates(subset=[primary_key])
         return df
 
-    def append_from(self, mapper) -> None:              
+    def append_from(self, mapper) -> None:
         """Loads data from a mapper into the current ODM object.
 
         Parameters
@@ -122,7 +123,8 @@ class Odm:
             else:
                 try:
                     table_name = base_mapper.get_odm_names(attr)
-                    combined = self.combine_table_instances(table_name, current_df, new_df)
+                    combined = self.combine_table_instances(
+                        table_name, current_df, new_df)
                     setattr(self, attr, combined)
 
                 except Exception as e:
@@ -150,7 +152,6 @@ class Odm:
                 self_attrs[key] = new_df.drop_duplicates(
                     keep="first", ignore_index=True)
 
-    
     def get_polygon_geoJSON(self, types=None) -> dict:
         """Transforms the Polygon table from the ODM into a geoJSON-like dict
 
@@ -202,7 +203,7 @@ class Odm:
     def to_sqlite3(self,
                    filepath: str,
                    attrs_to_save: list = None,
-                ) -> None:
+                   ) -> None:
         """Stores the contents of the ODM object into a SQLite instance.
 
         Parameters
@@ -210,7 +211,9 @@ class Odm:
         filepath : [str]
             Path to the SQLite instance
         attrs_to_save : list, optional
-            The attributes of the ODM object to save to the database (each attribute representing a table). If None, all the tables are saved.
+            The attributes of the ODM object to save to the database
+            (each attribute representing a table).
+            If None, all the tables are saved.
         """
         if attrs_to_save is None:
             attrs = self.__dict__
@@ -248,7 +251,7 @@ class Odm:
                path: str,
                file_prefix: str = None,
                attrs_to_save: list = None
-            ) -> None:
+               ) -> None:
         """Saves the contents of the ODM object to CSV files.
 
         Parameters
@@ -256,9 +259,12 @@ class Odm:
         path : str
             The path to the directory where files will be saved.
         file_prefix : str, optional
-            The desired prefix that will go in front of the Table name in the .csv file name.
+            The desired prefix that will go in
+            front of the Table name in the .csv file name.
         attrs_to_save : list, optional
-            The attributes of the ODM object to save to file (each attribute representing a table). If None, all the tables are saved.
+            The attributes of the ODM object
+            to save to file (each attribute representing a table).
+            If None, all the tables are saved.
         """
         if attrs_to_save is None:
             attrs = self.__dict__
@@ -273,7 +279,8 @@ class Odm:
             os.mkdir(path)
         for attr in attrs_to_save:
             odm_name = conversion_dict[attr]["odm_name"]
-            filename = file_prefix + "_" + odm_name if file_prefix else odm_name
+            filename = file_prefix + "_" + odm_name\
+                if file_prefix else odm_name
             df = getattr(self, attr)
             if df is None or df.empty:
                 continue
@@ -311,8 +318,13 @@ class Odm:
 class TableWidener:
     wide = None
 
-    def __init__(self, df: pd.DataFrame, features: List[str], qualifiers: List[str]):
-        """Creates the widener object and sets which columns are qualifiers and which are features
+    def __init__(self,
+                 df: pd.DataFrame,
+                 features: list[str],
+                 qualifiers: list[str]
+                 ):
+        """Creates the widener object and sets which
+        columns are qualifiers and which are features
 
         Parameters
         ----------
@@ -369,7 +381,8 @@ class TableWidener:
         df = self.clean_qualifier_columns()
         for qualifier in self.qualifiers:
             df[qualifier] = df[qualifier].astype(str)
-            df[qualifier] = df[qualifier].str.replace("single", f"single-to-{agg}")
+            df[qualifier] = df[qualifier].str.replace(
+                "single", f"single-to-{agg}")
         df["col_qualifiers"] = df[self.qualifiers].agg("_".join, axis=1)
         unique_col_qualifiers = df["col_qualifiers"].unique()
         for col_qualifier in unique_col_qualifiers:
@@ -402,7 +415,9 @@ class TableCombiner(Odm):
                 df[col_name] = df[col_name].astype(np.float32)
             elif 'timestamp' in last_part or 'date' in last_part:
                 df[col_name] = pd.to_datetime(df[col_name])
-            elif 'flag' in col_name or 'pooled' in col_name or 'shippedOnIce' in col_name:
+            elif 'flag' in col_name\
+                or 'pooled' in col_name\
+                    or 'shippedOnIce' in col_name:
                 df[col_name] = df[col_name].astype(np.bool)
             else:
                 df[col_name] = df[col_name].fillna("").astype(str)
@@ -509,7 +524,6 @@ class TableCombiner(Odm):
         return df
 
     def parse_cphd(self, df) -> pd.DataFrame:
-        
         if df.empty:
             return df
         df = self.remove_access(df)
@@ -707,7 +721,8 @@ class TableCombiner(Odm):
             merged_s_sm = samples_ts
         else:
             site_measure_ts = self.get_site_measure_ts(self.site_measure)
-            merged_s_sm = self.combine_site_measure(samples_ts, site_measure_ts)
+            merged_s_sm = self.combine_site_measure(
+                samples_ts, site_measure_ts)
 
         merged_s_sm = self.get_polygon_list(merged_s_sm, self.polygon)
         merged_s_sm = utilities.get_polygon_for_cphd(
@@ -764,4 +779,3 @@ def create_db(filepath=None):
 def destroy_db(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
-

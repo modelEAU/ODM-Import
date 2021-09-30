@@ -11,9 +11,10 @@ import geomet.wkt
 
 UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
+
 def hex_color_adder(color1: str, color2: str) -> str:
-    """Takes two hex color representations, 
-    and adds the hex numbers together, and returns 
+    """Takes two hex color representations,
+    and adds the hex numbers together, and returns
     the string representation of the resulting color.
 
     Parameters
@@ -29,7 +30,8 @@ def hex_color_adder(color1: str, color2: str) -> str:
         the resulting color between "#000000" and "#FFFFFF"
     """
     hex_pattern = re.compile("^#([A-F]|[0-9]){6}$", flags=re.I)
-    if not re.search(hex_pattern, color1) or not re.search(hex_pattern, color2):
+    if not re.search(hex_pattern, color1)\
+            or not re.search(hex_pattern, color2):
         raise Exception(f"color strings are not valid: {color1}, {color2}")
     reds = (int(color1[1:3], 16), int(color2[1:3], 16))
     greens = (int(color1[3:5], 16), int(color2[3:5], 16))
@@ -195,7 +197,6 @@ def reduce_text(x, y):
         x = 'na'
     if pd.isna(y):
         y = 'na'
-    
     if x == y:
         return x
     elif re.match(UNKNOWN_REGEX, x) and re.match(UNKNOWN_REGEX, y):
@@ -286,7 +287,10 @@ def clean_primary_key(key):
 def get_primary_key(table_name=None):
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)
-    keys = variables.loc[variables["key"] == "Primary Key", ["tableName", "variableName"]].set_index("tableName")
+    keys = variables.loc[
+            variables["key"] == "Primary Key",
+            ["tableName", "variableName"]
+        ].set_index("tableName")
     keys = keys.apply(lambda x: clean_primary_key(x["variableName"]), axis=1)
     keys = keys.to_dict()
     if table_name is None:
@@ -336,5 +340,5 @@ def reduce_with_warnings(series):
         return np.nan
     if n > 1:
         mismatched_values = series.loc[~series.duplicated()]
-        warnings.warn(f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}")
+        warnings.warn(f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}")  # noqa
     return list(values)[0]

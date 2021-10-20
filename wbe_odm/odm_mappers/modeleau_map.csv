@@ -17,7 +17,7 @@ Sample Info,Sample,index,1,,,
 Sample Info,Sample,fieldSampleTempC,4,lab sheet,,
 Sample Info,Sample,shippedOnIce,TRUE,lab sheet,,
 Sample Info,Sample,storageTempC,4,lab sheet,,
-Sample Info,Sample,qualityFlag,,lab sheet,P,has_quality_flag
+Sample Info,Sample,qualityFlag,,lab sheet,,
 Sample Info,Sample,notes,,lab sheet,P,
 Measures,WWMeasure,wwMeasureID,,lab sheet,I;J;__const__1:int;__labID__;A;K;__const__1:str,get_wwmeasure_id
 Measures,WWMeasure,reporterID,MaryamTohidi,lab sheet,,
@@ -32,7 +32,7 @@ Measures,WWMeasure,value,,lab sheet,G,validate_value
 Measures,WWMeasure,unit,,,H,
 Measures,WWMeasure,aggregation,single,,,
 Measures,WWMeasure,index,,,,
-Measures,WWMeasure,qualityFlag,TRUE,lab sheet,,
+Measures,WWMeasure,qualityFlag,FALSE,lab sheet,O,has_quality_flag
 Measures,WWMeasure,accessToPublic,TRUE,lab sheet,,
 Measures,WWMeasure,accessToAllOrg,TRUE,lab sheet,,
 Measures,WWMeasure,accessToPHAC,TRUE,lab sheet,,

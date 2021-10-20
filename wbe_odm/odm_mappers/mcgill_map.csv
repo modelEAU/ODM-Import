@@ -1,4 +1,4 @@
-﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
 Assay,AssayMethod,assayMethodID,,lab sheet,H;S;AI,get_assay_method_id
 Assay,AssayMethod,instrumentID,,static AssayMethod+lab sheet,H;S,get_assay_instrument
 Assay,AssayMethod,name,,static AssayMethod+lab sheet,H;S,get_assay_name
@@ -35,7 +35,7 @@ single,Sample,index,1,,,
 single,Sample,fieldSampleTempC,,lab sheet,J,get_field_sample_temp
 single,Sample,shippedOnIce,,lab sheet,K,get_shipped_on_ice
 single,Sample,storageTempC,,lab sheet,M,
-single,Sample,qualityFlag,FALSE,lab sheet,O,has_quality_flag
+single,Sample,qualityFlag,,lab sheet,O,has_quality_flag
 single,Sample,notes,,lab sheet,O,
 TSS,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__wqTSS:str;P;__const__1:int,get_wwmeasure_id
 TSS,WWMeasure,reporterID,,static Reporter+lab sheet,T,get_reporter_id
@@ -50,7 +50,7 @@ TSS,WWMeasure,value,,lab sheet,Y,validate_value
 TSS,WWMeasure,unit,mgl,,,
 TSS,WWMeasure,aggregation,single,,,
 TSS,WWMeasure,index,1,,,
-TSS,WWMeasure,qualityFlag,TRUE,lab sheet,Z,has_quality_flag
+TSS,WWMeasure,qualityFlag,,lab sheet,Z,has_quality_flag
 TSS,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 TSS,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 TSS,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -72,7 +72,7 @@ pH initial,WWMeasure,value,,lab sheet,U,validate_value
 pH initial,WWMeasure,unit,ph,,,
 pH initial,WWMeasure,aggregation,single,,,
 pH initial,WWMeasure,index,1,,,
-pH initial,WWMeasure,qualityFlag,TRUE,lab sheet,Z,has_quality_flag
+pH initial,WWMeasure,qualityFlag,,lab sheet,Z,has_quality_flag
 pH initial,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 pH initial,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 pH initial,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -94,7 +94,7 @@ Conductivity,WWMeasure,value,,lab sheet,X,validate_value
 Conductivity,WWMeasure,unit,uscm,,,
 Conductivity,WWMeasure,aggregation,single,,,
 Conductivity,WWMeasure,index,1,,,
-Conductivity,WWMeasure,qualityFlag,TRUE,lab sheet,Z,has_quality_flag
+Conductivity,WWMeasure,qualityFlag,,lab sheet,Z,has_quality_flag
 Conductivity,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 Conductivity,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 Conductivity,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -116,7 +116,7 @@ Turbidity,WWMeasure,value,,lab sheet,W,validate_value
 Turbidity,WWMeasure,unit,ntu,,,
 Turbidity,WWMeasure,aggregation,single,,,
 Turbidity,WWMeasure,index,1,,,
-Turbidity,WWMeasure,qualityFlag,TRUE,lab sheet,Z,has_quality_flag
+Turbidity,WWMeasure,qualityFlag,,lab sheet,Z,has_quality_flag
 Turbidity,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 Turbidity,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 Turbidity,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -138,7 +138,7 @@ BRSV Ct1,WWMeasure,value,,lab sheet,AL,validate_value
 BRSV Ct1,WWMeasure,unit,ct,,,
 BRSV Ct1,WWMeasure,aggregation,single,,,
 BRSV Ct1,WWMeasure,index,1,,,
-BRSV Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+BRSV Ct1,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 BRSV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 BRSV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 BRSV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -160,7 +160,7 @@ BRSV Ct2,WWMeasure,value,,lab sheet,AM,validate_value
 BRSV Ct2,WWMeasure,unit,ct,,,
 BRSV Ct2,WWMeasure,aggregation,single,,,
 BRSV Ct2,WWMeasure,index,2,,,
-BRSV Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+BRSV Ct2,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 BRSV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 BRSV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 BRSV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -182,7 +182,7 @@ BRSV Ct3,WWMeasure,value,,lab sheet,AN,validate_value
 BRSV Ct3,WWMeasure,unit,ct,,,
 BRSV Ct3,WWMeasure,aggregation,single,,,
 BRSV Ct3,WWMeasure,index,3,,,
-BRSV Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+BRSV Ct3,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 BRSV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 BRSV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 BRSV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -204,7 +204,7 @@ BRSV % recovery,WWMeasure,value,,lab sheet,AS,validate_value
 BRSV % recovery,WWMeasure,unit,pctRecovery,,,
 BRSV % recovery,WWMeasure,aggregation,single,,,
 BRSV % recovery,WWMeasure,index,4,,,
-BRSV % recovery,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+BRSV % recovery,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 BRSV % recovery,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 BRSV % recovery,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 BRSV % recovery,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -226,7 +226,7 @@ PMMV Ct1,WWMeasure,value,,lab sheet,AU,validate_value
 PMMV Ct1,WWMeasure,unit,ct,,,
 PMMV Ct1,WWMeasure,aggregation,single,,,
 PMMV Ct1,WWMeasure,index,1,,,
-PMMV Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+PMMV Ct1,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 PMMV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 PMMV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 PMMV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -248,7 +248,7 @@ PMMV Ct2,WWMeasure,value,,lab sheet,AV,validate_value
 PMMV Ct2,WWMeasure,unit,ct,,,
 PMMV Ct2,WWMeasure,aggregation,single,,,
 PMMV Ct2,WWMeasure,index,2,,,
-PMMV Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+PMMV Ct2,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 PMMV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 PMMV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 PMMV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -270,7 +270,7 @@ PMMV Ct3,WWMeasure,value,,lab sheet,AW,validate_value
 PMMV Ct3,WWMeasure,unit,ct,,,
 PMMV Ct3,WWMeasure,aggregation,single,,,
 PMMV Ct3,WWMeasure,index,3,,,
-PMMV Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+PMMV Ct3,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 PMMV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 PMMV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 PMMV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -292,7 +292,7 @@ PMMV gcml,WWMeasure,value,,lab sheet,BB,validate_value
 PMMV gcml,WWMeasure,unit,gcml,,,
 PMMV gcml,WWMeasure,aggregation,single,,,
 PMMV gcml,WWMeasure,index,4,,,
-PMMV gcml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+PMMV gcml,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 PMMV gcml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 PMMV gcml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 PMMV gcml,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -314,7 +314,7 @@ SARS-CoV-2 Ct1,WWMeasure,value,,lab sheet,BC,validate_value
 SARS-CoV-2 Ct1,WWMeasure,unit,ct,,,
 SARS-CoV-2 Ct1,WWMeasure,aggregation,single,,,
 SARS-CoV-2 Ct1,WWMeasure,index,1,,,
-SARS-CoV-2 Ct1,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+SARS-CoV-2 Ct1,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 SARS-CoV-2 Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 SARS-CoV-2 Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 SARS-CoV-2 Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -336,7 +336,7 @@ SARS-CoV-2 Ct2,WWMeasure,value,,lab sheet,BD,validate_value
 SARS-CoV-2 Ct2,WWMeasure,unit,ct,,,
 SARS-CoV-2 Ct2,WWMeasure,aggregation,single,,,
 SARS-CoV-2 Ct2,WWMeasure,index,2,,,
-SARS-CoV-2 Ct2,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+SARS-CoV-2 Ct2,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 SARS-CoV-2 Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 SARS-CoV-2 Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 SARS-CoV-2 Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -358,7 +358,7 @@ SARS-CoV-2 Ct3,WWMeasure,value,,lab sheet,BE,validate_value
 SARS-CoV-2 Ct3,WWMeasure,unit,ct,,,
 SARS-CoV-2 Ct3,WWMeasure,aggregation,single,,,
 SARS-CoV-2 Ct3,WWMeasure,index,3,,,
-SARS-CoV-2 Ct3,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+SARS-CoV-2 Ct3,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 SARS-CoV-2 Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access
@@ -380,7 +380,7 @@ SARS-CoV-2 gcml,WWMeasure,value,,lab sheet,BJ,validate_value
 SARS-CoV-2 gcml,WWMeasure,unit,gcml,,,
 SARS-CoV-2 gcml,WWMeasure,aggregation,single,,,
 SARS-CoV-2 gcml,WWMeasure,index,4,,,
-SARS-CoV-2 gcml,WWMeasure,qualityFlag,TRUE,lab sheet,BL,has_quality_flag
+SARS-CoV-2 gcml,WWMeasure,qualityFlag,,lab sheet,BL,has_quality_flag
 SARS-CoV-2 gcml,WWMeasure,accessToPublic,TRUE,lab sheet,BP,grant_access
 SARS-CoV-2 gcml,WWMeasure,accessToAllOrg,TRUE,lab sheet,BQ,grant_access
 SARS-CoV-2 gcml,WWMeasure,accessToPHAC,TRUE,lab sheet,BR,grant_access

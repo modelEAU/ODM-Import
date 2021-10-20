@@ -54,6 +54,10 @@ qc_virus_sheet_name: "QC Data Daily Samples (McGill)"
 qc_quality_sheet_name: "QC_Compil_STEP (int)"
 qc_virus_lab: "frigon_lab"
 
+ul_virus_data: "CentrEau-COVID_Resultats_McGill&Laval_Student_Residences.xlsx"
+ul_virus_sheet_name: "Data Daily Samples (McGill)"
+ul_virus_lab: "frigon_lab"
+
 mtl_lab_data: "CentrEau-COVID_Resultats_Montreal_final.xlsx"
 mtl_poly_sheet_name: "Mtl Data Daily Samples (Poly)"
 mtl_mcgill_sheet_name: "Mtl Data Daily Samples (McGill)"

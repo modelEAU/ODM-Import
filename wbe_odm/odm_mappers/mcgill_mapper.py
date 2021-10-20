@@ -716,6 +716,7 @@ class QcChecker:
                     ww_tot_filt = ww_type_filt & ww_unit_filt & ww_sample_filt
 
                     ww.loc[ww_tot_filt, ["qualityFlag", "notes"]] = [True, row["Quality Note"]]
+                    
 
         if 'grb' in sample_collection:
             sample_last_date_filt = samples['dateTime'] > last_date
@@ -731,6 +732,9 @@ class QcChecker:
         ww_u_sample_filt = ww['sampleID'].isin(unchecked_sample_ids)
         ww.loc[ww_u_type_filt & ww_u_sample_filt, ["qualityFlag", "notes"]] = [True, "Unchecked viral measurement"]
         
+        samples.loc[samples["qualityFlag"] != True, "qualityFlag"] = False
+        ww.loc[ww["qualityFlag"] != True, "qualityFlag"] = False
+
         mapper.sample = samples
         mapper.ww_measure = ww
         return mapper

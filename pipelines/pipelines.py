@@ -934,6 +934,15 @@ if __name__ == "__main__":
                 config.qc_quality_sheet_name)
 
             store.append_from(qc_lab)
+
+            print("Importing data from Université Laval...")
+            print("Importing viral data from Université Laval...")
+            ul_lab = mcgill_mapper.McGillMapper()
+            virus_path = os.path.join(config.data_folder, config.ul_virus_data)
+
+            ul_lab.read(virus_path, static_path, config.ul_virus_sheet_name, config.ul_virus_lab)  # noqa
+            store.append_from(ul_lab)
+
             print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
             path = os.path.join(config.data_folder, config.qc_lab_data)
@@ -1126,7 +1135,7 @@ if __name__ == "__main__":
                 metadata,
                 plot_start_date,
                 config.plot_output_dir,
-                od=config.lod,
+                lod=config.lod,
                 langs=config.plot_langs)
 
     if generate:

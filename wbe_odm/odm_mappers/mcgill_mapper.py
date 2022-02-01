@@ -1,15 +1,14 @@
 #%%
-import pandas as pd
-import numpy as np
-from datetime import datetime
 import os
 import re
 import warnings
-from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper
-from wbe_odm.odm_mappers import excel_template_mapper
-from wbe_odm.odm_mappers.csv_mapper import CsvMapper
+from datetime import datetime
 
+import numpy as np
+import pandas as pd
+from wbe_odm import utilities
+from wbe_odm.odm_mappers import base_mapper, excel_template_mapper
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 
@@ -575,10 +574,10 @@ class QcChecker:
 
     def _get_last_dates(self, sheet_df):
         dates = sheet_df.iloc[2].dropna().to_list()
-        temp_dates =[]
+        temp_dates = []
         for item in dates:
             try:
-                item = pd.to_datetime(item)
+                item = pd.to_datetime(item, format="%d/%m/%Y")
                 temp_dates.append(item)
             except Exception:
                 temp_dates.append(pd.NaT)
@@ -687,7 +686,7 @@ class QcChecker:
             "SARS (gc/ml)": {
                 "rejected_col": "Rejected by.2",
                 "unit": "gcml",
-                "type": "covn2",
+                "type": "covn1",
             }
         }
         

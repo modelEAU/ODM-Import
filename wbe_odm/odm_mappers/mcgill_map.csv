@@ -301,7 +301,7 @@ PMMV gcml,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 PMMV gcml,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 PMMV gcml,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 PMMV gcml,WWMeasure,notes,,lab sheet,BN,
-SARS-CoV-2 Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__1:int,get_wwmeasure_id
+SARS-CoV-2 Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN1:str;AI;__const__1:int,get_wwmeasure_id
 SARS-CoV-2 Ct1,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 SARS-CoV-2 Ct1,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 SARS-CoV-2 Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -309,7 +309,7 @@ SARS-CoV-2 Ct1,WWMeasure,assayMethodID,,,,
 SARS-CoV-2 Ct1,WWMeasure,analysisDate,,lab sheet,AI,
 SARS-CoV-2 Ct1,WWMeasure,reportDate,,,,
 SARS-CoV-2 Ct1,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-SARS-CoV-2 Ct1,WWMeasure,type,covN2,,,
+SARS-CoV-2 Ct1,WWMeasure,type,covN1,,,
 SARS-CoV-2 Ct1,WWMeasure,value,,lab sheet,BC,validate_value
 SARS-CoV-2 Ct1,WWMeasure,unit,ct,,,
 SARS-CoV-2 Ct1,WWMeasure,aggregation,single,,,
@@ -323,7 +323,7 @@ SARS-CoV-2 Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 SARS-CoV-2 Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 SARS-CoV-2 Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 SARS-CoV-2 Ct1,WWMeasure,notes,,lab sheet,BN,
-SARS-CoV-2 Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__2:int,get_wwmeasure_id
+SARS-CoV-2 Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN1:str;AI;__const__2:int,get_wwmeasure_id
 SARS-CoV-2 Ct2,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 SARS-CoV-2 Ct2,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 SARS-CoV-2 Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -331,7 +331,7 @@ SARS-CoV-2 Ct2,WWMeasure,assayMethodID,,,,
 SARS-CoV-2 Ct2,WWMeasure,analysisDate,,lab sheet,AI,
 SARS-CoV-2 Ct2,WWMeasure,reportDate,,,,
 SARS-CoV-2 Ct2,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-SARS-CoV-2 Ct2,WWMeasure,type,covN2,,,
+SARS-CoV-2 Ct2,WWMeasure,type,covN1,,,
 SARS-CoV-2 Ct2,WWMeasure,value,,lab sheet,BD,validate_value
 SARS-CoV-2 Ct2,WWMeasure,unit,ct,,,
 SARS-CoV-2 Ct2,WWMeasure,aggregation,single,,,
@@ -345,7 +345,7 @@ SARS-CoV-2 Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 SARS-CoV-2 Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 SARS-CoV-2 Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 SARS-CoV-2 Ct2,WWMeasure,notes,,lab sheet,BN,
-SARS-CoV-2 Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__3:int,get_wwmeasure_id
+SARS-CoV-2 Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN1:str;AI;__const__3:int,get_wwmeasure_id
 SARS-CoV-2 Ct3,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 SARS-CoV-2 Ct3,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 SARS-CoV-2 Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -353,7 +353,7 @@ SARS-CoV-2 Ct3,WWMeasure,assayMethodID,,,,
 SARS-CoV-2 Ct3,WWMeasure,analysisDate,,lab sheet,AI,
 SARS-CoV-2 Ct3,WWMeasure,reportDate,,,,
 SARS-CoV-2 Ct3,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-SARS-CoV-2 Ct3,WWMeasure,type,covN2,,,
+SARS-CoV-2 Ct3,WWMeasure,type,covN1,,,
 SARS-CoV-2 Ct3,WWMeasure,value,,lab sheet,BE,validate_value
 SARS-CoV-2 Ct3,WWMeasure,unit,ct,,,
 SARS-CoV-2 Ct3,WWMeasure,aggregation,single,,,
@@ -367,7 +367,7 @@ SARS-CoV-2 Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 SARS-CoV-2 Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 SARS-CoV-2 Ct3,WWMeasure,notes,,lab sheet,BN,
-SARS-CoV-2 gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN2:str;AI;__const__4:int,get_wwmeasure_id
+SARS-CoV-2 gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__covN1:str;AI;__const__4:int,get_wwmeasure_id
 SARS-CoV-2 gcml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 SARS-CoV-2 gcml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 SARS-CoV-2 gcml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -375,7 +375,7 @@ SARS-CoV-2 gcml,WWMeasure,assayMethodID,,,,
 SARS-CoV-2 gcml,WWMeasure,analysisDate,,lab sheet,AI,
 SARS-CoV-2 gcml,WWMeasure,reportDate,,,,
 SARS-CoV-2 gcml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-SARS-CoV-2 gcml,WWMeasure,type,covN2,,,
+SARS-CoV-2 gcml,WWMeasure,type,covN1,,,
 SARS-CoV-2 gcml,WWMeasure,value,,lab sheet,BJ,validate_value
 SARS-CoV-2 gcml,WWMeasure,unit,gcml,,,
 SARS-CoV-2 gcml,WWMeasure,aggregation,single,,,

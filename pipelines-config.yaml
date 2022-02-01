@@ -44,6 +44,8 @@ inspq_vaccine_data: ""
 qc_lab_data: "COVIDProject_Lab Measurements.xlsx"
 qc_sheet_name: "Lab analyses"
 qc_lab: "modeleau_lab"
+qc_geo_path1: "qc1-poly.txt"
+qc_geo_path2: "qc2-poly.txt"
 
 qc_city_sensor_folder: "Qc_sensors"
 qc_city_plant_folder: "Qc_plant"

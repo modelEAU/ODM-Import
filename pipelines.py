@@ -150,13 +150,13 @@ def get_viral_timeseries(samples):
     agg_method = 'single-to-mean'
     value_cols = []
     dfs = []
-    covn2_col = None
-    for virus in ['npmmov', 'covn2']:
+    covn1_col = None
+    for virus in ['npmmov', 'covn1']:
         common = "_".join([table, virus, unit, agg_method])
         value_col = "_".join([common, 'value'])
         value_cols.append(value_col)
-        if 'covn2' in value_col:
-            covn2_col = value_col
+        if 'covn1' in value_col:
+            covn1_col = value_col
         elif 'npmmov' in value_col:
             npmmov_col = value_col
         quality_col = "_".join([common, 'qualityFlag'])
@@ -167,7 +167,7 @@ def get_viral_timeseries(samples):
 
     viral = pd.concat(dfs, axis=1)
     viral = viral[[col for col in viral.columns if 'value' in col]]
-    viral["norm"] = viral[covn2_col] / viral[npmmov_col]
+    viral["norm"] = viral[covn1_col] / viral[npmmov_col]
     return viral
 
 
@@ -676,7 +676,7 @@ def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
         and not viral
     ):
         return None, None
-    sars_col = [col for col in viral.columns if 'covn2' in col][0]
+    sars_col = [col for col in viral.columns if 'covn1' in col][0]
     pmmv_col = [col for col in viral.columns if 'npmmov' in col][0]
     norm_col = 'norm'
     cases_col = 'CPHD_conf_report_value'
@@ -891,7 +891,7 @@ if __name__ == "__main__":
     parser.add_argument('-dcty', '--datacities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
     parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
-    parser.add_argument('-con', '--config', type=str, default='pipelines.yaml', help="Config file where all the paths are defined")  # noqa
+    parser.add_argument('-con', '--config', type=str, default='pipelines-config.yaml', help="Config file where all the paths are defined")  # noqa
     args = parser.parse_args()
 
     source_cities = args.cities
@@ -932,7 +932,14 @@ if __name__ == "__main__":
                 qc_lab,
                 virus_path,
                 config.qc_quality_sheet_name)
-
+            poly = qc_lab.polygon
+            for file, poly_id in zip([config.qc_geo_path1, config.qc_geo_path2], ["qc_01_swrcat", "qc_02_swrcat"]):
+                with open(os.path.join(config.data_folder, file), "r") as f:
+                    text = f.read()
+                    text = text[:-1]  # remove line break
+                poly.loc[poly['polygonID'] == poly_id, "wkt"] = text
+            
+            qc_lab.polygon = poly
             store.append_from(qc_lab)
 
             print("Importing data from Université Laval...")

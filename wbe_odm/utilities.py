@@ -1,13 +1,13 @@
 import json
-from functools import reduce
 import re
 import warnings
+from functools import reduce
 
+import geomet.wkt
 import numpy as np
 import pandas as pd
-from geojson_rewind import rewind
 import shapely.wkt
-import geomet.wkt
+from geojson_rewind import rewind
 
 UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
@@ -127,8 +127,8 @@ def clean_grab_datetime(df):
     na_filt = ~df[grab_date].isna()
     filt = na_filt & grb_filt
     df2 = df.loc[filt, df.columns.to_list()]
-    df2[result_start] = df2[grab_date].dt.normalize()
-    df2[result_end] = df2[result_start] + one_day
+    df2[result_start[0]] = df2[grab_date].dt.normalize()
+    df2[result_end[0]] = df2[result_start] + one_day
 
     df.loc[filt] = df2
     return df

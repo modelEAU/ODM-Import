@@ -3,12 +3,13 @@ import base64
 import json
 import os
 import shutil
-import yaml
+import warnings
 from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import yaml
 from easydict import EasyDict
 from plotly.express import colors as pc
 from plotly.subplots import make_subplots
@@ -844,7 +845,7 @@ def plot_web(data,
                 x=data.index,
                 y=data[col],
                 name=col_names[col][lang],
-                mode="lines+markers",
+                mode="markers",
                 marker=dict(color=marker_colors),
                 connectgaps=True,
                 visible='legendonly' if 'sars' not in col else True,
@@ -913,6 +914,8 @@ if __name__ == "__main__":
     if not os.path.exists(config.csv_folder):
         raise ValueError(
             "CSV folder does not exist. Please modify config file.")
+
+    # warnings.filterwarnings('error')
 
     store = odm.Odm()
     print(source_cities)

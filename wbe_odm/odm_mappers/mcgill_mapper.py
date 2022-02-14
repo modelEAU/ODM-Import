@@ -689,7 +689,7 @@ class QcChecker:
                 "type": "covn1",
             }
         }
-        
+
         samples = mapper.sample
         samples = self._parse_dates(samples)
         ww = mapper.ww_measure

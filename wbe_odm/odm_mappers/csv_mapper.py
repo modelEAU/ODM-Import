@@ -7,16 +7,18 @@ General-purpose CsvMapper base class.
 # For function annotations
 from __future__ import annotations
 
-import pandas as pd
-import numpy as np
-from datetime import datetime
-import re
 import os
+import re
+import warnings
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
 import yaml
 from easydict import EasyDict
-from wbe_odm.odm_mappers import base_mapper
-from wbe_odm.odm_mappers import excel_template_mapper
 from wbe_odm import utilities
+from wbe_odm.odm_mappers import base_mapper, excel_template_mapper
+
 
 class CsvMapper(base_mapper.BaseMapper):
     # Suffix to add to the attribute names for the ODM tables containing duplicates (that were removed from the actual tables)
@@ -159,7 +161,7 @@ class CsvMapper(base_mapper.BaseMapper):
         elif desired_type in ["int64", "float64"]:
             series = pd.to_numeric(series, errors="coerce")
         elif desired_type == "datetime64[ns]":
-            series = pd.to_datetime(series, errors="coerce")
+            series = pd.to_datetime(series, errors="coerce", format="%d-%m-%Y")
         series = series.astype(desired_type)
         return series
 
@@ -223,7 +225,9 @@ class CsvMapper(base_mapper.BaseMapper):
         pd.Series
             timestamp_series convert to a string series, with dates in the format YYYY-mm-dd.
         """
-        return timestamp_series.dt.strftime("%Y-%m-%d").fillna("")
+        ts_series = pd.Series(timestamp_series, dtype="datetime64[ns]")
+        str_series = ts_series.astype(str)
+        return str_series.fillna("")
 
     @classmethod
     def clean_labels(cls, label) -> str:
@@ -411,7 +415,9 @@ class CsvMapper(base_mapper.BaseMapper):
             :, ["columnName", "func", "final_inputs"]]
         for _, apply_row in to_apply.iterrows():
             col_name = apply_row["columnName"]
-            lab_data[col_name] = apply_row["func"](*apply_row["final_inputs"])
+            with warnings.catch_warnings():
+                warnings.filterwarnings(action="ignore")
+                lab_data[col_name] = apply_row["func"](*apply_row["final_inputs"])
         tables = {table: None for table in mapping["table"].unique()}
         for table in tables:
             elements = mapping.loc[

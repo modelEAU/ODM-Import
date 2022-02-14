@@ -1,7 +1,6 @@
 import json
 import os
 import sqlite3
-from wbe_odm.odm_mappers import base_mapper
 
 import numpy as np
 import pandas as pd
@@ -9,6 +8,7 @@ import requests
 from shapely.geometry import Point
 
 from wbe_odm import utilities
+from wbe_odm.odm_mappers import base_mapper
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -96,7 +96,7 @@ class Odm:
             pd.DataFrame: The merged table with dupicate rows dropped
         """
         primary_key = utilities.get_primary_key(table_name)
-        df = df1.append(df2)
+        df = pd.concat([df1, df2])
         df = df.drop_duplicates(subset=[primary_key])
         return df
 
@@ -388,7 +388,7 @@ class TableWidener:
         for col_qualifier in unique_col_qualifiers:
             for feature in self.features:
                 col_name = "_".join([col_qualifier, feature])
-                df[col_name] = pd.Series()
+                df[col_name] = pd.Series(dtype=np.float64)
                 filt = df["col_qualifiers"] == col_qualifier
                 df.loc[filt, col_name] = df.loc[filt, feature]
         df.drop(columns=self.features+self.qualifiers, inplace=True)
@@ -418,7 +418,7 @@ class TableCombiner(Odm):
             elif 'flag' in col_name\
                 or 'pooled' in col_name\
                     or 'shippedOnIce' in col_name:
-                df[col_name] = df[col_name].astype(np.bool)
+                df[col_name] = df[col_name].fillna(False).astype(np.bool)
             else:
                 df[col_name] = df[col_name].fillna("").astype(str)
         return df

@@ -9,7 +9,7 @@ dependencies = [
     "geojson",
     "geos",
     "numpy",
-    "pandas",
+    "pandas==1.2.5",
     "openpyxl",
     "plotly",
     "pygeoif",

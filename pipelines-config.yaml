@@ -6,23 +6,23 @@ colors:
       french: "Pas de données"
       english: "No Data"
       color: "#ececec"
-    "1": 
+    "1":
       french: "Très faible"
       english: "Very Low"
       color: "#6da06f"
-    "2": 
+    "2":
       french: "Faible"
       english: "Low"
       color: "#b6e9d1"
-    "3": 
+    "3":
       french: "Moyennement élevé"
       english: "Somewhat high"
       color: "#ffbb43"
-    "4": 
+    "4":
       french: "Élevé"
       english: "High"
       color: "#ff8652"
-    "5": 
+    "5":
       french: "Très élevé"
       english: "Very high"
       color: "#c13525"
@@ -32,8 +32,8 @@ lod: 0.5
 default_start_date: "2021-01-01"
 lvl_start_date: "2020-10-01"
 
-logo_path:  "/Users/jeandavidt/dev/modelEAU/ODM Import/Data/images/graph_logos.png"
-data_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input" 
+logo_path:  "/Users/jeandavidt/dev/modelEAU/ODM-Import/Data/images/graph_logos.png"
+data_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input"
 csv_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/odm_csv"
 polygon_output_dir: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Website geo"
 site_output_dir: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Website geo"
@@ -78,7 +78,7 @@ bsl_cities:
   - "stak"
   - "trpis"
   - "mtne"
-  - "riki" 
+  - "riki"
   - "rdl"
 bsl_quality_sheet_name: "BSL_Compil_STEP (int)"
 

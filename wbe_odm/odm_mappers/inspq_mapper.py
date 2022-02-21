@@ -1,8 +1,9 @@
-import pandas as pd
-from wbe_odm.odm_mappers import base_mapper as bm
-import requests
-import warnings
 import io
+import warnings
+
+import pandas as pd
+import requests
+from wbe_odm.odm_mappers import base_mapper as bm
 
 poly_names = {
     '13 - Laval': "prov_qc_hlthReg_laval",
@@ -100,7 +101,7 @@ class INSPQ_mapper(bm.BaseMapper):
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
-        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
+        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
         hist = hist.dropna(subset=["Date"])
         dfs = []
         for item, item_defaults in values_to_save.items():
@@ -135,7 +136,7 @@ class INSPQVaccineMapper(bm.BaseMapper):
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
-        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce")
+        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
         hist = hist.dropna(subset=["Date"])
         dfs = []
         for item, item_defaults in vaccine_to_save.items():
@@ -173,4 +174,4 @@ if __name__ == "__main__":
     mapper = INSPQ_mapper()
     mapper.read()
     print(mapper.cphd.head())
-    
+

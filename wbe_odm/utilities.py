@@ -48,7 +48,7 @@ def typecast_wide_table(df):
     for col in df.columns:
         name = df[col].name
         if "date" in name or "timestamp" in name:
-            df[col] = pd.to_datetime(df[col], errors="coerce")
+            df[col] = pd.to_datetime(df[col], errors="coerce", infer_datetime_format=True)
         elif "value" in name:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         else:

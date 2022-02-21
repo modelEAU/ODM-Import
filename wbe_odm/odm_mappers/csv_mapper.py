@@ -12,7 +12,6 @@ import re
 import warnings
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 import yaml
 from easydict import EasyDict
@@ -25,15 +24,15 @@ class CsvMapper(base_mapper.BaseMapper):
     dupes_suffix = "_dupes"
 
     def __init__(self, processing_functions=None, config_file=None):
-        self.start_time = datetime.now() # Used in format_file_name, to ensure consistent datetime is used
+        self.start_time = datetime.now()  # Used in format_file_name, to ensure consistent datetime is used
         self.processing_functions = processing_functions
-        
+
         if config_file:
             with open(config_file, "r") as f:
                 self.config = EasyDict(yaml.safe_load(f))
         else:
             self.config = None
- 
+
     @classmethod
     def remove_null_rows(cls, df, column) -> pd.DataFrame:
         """Remove all rows that have null in the specified column.
@@ -62,7 +61,7 @@ class CsvMapper(base_mapper.BaseMapper):
         df : pd.DataFrame
             Pandas DataFrame to typecast.
         types : tuple[str]
-            Tuple of string type names (eg. "date", "mixed", "bool", "number", "integer", etc). The order 
+            Tuple of string type names (eg. "date", "mixed", "bool", "number", "integer", etc). The order
             corresponds to the order of the columns (df.columns).
 
         Returns
@@ -110,12 +109,12 @@ class CsvMapper(base_mapper.BaseMapper):
         the dates in the column date_col.
         """
         if start is not None and str(start).strip() != "":
-            startdate = pd.to_datetime(start)
+            startdate = pd.to_datetime(start, infer_datetime_format=True)
             start_filt = (df[date_col] > startdate)
         else:
             start_filt = None
         if end is not None and str(end).strip() != "":
-            enddate = pd.to_datetime(end)
+            enddate = pd.to_datetime(end, infer_datetime_format=True)
             end_filt = (df[date_col] < enddate)
         else:
             end_filt = None
@@ -135,7 +134,7 @@ class CsvMapper(base_mapper.BaseMapper):
         Parameters
         ----------
         desired_type : str, type
-            The type we want to typecast to. Can be a string (eg. "bool", "string", "int64") or an actual 
+            The type we want to typecast to. Can be a string (eg. "bool", "string", "int64") or an actual
             type (eg. str, int, bool).
         series : pd.Series
             The series to typecast all elements.
@@ -161,7 +160,7 @@ class CsvMapper(base_mapper.BaseMapper):
         elif desired_type in ["int64", "float64"]:
             series = pd.to_numeric(series, errors="coerce")
         elif desired_type == "datetime64[ns]":
-            series = pd.to_datetime(series, errors="coerce", format="%d-%m-%Y")
+            series = pd.to_datetime(series, errors="coerce", infer_datetime_format=True)
         series = series.astype(desired_type)
         return series
 
@@ -173,7 +172,7 @@ class CsvMapper(base_mapper.BaseMapper):
         ----------
         col : int
             The 1-based column number to get the Excel-style column name of.
-        
+
         Returns
         -------
         str
@@ -181,7 +180,7 @@ class CsvMapper(base_mapper.BaseMapper):
         """
         result = []
         while col:
-            col, rem = divmod(col-1, 26)
+            col, rem = divmod(col - 1, 26)
             result[:0] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[rem]
         return "".join(result)
 
@@ -208,7 +207,7 @@ class CsvMapper(base_mapper.BaseMapper):
             return None
         elif len(args) == 1:
             return args[0]
-        arguments = pd.concat([arg for arg in args], axis=1).astype(str)
+        arguments = pd.concat(list(args), axis=1).astype(str)
         return arguments.agg(",".join, axis=1)
 
     @classmethod
@@ -226,7 +225,7 @@ class CsvMapper(base_mapper.BaseMapper):
             timestamp_series convert to a string series, with dates in the format YYYY-mm-dd.
         """
         ts_series = pd.Series(timestamp_series, dtype="datetime64[ns]")
-        str_series = ts_series.astype(str)
+        str_series = ts_series.dt.strftime('%Y-%m-%d')
         return str_series.fillna("")
 
     @classmethod
@@ -243,7 +242,7 @@ class CsvMapper(base_mapper.BaseMapper):
         ----------
         flag : str
             The quality flag value to test.
-        
+
         Returns
         -------
         bool
@@ -398,7 +397,7 @@ class CsvMapper(base_mapper.BaseMapper):
         Returns
         -------
         dict
-            Dictionary of DataFrames obtained from parsing the data. The keys are the ODM table names (str) and the values 
+            Dictionary of DataFrames obtained from parsing the data. The keys are the ODM table names (str) and the values
             are the DataFrames.
         """
         mapping["lab_arguments"] = mapping.apply(
@@ -447,7 +446,7 @@ class CsvMapper(base_mapper.BaseMapper):
         attr_suffix : str
             Add this suffix to the end of all attribute names. Can be empty.
         """
-        attr_suffix = attr_suffix or ""        
+        attr_suffix = attr_suffix or ""
         for table_name, info in self.conversion_dict.items():
             table_name = f"{table_name}{attr_suffix}"
             setattr(self, table_name, pd.DataFrame(columns=utilities.get_table_fields(info["odm_name"])))
@@ -456,7 +455,7 @@ class CsvMapper(base_mapper.BaseMapper):
         """Set all our object's attributes for the ODM DataFrames in the tables dictionary.
 
         For each item in tables, we convert the table name (eg. "WWMeasure") to the corresponding
-        ODM table name (eg. "ww_measure") and use that as the object's attribute name. We optionally 
+        ODM table name (eg. "ww_measure") and use that as the object's attribute name. We optionally
         append attr_suffix to the attribute name when assigning it.
 
         On return, the tables can be accessed through the attribute accessors (eg. self.ww_measure).
@@ -504,7 +503,7 @@ class CsvMapper(base_mapper.BaseMapper):
         tables : dict
             Dictionary of all parsed ODM data tables, where they keys are the ODM table names and the
             values are DataFrames.
-        
+
         Returns
         -------
         new_tables : dict
@@ -516,9 +515,7 @@ class CsvMapper(base_mapper.BaseMapper):
         dupes_tables = {}
         primary_keys = utilities.get_primary_key()
         for table_name, df in tables.items():
-            attr = self.get_attr_from_table_name(table_name)
-            if attr:
-                d = self.conversion_dict[attr]
+            if attr := self.get_attr_from_table_name(table_name):
                 primary_key = primary_keys.get(table_name, None)
                 df_dupes = None
                 if primary_key:
@@ -543,7 +540,7 @@ class CsvMapper(base_mapper.BaseMapper):
         ----------
         file : str
             The file name, containing the tags to replace.
-        
+
         Returns
         -------
             The formatted file name.
@@ -601,7 +598,7 @@ class CsvMapper(base_mapper.BaseMapper):
         file : str
             The output Excel file to save to. Can contain formatting tags (eg. {date}, see format_file_name)
         attr_suffix : str
-            An optional suffix 
+            An optional suffix
 
         Returns
         -------
@@ -616,10 +613,10 @@ class CsvMapper(base_mapper.BaseMapper):
         if os.path.dirname(file):
             os.makedirs(os.path.dirname(file), exist_ok=True)
 
-        tables = [{"table_name" : table_name, "table" : getattr(self, f"{table_name}{attr_suffix}", None)} for table_name in self.conversion_dict.keys()]
+        tables = [{"table_name": table_name, "table": getattr(self, f"{table_name}{attr_suffix}", None)} for table_name in self.conversion_dict.keys()]
         tables = [t for t in tables if t["table"] is not None]
         if not tables:
-            tables = [{"table_name" : "empty", "table" : pd.DataFrame()}]
+            tables = [{"table_name": "empty", "table": pd.DataFrame()}]
         if tables:
             with pd.ExcelWriter(file) as writer:
                 for info in tables:
@@ -648,7 +645,7 @@ class CsvMapper(base_mapper.BaseMapper):
         ----------
         staticdata_path : str
             The path to the static data Excel file.
-        
+
         Returns
         -------
         dict
@@ -711,6 +708,6 @@ class CsvMapper(base_mapper.BaseMapper):
             List of Excel-style column names.
         """
         return [
-            self.excel_style(i+1)
+            self.excel_style(i + 1)
             for i, _ in enumerate(df.columns.to_list())
         ]

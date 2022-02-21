@@ -1,13 +1,13 @@
 import json
 import os
-import requests
+
 import pandas as pd
+import requests
 import unidecode
 from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
-
 directory = os.path.dirname(__file__)
-LEDEVOIR_MAP_NAME = directory + "/" + "ledevoir_map.csv"
+LEDEVOIR_MAP_NAME = f'{directory}/ledevoir_map.csv'
 
 
 POLYGON_LOOKUP = {
@@ -48,7 +48,7 @@ def get_polygon_id(region):
 
 
 def get_date(date):
-    return pd.to_datetime(date)
+    return pd.to_datetime(date, infer_datetime_format=True)
 
 
 cphd_funcs = {
@@ -103,7 +103,7 @@ class LeDevoirMapper(CsvMapper):
             cases = pd.DataFrame(j["regions"][i]["data"])
             name = entry["name"]
             cases["region"] = unidecode.unidecode(name.lower())
-            cases["date"] = pd.to_datetime(cases["date"])
+            cases["date"] = pd.to_datetime(cases["date"], infer_datetime_format=True)
             cases = cases.set_index("date")
             cases = cases[["region", "dc", "dd"]]
             if name.lower() in [

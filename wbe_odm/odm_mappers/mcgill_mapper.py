@@ -1,4 +1,3 @@
-#%%
 import os
 import re
 import warnings
@@ -7,44 +6,36 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from wbe_odm import utilities
-from wbe_odm.odm_mappers import base_mapper, excel_template_mapper
+from wbe_odm.odm_mappers import excel_template_mapper
 from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 
 directory = os.path.dirname(__file__)
 
-MCGILL_MAP_NAME = directory + "/" + "mcgill_map.csv"
+MCGILL_MAP_NAME = f'{directory}/mcgill_map.csv'
 
 LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
+
 class MapperFuncs:
-    # def excel_style(col):
-    #     """ Convert given column number to an Excel-style column name. """
-    #     result = []
-    #     while col:
-    #         col, rem = divmod(col-1, 26)
-    #         result[:0] = LETTERS[rem]
-    #     return "".join(result)
 
     @classmethod
-    def parse_date(cls, item):
-        if isinstance(item, (str, datetime)):
-            return pd.to_datetime(item)
-        return pd.NaT
-
-
-    # def str_date_from_timestamp(timestamp_series):
-    #     return timestamp_series.dt.strftime("%Y-%m-%d").fillna("")
+    def parse_date(cls, item, format="%Y-%m-%d"):
+        date = pd.NaT
+        try:
+            date = pd.to_datetime(item, format=format)
+        except TypeError:
+            return date
 
     @classmethod
-    def clean_up(cls, df, molecular_cols, meas_cols):
+    def clean_up(cls, df, molecular_cols, meas_cols, date_format):
         # removed rows that aren't samples
         type_col = "sampling.general information.type sample.na"
         df = df.loc[~df[type_col].isin(["Reference", "Negative"])]
 
-        df.loc[:, molecular_cols+meas_cols] = df.loc[
-            :, molecular_cols+meas_cols]\
+        df.loc[:, molecular_cols + meas_cols] = df.loc[
+            :, molecular_cols + meas_cols]\
             .apply(pd.to_numeric, errors="coerce")
 
         df = df.dropna(subset=molecular_cols, how="all")
@@ -52,57 +43,14 @@ class MapperFuncs:
         # we need to convert resistivity to conductivity
         cond_col = 'concentration.key parametres.conductivity megohm.na'
         df[cond_col] = df[cond_col].apply(
-            lambda x: 1/x if str(x).isnumeric
+            lambda x: 1 / x if str(x).isnumeric
             else np.nan)
         # Parse date columns to datetime
         for col in df.columns:
             if "date" in col:
                 df[col] = df[col].apply(
-                    lambda x: cls.parse_date(x))
+                    lambda x: cls.parse_date(x, date_format))
         return df
-
-
-    # def typecast_column(desired_type, series):
-    #     if desired_type == "bool":
-    #         series = series.astype(str)
-    #         series = series.str.strip().str.lower()
-    #         series = series.apply(
-    #             lambda x: base_mapper.replace_unknown_by_default(x, ""))
-    #         series = series.str.replace("oui", "true", case=False)\
-    #             .str.replace("yes", "true", case=False)\
-    #             .str.startswith("true")
-    #     elif desired_type in ["string", "category"]:
-    #         series = series.astype(str)
-    #         series = series.str.lower()
-    #         series = series.str.strip()
-    #         series = series.apply(
-    #             lambda x: base_mapper.replace_unknown_by_default(x, ""))
-    #     elif desired_type in ["int64", "float64"]:
-    #         series = pd.to_numeric(series, errors="coerce")
-    #     elif desired_type == "datetime64[ns]":
-    #         series = pd.to_datetime(series, errors="coerce")
-    #     series = series.astype(desired_type)
-    #     return series
-
-
-    # def typecast_lab(lab, types):
-    #     clean_types = []
-    #     for datatype in types:
-    #         if datatype in base_mapper.UNKNOWN_TOKENS:
-    #             datatype = "string"
-    #         datatype = str(datatype)\
-    #             .replace("date", "datetime64[ns]") \
-    #             .replace("mixed", "object") \
-    #             .replace("boolean", "bool") \
-    #             .replace("float", "float64") \
-    #             .replace("integer", "int64") \
-    #             .replace("number", "float64") \
-    #             .replace("text", "string") \
-    #             .replace("blob", "object")
-    #         clean_types.append(datatype)
-    #     for i, col_name in enumerate(lab.columns):
-    #         lab[col_name] = typecast_column(clean_types[i], lab[col_name])
-    #     return lab
 
     @classmethod
     def clean_labels(cls, label):
@@ -151,15 +99,6 @@ class MapperFuncs:
         collection = collection.str.strip()
         collection = collection.apply(lambda x: check_collection_method(x))
         return collection
-
-
-    # def pass_raw(*args):
-    #     if len(args) == 0:
-    #         return None
-    #     elif len(args) == 1:
-    #         return args[0]
-    #     arguments = pd.concat([arg for arg in args], axis=1)
-    #     return arguments.agg(",".join, axis=1)
 
     @classmethod
     def get_assay_method_id(cls, sample_type, concentration_method, assay_date):
@@ -221,7 +160,7 @@ class MapperFuncs:
         def extract_from_label(label_id):
             if re.match(LABEL_REGEX, label_id):
                 label_parts = label_id.split("_")
-                return "_".join(label_parts[0:2])
+                return "_".join(label_parts[:2])
             else:
                 return ""
         clean_label_series = labels.apply(lambda x: cls.clean_labels(x))
@@ -243,11 +182,7 @@ class MapperFuncs:
                 for item in split_pooled
                 if re.match(LABEL_REGEX, item)
             ]
-
-            if not children_ids:
-                return ""
-            else:
-                return ",".join(children_ids)
+            return "" if not children_ids else ",".join(children_ids)
         clean_date = CsvMapper.str_date_from_timestamp(sample_date)
         df = pd.concat([pooled, clean_date], axis=1)
         df.columns = ["pooled", "clean_date"]
@@ -363,9 +298,7 @@ class MapperFuncs:
     @classmethod
     def validate_fraction_analyzed(cls, series):
         filt = (
-            series.str.contains("mixed") |
-            series.str.contains("liquid") |
-            series.str.contains("solids")
+            series.str.contains("mixed") | series.str.contains("liquid") | series.str.contains("solids")
         )
         series.loc[~filt] = ""
         return series
@@ -373,7 +306,7 @@ class MapperFuncs:
     @classmethod
     def validate_value(cls, values):
         return pd.to_numeric(values, errors="coerce")
-    
+
     @classmethod
     def get_lab_id(cls, lab_id):
         if isinstance(lab_id, str):
@@ -436,8 +369,10 @@ def remove_bad_rows(lab):
     If it's something else than an empty value and that this empty value
     doesn't cast to datetime, the row should be deleted"""
     LABEL_ID_COL = "D"
-    filt = (~pd.isnull(lab[LABEL_ID_COL]))
-    return lab.loc[filt]
+    filt1 = ~pd.isnull(lab[LABEL_ID_COL])
+    filt2 = ~lab[LABEL_ID_COL].str.lower().str.contains("reference").astype(bool)
+    filt3 = ~lab[LABEL_ID_COL].str.lower().str.contains("negative").astype(bool)
+    return lab.loc[filt1 & filt2 & filt3]
 
 
 def get_labsheet_inputs(map_row, lab_data, lab_id):
@@ -515,7 +450,7 @@ def parse_sheet(mapping, static, lab_data, processing_functions, lab_id,):
         sub_dfs = []
         for element in elements:
             table_element_filt = (mapping["table"] == table)\
-                 & (mapping["elementName"] == element)
+                & (mapping["elementName"] == element)
             col_names = mapping.loc[table_element_filt, "columnName"]
             var_names = mapping.loc[table_element_filt, "variableName"]
             sub_df = lab_data[col_names]
@@ -532,10 +467,10 @@ class QcChecker:
     def _find_df_borders(self, sheet_cols, idx_col_pos):
         pos_of_cols_w_headers = []
         for i, col in enumerate(sheet_cols):
-            if i==idx_col_pos:
+            if i == idx_col_pos:
                 continue
             if 'Unnamed' not in col:
-                pos_of_cols_w_headers.append(i+1)
+                pos_of_cols_w_headers.append(i + 1)
         last_sheet_col = len(sheet_cols)
         pos_of_cols_w_headers.append(last_sheet_col)
 
@@ -545,53 +480,44 @@ class QcChecker:
         pos_of_last_item = len(pos_of_cols_w_headers) - 1
         for i in range(len(pos_of_cols_w_headers.copy())):
             if i == pos_of_last_item:
-                #This is the end of the last df, so stop
+                # This is the end of the last df, so stop
                 break
 
             start_pos = pos_of_cols_w_headers[i]
-            
-            if i == pos_of_last_item-1:
-                end_pos = pos_of_cols_w_headers[i+1]
-                
+
+            if i == pos_of_last_item - 1:
+                end_pos = pos_of_cols_w_headers[i + 1]
+
             else:
-                end_pos = pos_of_cols_w_headers[i+1] -1
+                end_pos = pos_of_cols_w_headers[i + 1] - 1
 
-
-            start_idx = CsvMapper.excel_style(start_pos+1)
-            end_idx = CsvMapper.excel_style(end_pos+1)
+            start_idx = CsvMapper.excel_style(start_pos + 1)
+            end_idx = CsvMapper.excel_style(end_pos + 1)
             xl_start_cols.append(start_idx)
             xl_end_cols.append(end_idx)
         return xl_start_cols, xl_end_cols
 
-
     def _get_type_codes(self, sheet_df):
         return sheet_df.iloc[1].dropna().to_list()
 
-
     def _get_sample_collection(self, type_codes):
         return [str(x).lower() for x in type_codes[::3]]
-
 
     def _get_last_dates(self, sheet_df):
         dates = sheet_df.iloc[2].dropna().to_list()
         temp_dates = []
         for item in dates:
-            try:
-                item = pd.to_datetime(item, format="%d/%m/%Y")
-                temp_dates.append(item)
-            except Exception:
-                temp_dates.append(pd.NaT)
+            item = pd.to_datetime(item, errors='raise', infer_datetime_format=True)
+            temp_dates.append(item)
         return temp_dates
-
 
     def _get_label_ids(self, type_codes):
         return type_codes[2::3]
 
-
     def _get_site_ids(self, label_ids):
         sites = []
         for item in label_ids:
-            split = item.split("_")[0:2]
+            split = item.split("_")[:2]
             site = "_".join(split).lower()
             sites.append(site)
         return sites
@@ -600,25 +526,24 @@ class QcChecker:
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             return pd.read_excel(
-                    path,
-                    sheet_name=sheet_name,
-                    header=header_row_pos,
-                    usecols =f"{start}:{end}"
-                    )
+                path,
+                sheet_name=sheet_name,
+                header=header_row_pos,
+                usecols=f"{start}:{end}"
+            )
 
     def _get_index_series(self, path, sheet_name, idx_col, header_row_pos):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             idx_series = pd.read_excel(
-                    path,
-                    sheet_name=sheet_name,
-                    header=header_row_pos,
-                    usecols = idx_col,
-                    squeeze=True
-                )
-        idx_series = pd.to_datetime(idx_series).dt.strftime("%Y-%m-%d")
-        return pd.to_datetime(idx_series)
-        
+                path,
+                sheet_name=sheet_name,
+                header=header_row_pos,
+                usecols=idx_col,
+                squeeze=True
+            )
+        return pd.to_datetime(idx_series, infer_datetime_format=True)
+
     def _clean_names(self, df):
         rejected_col_template = "Rejected by"
         cols = df.columns
@@ -630,14 +555,14 @@ class QcChecker:
                 if not incrementer:
                     new_col = rejected_col_template
                 else:
-                    new_col = rejected_col_template + "." + str(incrementer)
-                incrementer +=1
-            elif re.match(".*\.[0-9]", col):
+                    new_col = f'{rejected_col_template}.{incrementer}'
+                incrementer += 1
+            elif re.match(r".*\.[0-9]", col):
                 dot_idx = col.find(".")
-                new_col = col[0:dot_idx]
+                new_col = col[:dot_idx]
 
             renamed_cols[col] = new_col
-        return df.rename(columns = renamed_cols) 
+        return df.rename(columns=renamed_cols)
 
     def _extract_dfs(self, path, sheet_name, idx_col_pos=0, header_row_pos=4):
         with warnings.catch_warnings():
@@ -645,11 +570,19 @@ class QcChecker:
             sheet_df = pd.read_excel(path, sheet_name=sheet_name, header=0, index_col=0)
         sheet_cols = [str(col) for col in sheet_df.columns]
         start_borders, end_borders = self._find_df_borders(sheet_cols, idx_col_pos)
-        idx_col = CsvMapper.excel_style(idx_col_pos+1)
+        idx_col = CsvMapper.excel_style(idx_col_pos + 1)
 
         dfs = []
-        cols_to_keep = ["BRSV (%rec)","Rejected by", "PMMV (gc/ml)","Rejected by.1", "SARS (gc/ml)", "Rejected by.2", "Quality Note"]
-        for i, (start, end) in enumerate(zip(start_borders, end_borders)):
+        cols_to_keep = [
+            "BRSV (%rec)",
+            "Rejected by",
+            "PMMV (gc/ml)",
+            "Rejected by.1",
+            "SARS (gc/ml)",
+            "Rejected by.2",
+            "Quality Note"
+        ]
+        for start, end in zip(start_borders, end_borders):
             vals = self._get_values_df(path, sheet_name, start, end, header_row_pos)
             idx = self._get_index_series(path, sheet_name, idx_col, header_row_pos)
             df = vals.set_index(idx)
@@ -660,18 +593,17 @@ class QcChecker:
             dfs.append(df)
         return sheet_df, dfs
 
-
     def _parse_dates(self, df):
         for col in df.columns:
             if 'dateTime' in col:
-                df[col] = pd.to_datetime(df[col])
+                df[col] = pd.to_datetime(df[col], infer_datetime_format=True)
         return df
 
     def _validation_has_started(self, last_date):
         # If there is no 'last checked date', then validation isn't happening at this site, but the data shouldn't be removed
         return not pd.isna(pd.to_datetime(last_date))
-    
-    def _apply_quality_checks(self, mapper,  v_df, last_date, site_id, sample_collection):
+
+    def _apply_quality_checks(self, mapper, v_df, last_date, site_id, sample_collection):
         charac = {
             "BRSV (%rec)": {
                 "rejected_col": "Rejected by",
@@ -690,10 +622,10 @@ class QcChecker:
             }
         }
 
-        samples = mapper.sample
+        samples = mapper.sample.copy()
         samples = self._parse_dates(samples)
-        ww = mapper.ww_measure
-        
+        ww = mapper.ww_measure.copy()
+
         sample_collection_filt = samples["collection"].str.lower().str.contains(sample_collection)
         sample_sites_filt = samples["siteID"].str.lower().str.contains(site_id)
         for _, row in v_df.iterrows():
@@ -706,7 +638,7 @@ class QcChecker:
 
             sample_list = samples.loc[sample_tot_filt, "sampleID"].drop_duplicates().to_list()
 
-            for col, wwm_info in charac.items():
+            for wwm_info in charac.values():
                 if row[wwm_info["rejected_col"]]:
                     # print("Applying flag for ", row.name, col, row[wwm_info["rejected_col"]])
                     ww_type_filt = ww["type"].str.lower().str.contains(wwm_info["type"])
@@ -715,24 +647,20 @@ class QcChecker:
                     ww_tot_filt = ww_type_filt & ww_unit_filt & ww_sample_filt
 
                     ww.loc[ww_tot_filt, ["qualityFlag", "notes"]] = [True, row["Quality Note"]]
-                    
 
         if 'grb' in sample_collection:
             sample_last_date_filt = samples['dateTime'] > last_date
         else:
             sample_last_date_filt = samples['dateTimeEnd'] > last_date
-        
+
         unchecked_filt = sample_collection_filt & sample_sites_filt & sample_last_date_filt
         samples.loc[unchecked_filt, ["qualityFlag", "notes"]] = [True, "Unchecked viral measurements"]
-        
+
         unchecked_sample_ids = samples.loc[unchecked_filt, "sampleID"].drop_duplicates().to_list()
 
         ww_u_type_filt = ww["type"].str.lower().isin([x["type"] for x in charac.values()])
         ww_u_sample_filt = ww['sampleID'].isin(unchecked_sample_ids)
         ww.loc[ww_u_type_filt & ww_u_sample_filt, ["qualityFlag", "notes"]] = [True, "Unchecked viral measurement"]
-        
-        samples.loc[samples["qualityFlag"] != True, "qualityFlag"] = False
-        ww.loc[ww["qualityFlag"] != True, "qualityFlag"] = False
 
         mapper.sample = samples
         mapper.ww_measure = ww
@@ -742,7 +670,7 @@ class QcChecker:
         sheet_df, dfs = self._extract_dfs(path, sheet_name)
 
         last_dates = self._get_last_dates(sheet_df)
-        
+
         type_codes = self._get_type_codes(sheet_df)
         sample_collections = self._get_sample_collection(type_codes)
         label_ids = self._get_label_ids(type_codes)
@@ -755,97 +683,11 @@ class QcChecker:
         return mapper
 
 
-# class McGillMapper(base_mapper.BaseMapper):
-# def get_labsheet_inputs(map_row, lab_data, lab_id):
-#     lab_input = map_row["labInputs"]
-#     if lab_input == "":
-#         return None
-#     var_name = map_row["variableName"]
-#     raw_inputs = lab_input.split(";")
-#     final_inputs = []
-#     for input_ in raw_inputs:
-#         if re.match(r"__const__.*:.*", input_):
-#             value, type_ = input_[len("__const__"):].split(":")
-#             if type_ == "str":
-#                 value = str(value)
-#             elif type_ == "int":
-#                 value = int(value)
-#         elif input_ == "__labID__":
-#             value = lab_id
-#         elif input_ == "__varName__":
-#             value = var_name
-#         elif input_ == "__default__":
-#             value = map_row["defaultValue"]
-#         else:
-#             value = lab_data[input_]
-#         final_inputs.append(value)
-#     return tuple(final_inputs)
-
-
-# def get_static_inputs(map_row, static_data):
-#     input_sources = map_row["inputSources"]
-#     if "static" in input_sources:
-#         static_table = input_sources.split("+")[0]
-#         static_table = static_table[len("static "):]
-#         return static_data[static_table]
-#     else:
-#         return None
-
-
-# def get_all_inputs(row):
-#     static_input = row["static"]
-#     lab_inputs = row["lab_arguments"]
-#     if static_input is None and lab_inputs is None:
-#         inputs = None
-#     elif static_input is None:
-#         inputs = lab_inputs
-#     else:
-#         inputs = (static_input, *lab_inputs)
-#     if inputs is None:
-#         inputs = tuple([row["defaultValue"]])
-#     return inputs
-
-
-# def parse_sheet(mapping, static, lab_data, processing_functions, lab_id,):
-#     mapping["lab_arguments"] = mapping.apply(
-#         lambda row: get_labsheet_inputs(row, lab_data, lab_id), axis=1)
-#     mapping["static"] = mapping.apply(
-#         lambda row: get_static_inputs(row, static), axis=1)
-#     mapping["final_inputs"] = mapping.apply(
-#         lambda row: get_all_inputs(row), axis=1)
-#     mapping["func"] = mapping["processingFunction"].apply(
-#         lambda x: processing_functions.get(x, pass_raw))
-
-#     mapping["columnName"] = mapping[
-#         ["table", "elementName", "variableName"]].agg("_".join, axis=1)
-#     to_apply = mapping.loc[
-#         :, ["columnName", "func", "final_inputs"]]
-#     for _, apply_row in to_apply.iterrows():
-#         col_name = apply_row["columnName"]
-#         lab_data[col_name] = apply_row["func"](*apply_row["final_inputs"])
-#     tables = {table: None for table in mapping["table"].unique()}
-#     for table in tables:
-#         elements = mapping.loc[
-#             mapping["table"] == table, "elementName"
-#         ].unique()
-#         sub_dfs = []
-#         for element in elements:
-#             table_element_filt = (mapping["table"] == table)\
-#                  & (mapping["elementName"] == element)
-#             col_names = mapping.loc[table_element_filt, "columnName"]
-#             var_names = mapping.loc[table_element_filt, "variableName"]
-#             sub_df = lab_data[col_names]
-#             sub_df.columns = var_names
-#             sub_dfs.append(sub_df)
-#         table_df = pd.concat(sub_dfs, axis=0, ignore_index=True)
-#         if table in ["WWMeasure", "SiteMeasure"]:
-#             table_df = table_df.dropna(subset=["value"])
-#         tables[table] = table_df
-#     return tables
-
 class McGillMapper(CsvMapper):
+
     def __init__(self, processing_functions=MapperFuncs):
         super().__init__(processing_functions=processing_functions)
+
     def get_attr_from_table_name(self, table_name):
         for attr, dico in self.conversion_dict.items():
             odm_name = dico["odm_name"]
@@ -925,10 +767,11 @@ class McGillMapper(CsvMapper):
     def validates(self):
         return True
 
+
 def debug():
     mapper = McGillMapper(processing_functions=MapperFuncs)
-    lab_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    static_data = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
+    lab_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
+    static_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
     # lab_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
     # static_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/mcgill_static.xlsx"  # noqa
     sheet_name = "QC Data Daily Samples (McGill)"
@@ -940,6 +783,15 @@ def debug():
                 map_path=MCGILL_MAP_NAME,
                 startdate=None,
                 enddate=None)
+    print(mapper.ww_measure.head())
+    qc_quality_checker = QcChecker()
+    qc_lab = qc_quality_checker.read_validation(
+        mapper,
+        lab_data,
+        "QC_Compil_STEP (int)"
+    )
+    print(qc_lab.ww_measure)
+
 
 if __name__ == "__main__":
     debug()

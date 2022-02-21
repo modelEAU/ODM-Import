@@ -3,7 +3,6 @@ import base64
 import json
 import os
 import shutil
-import warnings
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -193,7 +192,7 @@ def get_color_ts(viral,
                  colorscale,
                  dateStart="2021-01-01",
                  dateEnd=None):
-    dateStart = pd.to_datetime(dateStart)
+    dateStart = pd.to_datetime(dateStart, infer_datetime_format=True)
     weekly = None
     if viral is not None:
         viral["last_sunday"] = viral.index.map(get_last_sunday)
@@ -820,7 +819,7 @@ def plot_web(data,
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
     col_names = get_column_names(metadata)
-    first_sunday = get_last_sunday(pd.to_datetime(dateStart))
+    first_sunday = get_last_sunday(pd.to_datetime(dateStart, infer_datetime_format=True))
     for lang in langs:
         fig = make_subplots(
             rows=1,
@@ -845,9 +844,9 @@ def plot_web(data,
                 x=data.index,
                 y=data[col],
                 name=col_names[col][lang],
-                mode="markers",
+                mode="lines+markers",
                 marker=dict(color=marker_colors),
-                connectgaps=True,
+                connectgaps=False,
                 visible='legendonly' if 'sars' not in col else True,
                 yaxis="y3" if 'norm' not in col else "y2",
                 hovertemplate=' %{y:.3f}'
@@ -941,7 +940,7 @@ if __name__ == "__main__":
                     text = f.read()
                     text = text[:-1]  # remove line break
                 poly.loc[poly['polygonID'] == poly_id, "wkt"] = text
-            
+
             qc_lab.polygon = poly
             store.append_from(qc_lab)
 

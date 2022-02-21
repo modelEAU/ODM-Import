@@ -1,8 +1,8 @@
-from abc import ABC, abstractmethod
-import pandas as pd
 import re
-from wbe_odm import utilities
+from abc import ABC, abstractmethod
 
+import pandas as pd
+from wbe_odm import utilities
 
 DATA_TYPES = utilities.get_data_types()
 UNKNOWN_TOKENS = [
@@ -92,7 +92,7 @@ def parse_types(table_name, series):
     elif desired_type == "datetime64[ns]":
         series = series.astype(str)
         series = series.apply(lambda x: replace_unknown_by_default(x, ""))
-        series = pd.to_datetime(series, errors="coerce")
+        series = pd.to_datetime(series, errors="coerce", infer_datetime_format=True)
     elif desired_type in ["int64", "float64"]:
         series = pd.to_numeric(series, errors="coerce")
 
@@ -143,12 +143,12 @@ class BaseMapper(ABC):
                     columns=utilities.get_table_fields(table_name))
             return value.drop_duplicates(
                 keep="first", ignore_index=True)
-    
+
     def type_cast_table(self, odm_name, df):
         return df.apply(
                 lambda x: parse_types(odm_name, x),
                 axis=0)
-    
+
     def get_attribute_from_odm_name(self, odm_name):
         for attribute, dico in self.conversion_dict.items():
             table_name = dico["odm_name"]

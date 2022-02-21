@@ -129,7 +129,7 @@ class Odm:
 
                 except Exception as e:
                     setattr(self, attr, current_df)
-                    raise e
+                    raise e from e
         return
 
     def load_from(self, mapper: base_mapper.BaseMapper) -> None:
@@ -414,7 +414,7 @@ class TableCombiner(Odm):
             if last_part in ['value', 'pop', 'temp', 'size']:
                 df[col_name] = df[col_name].astype(np.float32)
             elif 'timestamp' in last_part or 'date' in last_part:
-                df[col_name] = pd.to_datetime(df[col_name])
+                df[col_name] = pd.to_datetime(df[col_name], infer_datetime_format=True)
             elif 'flag' in col_name\
                 or 'pooled' in col_name\
                     or 'shippedOnIce' in col_name:

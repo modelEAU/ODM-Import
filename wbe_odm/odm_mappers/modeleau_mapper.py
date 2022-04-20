@@ -12,12 +12,14 @@ MODELEAU_MAP_NAME = directory + "/" + "modeleau_map.csv"
 class MapperFuncs:
     @classmethod
     def clean_up(cls, df):
+        df = df.copy()
+        df = df.dropna(subset=["Measurement"])
         for col in df.columns.to_list():
-            df[col] = pd.to_datetime(cls.replace_excel_dates(df[col])) \
+            df.loc[:, col] = pd.to_datetime(cls.replace_excel_dates(df[col])) \
                 if "date" in col.lower() else df[col]
-            df[col] = df[col].apply(lambda x: None if x in ["None", ""] else x)
+            df.loc[:, col] = df[col].apply(lambda x: None if x in ["None", ""] else x)
             if col == "Measurement":
-                df[col] = df[col].apply(lambda x: x.replace("*", "").strip())
+                df.loc[:, col] = df.loc[:, col].apply(lambda x: x.replace("*", "").strip())
             if "Unnamed" in col:
                 del df[col]
         df.drop_duplicates(keep="first", inplace=True)
@@ -180,6 +182,32 @@ class MapperFuncs:
     def validate_value(cls, raw_values):
         return pd.to_numeric(raw_values, errors="coerce")
 
+    @classmethod
+    def determine_reporter_id(cls, dates, *args):
+        dates = dates.rename("dates")
+        df = pd.DataFrame(dates)
+
+        reporter_names = args[::2]
+        cutoff_dates = [pd.to_datetime(x, format="%Y-%m-%d") for x in args[1::2]]
+
+        df["reporter"] = ""
+        first_reporter = reporter_names[0]
+        if not cutoff_dates:
+            df["reporter"] = first_reporter
+        else:
+            first_cutoff = cutoff_dates[0]
+            df.loc[df["dates"] <= first_cutoff, "reporter"] = first_reporter
+
+            previous_cutoff = first_cutoff
+            if len(reporter_names) > 2:
+                for reporter, cutoff_date in zip(reporter_names[1:-1], cutoff_dates):
+                    cond1 = df["dates"] >= previous_cutoff
+                    cond2 = df["dates"] <= cutoff_date
+                    df.loc[cond1 & cond2, "reporter"] = reporter
+                    previous_cutoff = cutoff_date
+            df.loc[df["dates"] > cutoff_dates[-1], "reporter"] = reporter_names[-1]
+        return df["reporter"]
+
 
 class ModelEauMapper(CsvMapper):
     def __init__(self, processing_functions=MapperFuncs):
@@ -215,7 +243,7 @@ class ModelEauMapper(CsvMapper):
 
 
 if __name__ == "__main__":
-    path = "/Users/jeandavidt/OneDrive - Université Laval/COVID/Latest Data/Input/COVIDProject_Lab Measurements.xlsx"  # noqa
+    path = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/COVIDProject_Lab Measurements.xlsx"  # noqa
     sheet_name = "Lab analyses"
     mapper = ModelEauMapper()
     mapper.read(path, sheet_name)

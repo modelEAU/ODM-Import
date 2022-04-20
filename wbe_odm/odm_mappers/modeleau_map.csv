@@ -20,7 +20,7 @@ Sample Info,Sample,storageTempC,4,lab sheet,,
 Sample Info,Sample,qualityFlag,,lab sheet,,
 Sample Info,Sample,notes,,lab sheet,P,
 Measures,WWMeasure,wwMeasureID,,lab sheet,I;J;__const__1:int;__labID__;A;K;__const__1:str,get_wwmeasure_id
-Measures,WWMeasure,reporterID,MaryamTohidi,lab sheet,,
+Measures,WWMeasure,reporterID,MaryamTohidi,lab sheet,J;__const__MaryamTohidi:str;__const__2021-08-01:str;__const__CamilleLaliberte:str;__const__2021-09-01:str;__const__JD:str,determine_reporter_id
 Measures,WWMeasure,sampleID,,lab sheet,I;J;__const__1:int,get_sample_id
 Measures,WWMeasure,labID,,lab sheet,__labID__,
 Measures,WWMeasure,assayMethodID,,,,

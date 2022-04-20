@@ -1,6 +1,8 @@
 geojson
 geos
 matplotlib
+unidecode
+dash
 notebook
 numpy
 openpyxl

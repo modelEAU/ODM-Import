@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import sqlite3
@@ -56,9 +57,7 @@ class Odm:
         self.polygon = polygon
         self.cphd = cphd
 
-    def _default_value_by_dtype(
-        self, dtype: str
-            ):
+    def _default_value_by_dtype(self, dtype: str):
         """Gets you a default value of the correct data type to create new
         columns in a pandas DataFrame
 
@@ -83,8 +82,7 @@ class Odm:
     def combine_table_instances(
             self, table_name: str,
             df1: pd.DataFrame,
-            df2: pd.DataFrame
-                                ) -> pd.DataFrame:
+            df2: pd.DataFrame) -> pd.DataFrame:
         """Merges two instances of an ODM table.
 
         Args:
@@ -279,13 +277,12 @@ class Odm:
             os.mkdir(path)
         for attr in attrs_to_save:
             odm_name = conversion_dict[attr]["odm_name"]
-            filename = file_prefix + "_" + odm_name\
-                if file_prefix else odm_name
+            filename = f'{file_prefix}_' + odm_name if file_prefix else odm_name
             df = getattr(self, attr)
             if df is None or df.empty:
                 continue
             complete_path = os.path.join(path, filename)
-            df.to_csv(complete_path+".csv", sep=",", index=False)
+            df.to_csv(complete_path + ".csv", sep=",", index=False)
         return
 
     def append_odm(self, other_odm) -> None:
@@ -385,13 +382,12 @@ class TableWidener:
                 "single", f"single-to-{agg}")
         df["col_qualifiers"] = df[self.qualifiers].agg("_".join, axis=1)
         unique_col_qualifiers = df["col_qualifiers"].unique()
-        for col_qualifier in unique_col_qualifiers:
-            for feature in self.features:
-                col_name = "_".join([col_qualifier, feature])
-                df[col_name] = pd.Series(dtype=np.float64)
-                filt = df["col_qualifiers"] == col_qualifier
-                df.loc[filt, col_name] = df.loc[filt, feature]
-        df.drop(columns=self.features+self.qualifiers, inplace=True)
+        for col_qualifier, feature in itertools.product(unique_col_qualifiers, self.features):
+            col_name = "_".join([col_qualifier, feature])
+            df[col_name] = pd.Series(dtype=np.float64)
+            filt = df["col_qualifiers"] == col_qualifier
+            df.loc[filt, col_name] = df.loc[filt, feature]
+        df.drop(columns=self.features + self.qualifiers, inplace=True)
         df.drop(columns=["col_qualifiers"], inplace=True)
         self.wide = df.copy()
         return self.wide
@@ -418,7 +414,7 @@ class TableCombiner(Odm):
             elif 'flag' in col_name\
                 or 'pooled' in col_name\
                     or 'shippedOnIce' in col_name:
-                df[col_name] = df[col_name].fillna(False).astype(np.bool)
+                df[col_name] = df[col_name].fillna(False).astype(np.bool_)
             else:
                 df[col_name] = df[col_name].fillna("").astype(str)
         return df
@@ -460,11 +456,11 @@ class TableCombiner(Odm):
         df = self.remove_access(df)
         features = ["value", "qualityFlag"]
         qualifiers = [
-                # "fractionAnalyzed",
-                "type",
-                "unit",
-                "aggregation",
-            ]
+            # "fractionAnalyzed",
+            "type",
+            "unit",
+            "aggregation",
+        ]
         wide = TableWidener(df, features, qualifiers).widen()
         wide.drop(columns=["index"], inplace=True)
         wide = wide.add_prefix("WWMeasure_")
@@ -559,10 +555,9 @@ class TableCombiner(Odm):
             .agg(utilities.reduce_by_type)
 
     def combine_ww_measure_and_sample(
-        self,
-        ww: pd.DataFrame,
-        sample: pd.DataFrame
-            ) -> pd.DataFrame:
+            self,
+            ww: pd.DataFrame,
+            sample: pd.DataFrame) -> pd.DataFrame:
         """Merges tables on sampleID
 
         Parameters
@@ -744,10 +739,7 @@ class TableCombiner(Odm):
 class OdmEncoder(json.JSONEncoder):
     def default(self, o):
         if (isinstance(o, Odm)):
-            return {
-                '__{}__'.format(o.__class__.__name__):
-                o.__dict__
-            }
+            return {f'__{o.__class__.__name__}__': o.__dict__}
         elif isinstance(o, pd.Timestamp):
             return {'__Timestamp__': str(o)}
         elif isinstance(o, pd.DataFrame):

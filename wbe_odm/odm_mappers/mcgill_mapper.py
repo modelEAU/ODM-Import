@@ -182,7 +182,7 @@ class MapperFuncs:
                 for item in split_pooled
                 if re.match(LABEL_REGEX, item)
             ]
-            return "" if not children_ids else ",".join(children_ids)
+            return ",".join(children_ids) if children_ids else ""
         clean_date = CsvMapper.str_date_from_timestamp(sample_date)
         df = pd.concat([pooled, clean_date], axis=1)
         df.columns = ["pooled", "clean_date"]
@@ -197,9 +197,8 @@ class MapperFuncs:
 
         df = pd.concat([clean_label, clean_date, spike_batch], axis=1)
         df["lab_id"] = lab_id
-        df["index_no"] = str(sample_index) \
-            if not isinstance(sample_index, pd.Series) \
-            else sample_index.astype(str)
+        df["index_no"] = sample_index.astype(str) if isinstance(sample_index, pd.Series) else str(sample_index)
+
         df.columns = [
             "clean_label", "clean_date", "spike_batch",
             "lab_id", "index_no"
@@ -240,8 +239,8 @@ class MapperFuncs:
         meas_date = CsvMapper.str_date_from_timestamp(meas_date)
         df = pd.concat([sample_id, meas_date], axis=1)
         df["meas_type"] = meas_type
-        df["index_no"] = str(index) if not isinstance(index, pd.Series) \
-            else index.astype(str)
+        df["index_no"] = index.astype(str) if isinstance(index, pd.Series) else str(index)
+
         return df.agg("_".join, axis=1)
 
     @classmethod
@@ -268,7 +267,7 @@ class MapperFuncs:
 
     @classmethod
     def get_sample_volume(cls, vols, default):
-        vols = vols.apply(lambda x: x if not pd.isna(x) else default)
+        vols = vols.apply(lambda x: default if pd.isna(x) else x)
         return vols
 
     @classmethod
@@ -421,7 +420,7 @@ def get_all_inputs(row):
     else:
         inputs = (static_input, *lab_inputs)
     if inputs is None:
-        inputs = tuple([row["defaultValue"]])
+        inputs = (row["defaultValue"], )
     return inputs
 
 
@@ -552,10 +551,7 @@ class QcChecker:
         for col in cols:
             new_col = col
             if 'rejected' in col.lower():
-                if not incrementer:
-                    new_col = rejected_col_template
-                else:
-                    new_col = f'{rejected_col_template}.{incrementer}'
+                new_col = f'{rejected_col_template}.{incrementer}' if incrementer else rejected_col_template
                 incrementer += 1
             elif re.match(r".*\.[0-9]", col):
                 dot_idx = col.find(".")
@@ -601,7 +597,7 @@ class QcChecker:
 
     def _validation_has_started(self, last_date):
         # If there is no 'last checked date', then validation isn't happening at this site, but the data shouldn't be removed
-        return not pd.isna(pd.to_datetime(last_date))
+        return not pd.isna(pd.to_datetime(last_date, infer_datetime_format=True))
 
     def _apply_quality_checks(self, mapper, v_df, last_date, site_id, sample_collection):
         charac = {
@@ -629,8 +625,8 @@ class QcChecker:
         sample_collection_filt = samples["collection"].str.lower().str.contains(sample_collection)
         sample_sites_filt = samples["siteID"].str.lower().str.contains(site_id)
         for _, row in v_df.iterrows():
-            sample_date_filt1 = samples["dateTimeEnd"].dt.date == pd.to_datetime(row.name).date()
-            sample_date_filt2 = samples["dateTime"].dt.date == pd.to_datetime(row.name).date()
+            sample_date_filt1 = samples["dateTimeEnd"].dt.date == pd.to_datetime(row.name, infer_datetime_format=True).date()
+            sample_date_filt2 = samples["dateTime"].dt.date == pd.to_datetime(row.name, infer_datetime_format=True).date()
             sample_date_filt = sample_date_filt1 | sample_date_filt2
             sample_tot_filt = sample_date_filt & sample_sites_filt & sample_collection_filt
 
@@ -794,4 +790,6 @@ def debug():
 
 
 if __name__ == "__main__":
-    debug()
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action="error")
+        debug()

@@ -80,10 +80,12 @@ vaccine_to_save = {
     }
 }
 
+
 def build_cphd_ids(reporter, region, type_, datetype, date):
     date = date.dt.strftime("%Y-%m-%d")
     df = pd.concat([reporter, region, type_, datetype, date], axis=1)
     return df.agg("_".join, axis=1)
+
 
 def df_from_req(url):
     req = requests.get(url)
@@ -92,15 +94,17 @@ def df_from_req(url):
     content = req.content
     return pd.read_csv(io.StringIO(content.decode('utf-8')))
 
+
 INSPQ_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/donnees/covid19-hist.csv?randNum=27002747"
 INSPQ_VACCINE_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/donnees/vaccination.csv?randNum=27002747"
+
 
 class INSPQ_mapper(bm.BaseMapper):
     def read(self, filepath=None):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
-        hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
+        hist = hist.loc[hist["Nom"].isin(poly_names.keys())].copy()
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
         hist = hist.dropna(subset=["Date"])
         dfs = []
@@ -130,12 +134,13 @@ class INSPQ_mapper(bm.BaseMapper):
     def validates(self):
         return True
 
+
 class INSPQVaccineMapper(bm.BaseMapper):
     def read(self, filepath=None):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
-        hist = hist.loc[hist["Nom"].isin(poly_names.keys())]
+        hist = hist.loc[hist["Nom"].isin(poly_names.keys())].copy()
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
         hist = hist.dropna(subset=["Date"])
         dfs = []
@@ -174,4 +179,3 @@ if __name__ == "__main__":
     mapper = INSPQ_mapper()
     mapper.read()
     print(mapper.cphd.head())
-

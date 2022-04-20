@@ -40,8 +40,7 @@ def make_point_feature(row, props_to_add):
         "type": "Feature",
         "geometry": {
             "type": "Point",
-            "coordinates": [row["geoLong"], row["geoLat"]],
-            },
+            "coordinates": [row["geoLong"], row["geoLat"]]},
         "properties": {
             k: row[k] for k in props_to_add
         }
@@ -118,7 +117,7 @@ def combine_viral_cols(viral):
             sars.append(col)
         elif "pmmov" in virus:
             pmmov.append(col)
-    viral.drop(columns=sars+pmmov, inplace=True)
+    viral.drop(columns=sars + pmmov, inplace=True)
     return viral
 
 
@@ -179,7 +178,7 @@ def build_empty_color_ts(date_range):
 
 
 def get_n_bins(series, all_colors):
-    max_len = len(all_colors)-1
+    max_len = len(all_colors) - 1
     len_not_null = len(series[~series.isna()])
     if len_not_null == 0:
         return None
@@ -200,7 +199,7 @@ def get_color_ts(viral,
 
     date_range_start = get_last_sunday(dateStart)
     if dateEnd is None:
-        dateEnd = pd.to_datetime("now")
+        dateEnd = pd.to_datetime(datetime.now())
     date_range = pd.date_range(start=date_range_start, end=dateEnd, freq="W")
     result = pd.DataFrame(date_range)
     result.columns = ["date"]
@@ -225,7 +224,7 @@ def get_color_ts(viral,
         result["signal_strength"] = pd.cut(
             result["norm"],
             n_bins,
-            labels=range(1, n_bins+1))
+            labels=range(1, n_bins + 1))
     result["signal_strength"] = result["signal_strength"].astype("str")
     result.loc[result["signal_strength"].isna(), "signal_strength"] = "0"
     result["date"] = result["date"].dt.strftime("%Y-%m-%d")
@@ -241,150 +240,129 @@ def get_website_type(types):
         },
         "pstat": {
             "french": "Station de pompage",
-            "english": "Pumping station"
-            },
+            "english": "Pumping station"},
         "ltcf": {
             "french": "Établissement de soins de longue durée",
-            "english": "Long-term care facility"
-            },
+            "english": "Long-term care facility"},
         "airpln": {
             "french": "Avion",
-            "english": "Airplane"
-            },
+            "english": "Airplane"},
         "corfcil": {
             "french": "Prison",
-            "english": "Correctional facility"
-            },
+            "english": "Correctional facility"},
         "school": {
             "french": "École",
-            "english": "School"
-            },
+            "english": "School"},
         "hosptl": {
             "french": "Hôpital",
-            "english": "Hospital"
-            },
+            "english": "Hospital"},
         "shelter": {
             "french": "Refuge",
-            "english": "Shelter"
-            },
+            "english": "Shelter"},
         "swgtrck": {
             "french": "Camion de vidange",
-            "english": "Sewage truck"
-            },
+            "english": "Sewage truck"},
         "ucampus": {
             "french": "Campus universitaire",
-            "english": "University campus"
-            },
+            "english": "University campus"},
         "mswrppl": {
             "french": "Collecteur d'égouts",
-            "english": "Sewer main collector"
-            },
+            "english": "Sewer main collector"},
         "holdtnk": {
             "french": "Bassin de stockage",
-            "english": "Holding tank"
-            },
+            "english": "Holding tank"},
         "retpond": {
             "french": "Bassin de rétention",
-            "english": "Retention tank"
-            },
+            "english": "Retention tank"},
         "wwtpmus": {
             "french": "StaRRE municipale pour égouts sanitaires",  # noqa
-            "english": "Municipal WRRF for sanitary sewers"
-            },
+            "english": "Municipal WRRF for sanitary sewers"},
         "wwtpind": {
             "french": "StaRRE eaux industrielles",
-            "english": "WWRF for industrial waters"
-            },
+            "english": "WWRF for industrial waters"},
         "lagoon": {
             "french": "Étang aéré",
-            "english": "Aerated lagoon"
-            },
+            "english": "Aerated lagoon"},
         "septtnk": {
             "french": "Fosse septique",
-            "english": "Septic tank"
-            },
+            "english": "Septic tank"},
         "river": {
             "french": "Rivière",
-            "english": "River"
-            },
+            "english": "River"},
         "lake": {
             "french": "Lac",
-            "english": "Lake",
-        },
+            "english": "Lake"},
         "estuary": {
             "french": "Estuaire",
-            "english": "Estuary"
-            },
+            "english": "Estuary"},
         "sea": {
             "french": "Mer",
-            "english": "Sea",
-            },
+            "english": "Sea"},
         "ocean": {
             "french": "Océan",
-            "english": "Ocean"
-            },
+            "english": "Ocean"},
     }
     return types.str.lower().map(site_types)
 
 
 sitename_lang_map = {
-        "québec station est": {
-            "french": "Québec Station Est",
-            "english": "Québec East WRRF",
-        },
-        "québec station ouest": {
-            "french": "Québec Station Ouest",
-            "english": "Québec West WRRF",
-        },
-        "montréal intercepteur nord": {
-            "french": "Montréal Intercepteur Nord",
-            "english": "Montreal North Intercepter",
-        },
-        "montréal intercepteur sud": {
-            "french": "Montréal Intercepteur Sud",
-            "english": "Montreal South Intercepter",
-        },
-        "station rimouski": {
-            "french": "StaRRE de Rimouski",
-            "english": "Rimouski WRRF",
-        },
-        "station rivière-du-loup": {
-            "french": "StaRRE de Rivière-du-Loup",
-            "english": "Rivière-du-Loup WRRF",
-        },
-        "station st-alexandre-de-kamouraska": {
-            "french": "StaRRE de St-Alexandre-de Kamouraska",
-            "english": "St-Alexandre-de-Kamouraska WRRF",
-        },
-        "trois-pistoles": {
-            "french": "StaRRE de Trois-Pistoles",
-            "english": "Trois-Pistoles WRRF",
-        },
-        "matane": {
-            "french": "StaRRE de Matane",
-            "english": "Matane WRRF",
-        },
-        "auteuil": {
-            "french": "StaRRE Auteuil",
-            "english": "Auteuil WRRF",
-        },
-        "fabreville": {
-            "french": "StaRRE Fabreville",
-            "english": "Fabreville WRRF",
-        },
-        "station de pompage sainte-dorothée": {
-            "french": "Station de pompage de Ste-Dorothée",
-            "english": "Ste-Dorothée pumping station",
-        },
-        "station de pompage bertrand": {
-            "french": "Station de pompage Bertrand",
-            "english": "Bertrand pumping station",
-        },
-        "la pinière": {
-            "french": "StaRRE de La Pinière",
-            "english": "La Pinière WRRF",
-        },
-    }
+    "québec station est": {
+        "french": "Québec Station Est",
+        "english": "Québec East WRRF",
+    },
+    "québec station ouest": {
+        "french": "Québec Station Ouest",
+        "english": "Québec West WRRF",
+    },
+    "montréal intercepteur nord": {
+        "french": "Montréal Intercepteur Nord",
+        "english": "Montreal North Intercepter",
+    },
+    "montréal intercepteur sud": {
+        "french": "Montréal Intercepteur Sud",
+        "english": "Montreal South Intercepter",
+    },
+    "station rimouski": {
+        "french": "StaRRE de Rimouski",
+        "english": "Rimouski WRRF",
+    },
+    "station rivière-du-loup": {
+        "french": "StaRRE de Rivière-du-Loup",
+        "english": "Rivière-du-Loup WRRF",
+    },
+    "station st-alexandre-de-kamouraska": {
+        "french": "StaRRE de St-Alexandre-de Kamouraska",
+        "english": "St-Alexandre-de-Kamouraska WRRF",
+    },
+    "trois-pistoles": {
+        "french": "StaRRE de Trois-Pistoles",
+        "english": "Trois-Pistoles WRRF",
+    },
+    "matane": {
+        "french": "StaRRE de Matane",
+        "english": "Matane WRRF",
+    },
+    "auteuil": {
+        "french": "StaRRE Auteuil",
+        "english": "Auteuil WRRF",
+    },
+    "fabreville": {
+        "french": "StaRRE Fabreville",
+        "english": "Fabreville WRRF",
+    },
+    "station de pompage sainte-dorothée": {
+        "french": "Station de pompage de Ste-Dorothée",
+        "english": "Ste-Dorothée pumping station",
+    },
+    "station de pompage bertrand": {
+        "french": "Station de pompage Bertrand",
+        "english": "Bertrand pumping station",
+    },
+    "la pinière": {
+        "french": "StaRRE de La Pinière",
+        "english": "La Pinière WRRF",
+    },
+}
 
 
 def get_website_name(name):
@@ -392,18 +370,18 @@ def get_website_name(name):
 
 
 municipalities = {
-        "qc": "Québec",
-        "mtl": "Montréal",
-        "lvl": "Laval",
-        "tr": "Trois-Rivières",
-        "dr": "Drummondville",
-        "vc": "Victoriaville",
-        "riki": "Rimouski",
-        "rdl": "Rivière-du-Loup",
-        "stak": "Saint-Alexandre-de-Kamouraska",
-        "trpis": "Trois-Pistoles",
-        "mtne": "Matane"
-    }
+    "qc": "Québec",
+    "mtl": "Montréal",
+    "lvl": "Laval",
+    "tr": "Trois-Rivières",
+    "dr": "Drummondville",
+    "vc": "Victoriaville",
+    "riki": "Rimouski",
+    "rdl": "Rivière-du-Loup",
+    "stak": "Saint-Alexandre-de-Kamouraska",
+    "trpis": "Trois-Pistoles",
+    "mtne": "Matane"
+}
 
 
 def get_municipality(id):
@@ -412,17 +390,17 @@ def get_municipality(id):
 
 
 collection = {
-        "cp": {
-            "french": "Composite",
-            "english": "Composite"},
-        "grb": {
-            "french": "Ponctuel",
-            "english": "Grab"},
-        "ps": {
-            "french": "Passif",
-            "english": "Passive"
-        }
+    "cp": {
+        "french": "Composite",
+        "english": "Composite"},
+    "grb": {
+        "french": "Ponctuel",
+        "english": "Grab"},
+    "ps": {
+        "french": "Passif",
+        "english": "Passive"
     }
+}
 
 
 def website_collection_method(cm):
@@ -669,12 +647,7 @@ def centreau_website_data(combined, site_id, dateStart, dateEnd=None):
     site_dataset = utilities.resample_per_day(site_dataset)
     samples = get_samples_to_plot(site_dataset, dateStart, dateEnd)
     viral = get_viral_timeseries(samples)
-    if (
-        isinstance(viral, pd.DataFrame)
-        and viral.empty
-        or not isinstance(viral, pd.DataFrame)
-        and not viral
-    ):
+    if (isinstance(viral, pd.DataFrame) and viral.empty or not isinstance(viral, pd.DataFrame) and not viral):
         return None, None
     sars_col = [col for col in viral.columns if 'covn1' in col][0]
     pmmv_col = [col for col in viral.columns if 'npmmov' in col][0]
@@ -797,24 +770,14 @@ def update_webplot_layout(fig, x0, lang, plot_titles, axes_titles):
 
 def add_logo_to_plot(fig, path):
     encoded_image = base64.b64encode(open(path, 'rb').read())
-    fig.add_layout_image(
-        dict(
-            source='data:image/png;base64,{}'.format(encoded_image.decode()),
-            xref="paper", yref="paper",
-            x=1.125, y=1.00,
-            sizex=0.5, sizey=0.25,
-            xanchor="right", yanchor="bottom"
-            )
-    )
+    fig.add_layout_image(dict(source=f'data:image/png;base64,{encoded_image.decode()}', xref="paper", yref="paper", x=1.125, y=1.00, sizex=0.5, sizey=0.25, xanchor="right", yanchor="bottom"))
+
     return fig
 
 
-def plot_web(data,
-             metadata,
-             dateStart,
-             output_dir,
-             lod=0,
-             langs=['french', 'english']):
+def plot_web(data, metadata, dateStart, output_dir, lod=0, langs=None):
+    if langs is None:
+        langs = ['french', 'english']
     # sourcery no-metrics
     plot_titles = get_plot_titles(metadata)
     axes_titles = get_axes_titles()
@@ -1052,7 +1015,7 @@ if __name__ == "__main__":
         print("Removing older dataset...")
         for root, dirs, files in os.walk(config.csv_folder):
             for f in files:
-                os.unlink(os.path.join(root, f))
+                os.unlink(os.path.join(str(root), str(f)))
             for d in dirs:
                 shutil.rmtree(os.path.join(root, d))
 
@@ -1066,7 +1029,7 @@ if __name__ == "__main__":
 
         combined = store.combine_dataset()
         combined = utilities.typecast_wide_table(combined)
-        combined_path = os.path.join(config.csv_folder, "_"+"combined.csv")
+        combined_path = os.path.join(config.csv_folder, "_" + "combined.csv")
         combined.to_csv(combined_path, sep=",", index=False)
         print(f"Saved Combined dataset to folder {config.csv_folder}.")
 
@@ -1081,12 +1044,12 @@ if __name__ == "__main__":
         for root, dirs, files in os.walk(config.csv_folder):
             for f in files:
                 if "combined" in f:
-                    combined_path = f
+                    combined_path = str(f)
                     break
         if combined_path is None:
             combined = pd.DataFrame()
         combined = pd.read_csv(
-            os.path.join(config.csv_folder, f), low_memory=False)
+            os.path.join(config.csv_folder, str(f)), low_memory=False)
         combined = combined.replace('nan', np.nan)
         combined = utilities.typecast_wide_table(combined)
 
@@ -1132,12 +1095,7 @@ if __name__ == "__main__":
                 combined,
                 site_id,
                 plot_start_date)
-            if (
-                isinstance(plot_data, pd.DataFrame)
-                and plot_data.empty
-                or not isinstance(plot_data, pd.DataFrame)
-                and not plot_data
-            ):
+            if (isinstance(plot_data, pd.DataFrame) and plot_data.empty or not isinstance(plot_data, pd.DataFrame) and not plot_data):
                 continue
             plot_web(
                 plot_data,
@@ -1159,13 +1117,12 @@ if __name__ == "__main__":
             filt_city = sites["siteID"].str.contains(city)
             site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
             city_sites = sites.loc[
-                    filt_city & site_type_filt, "siteID"]\
-                .dropna().unique()
+                filt_city & site_type_filt, "siteID"].dropna().unique()
             for city_site in city_sites:
                 print(f"Generating dataset for {city_site}")
                 dataset = utilities.build_site_specific_dataset(
                     combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
                 # dataset = dataset["2021-01-01":]
-                dataset.to_csv(
-                    os.path.join(config.city_output_dir, f"{city_site}.csv"))
+                path = os.path.join(config.city_output_dir, f"{city_site}.csv")
+                dataset.to_csv(path)

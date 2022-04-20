@@ -32,15 +32,13 @@ def hex_color_adder(color1: str, color2: str) -> str:
     hex_pattern = re.compile("^#([A-F]|[0-9]){6}$", flags=re.I)
     if not re.search(hex_pattern, color1)\
             or not re.search(hex_pattern, color2):
-        raise Exception(f"color strings are not valid: {color1}, {color2}")
+        raise ValueError(f"color strings are not valid: {color1}, {color2}")
     reds = (int(color1[1:3], 16), int(color2[1:3], 16))
     greens = (int(color1[3:5], 16), int(color2[3:5], 16))
     blues = (int(color1[5:], 16), int(color2[5:], 16))
     final_color = ['#']
-    for channel in [reds, greens, blues]:
-        sum_channel = min(int(0xff), sum(channel))
-        str_sum = hex(sum_channel)[2:]
-        final_color.append(str_sum)
+    final_color.extend(hex(min(255, sum(channel)))[2:] for channel in [reds, greens, blues])
+
     return ''.join(final_color)
 
 
@@ -110,7 +108,7 @@ def get_encompassing_polygons(row, poly):
 def get_midpoint_time(date1, date2):
     if pd.isna(date1) or pd.isna(date2):
         return pd.NaT
-    return date1 + (date2 - date1)/2
+    return date1 + (date2 - date1) / 2
 
 
 def clean_grab_datetime(df):
@@ -216,7 +214,7 @@ def reduce_nums(x, y):
         return y
     elif pd.isna(y):
         return x
-    return (x+y)/2
+    return (x + y) / 2
 
 
 def reduce_by_type(series):
@@ -277,8 +275,7 @@ def get_table_fields(table_name):
 
 def clean_primary_key(key):
     key = str(key)
-    if key.startswith('u'):
-        key = key[1:]
+    key = key.removeprefix('u')
     if key[0].isupper():
         key = key[0].lower() + key[1:]
     return key.replace('Ww', 'ww')
@@ -288,9 +285,9 @@ def get_primary_key(table_name=None):
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)
     keys = variables.loc[
-            variables["key"] == "Primary Key",
-            ["tableName", "variableName"]
-        ].set_index("tableName")
+        variables["key"] == "Primary Key",
+        ["tableName", "variableName"]
+    ].set_index("tableName")
     keys = keys.apply(lambda x: clean_primary_key(x["variableName"]), axis=1)
     keys = keys.to_dict()
     if table_name is None:
@@ -328,9 +325,7 @@ def build_site_specific_dataset(df, site_id):
 
 
 def resample_per_day(df):
-    if df.empty:
-        return df
-    return df.resample('1D').agg(reduce_by_type)
+    return df if df.empty else df.resample('1D').agg(reduce_by_type)
 
 
 def reduce_with_warnings(series):

@@ -88,7 +88,7 @@ class CsvMapper(base_mapper.BaseMapper):
         return df
 
     @classmethod
-    def filter_by_date(cls, df, date_col, start, end) -> pd.DataFrame:
+    def filter_by_date(cls, df, date_col, start, end, date_format="%Y-%m-%d") -> pd.DataFrame:
         """Filter all entries in a DataFrame based on a start and end date, in the
         specified column.
 
@@ -109,12 +109,12 @@ class CsvMapper(base_mapper.BaseMapper):
         the dates in the column date_col.
         """
         if start is not None and str(start).strip() != "":
-            startdate = pd.to_datetime(start, infer_datetime_format=True)
+            startdate = pd.to_datetime(start, format=date_format)
             start_filt = (df[date_col] > startdate)
         else:
             start_filt = None
         if end is not None and str(end).strip() != "":
-            enddate = pd.to_datetime(end, infer_datetime_format=True)
+            enddate = pd.to_datetime(end, format=date_format)
             end_filt = (df[date_col] < enddate)
         else:
             end_filt = None
@@ -128,7 +128,7 @@ class CsvMapper(base_mapper.BaseMapper):
             return df[start_filt & end_filt]
 
     @classmethod
-    def typecast_column(cls, desired_type, series) -> pd.Series:
+    def typecast_column(cls, desired_type, series, date_format="%Y-%m-%d") -> pd.Series:
         """Typecast all items in a Pandas Series with the specified type.
 
         Parameters
@@ -160,7 +160,7 @@ class CsvMapper(base_mapper.BaseMapper):
         elif desired_type in ["int64", "float64"]:
             series = pd.to_numeric(series, errors="coerce")
         elif desired_type == "datetime64[ns]":
-            series = pd.to_datetime(series, errors="coerce", infer_datetime_format=True)
+            series = pd.to_datetime(series, errors="coerce", format=date_format)
         series = series.astype(desired_type)
         return series
 

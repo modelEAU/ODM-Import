@@ -1,9 +1,9 @@
+import datetime as dt
 import os
 import re
-import pandas as pd
-import datetime as dt
-from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
+import pandas as pd
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 directory = os.path.dirname(__file__)
 MODELEAU_MAP_NAME = directory + "/" + "modeleau_map.csv"
@@ -26,8 +26,7 @@ class MapperFuncs:
     @classmethod
     def replace_excel_dates(cls, series):
         return series.apply(
-            lambda x: pd.to_timedelta(x, unit='d') +
-            dt.datetime(1899, 12, 30) if isinstance(x, float) else x
+            lambda x: pd.to_timedelta(x, unit='d') + dt.datetime(1899, 12, 30) if isinstance(x, float) else x
         )
 
     @classmethod
@@ -39,9 +38,9 @@ class MapperFuncs:
     @classmethod
     def build_missing_indices(cls, df):
         uniques = df["wwMeasureID"].drop_duplicates()
-        for _, unique in enumerate(uniques):
+        for unique in uniques:
             replicates = df.loc[df["wwMeasureID"] == unique]
-            indices = [x+1 for x in range(len(replicates))]
+            indices = [x + 1 for x in range(len(replicates))]
             df.loc[df["wwMeasureID"] == unique, ["index"]] = indices
         df = df.apply(lambda x: cls.edit_index_in_id(x), axis=1)
         return df
@@ -133,7 +132,7 @@ class MapperFuncs:
 
     @classmethod
     def get_wwmeasure_id(
-            cls, 
+            cls,
             label,
             end_date,
             sample_index,
@@ -148,8 +147,8 @@ class MapperFuncs:
         df = pd.concat([sample_id, ana_date], axis=1)
         df["meas_type"] = cls.get_measure_type(type_)
         df["lab_id"] = lab_id
-        df["index_no"] = str(meas_index) if not isinstance(meas_index, pd.Series) \
-            else meas_index.astype(str)
+        df["index_no"] = meas_index.astype(str) if isinstance(meas_index, pd.Series) else str(meas_index)
+
         return df.agg("_".join, axis=1)
 
     @classmethod
@@ -159,9 +158,8 @@ class MapperFuncs:
         clean_label = label.apply(lambda x: CsvMapper.clean_labels(x))
 
         df = pd.concat([clean_label, clean_date], axis=1)
-        df["index_no"] = str(sample_index) \
-            if not isinstance(sample_index, pd.Series) \
-            else sample_index.astype(str)
+        df["index_no"] = sample_index.astype(str) if isinstance(sample_index, pd.Series) else str(sample_index)
+
         df.columns = [
             "clean_label", "clean_date", "index_no"
         ]
@@ -186,12 +184,13 @@ class MapperFuncs:
 class ModelEauMapper(CsvMapper):
     def __init__(self, processing_functions=MapperFuncs):
         super().__init__(processing_functions=processing_functions)
+
     def read(self, filepath, sheet_name,
              modeleau_map=MODELEAU_MAP_NAME, lab_id="modeleau_lab"):
         lab = pd.read_excel(filepath, sheet_name=sheet_name)
         lab = self.processing_functions.clean_up(lab)
         lab.columns = [
-            self.excel_style(i+1)
+            self.excel_style(i + 1)
             for i, _ in enumerate(lab.columns.to_list())
         ]
         mapping = pd.read_csv(modeleau_map)

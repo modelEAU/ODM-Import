@@ -55,7 +55,7 @@ qc_city_sensor_folder: "Qc_sensors"
 qc_city_plant_folder: "Qc_plant"
 qc_city_rain_folder: "Qc_rain"
 
-qc_virus_data: "CentrEau-COVID_Resultats_Quebec_final.xlsx"
+qc_virus_data: "CentrEau-COVID_Resultats_Quebec.xlsx"
 qc_virus_sheet_name: "QC Data Daily Samples (McGill)"
 qc_quality_sheet_name: "QC_Compil_STEP (int)"
 qc_virus_lab: "frigon_lab"

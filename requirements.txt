@@ -1,0 +1,17 @@
+geojson
+geos
+matplotlib
+notebook
+numpy
+openpyxl
+pandas
+plotly
+pygeoif
+pyproj
+shapely
+sqlalchemy
+geojson-rewind
+geomet
+pyyaml
+easydict
+requests

@@ -608,7 +608,7 @@ class TableCombiner(Odm):
         merged["temp_point"] = merged.apply(
             lambda row: Point(
                 row["Site_geoLong"], row["Site_geoLat"]
-            ), axis=1)
+            ).coords, axis=1)
         polygons["shape"] = polygons["Polygon_wkt"].apply(
             lambda x: utilities.convert_wkt(x))
         merged["Calculated_polygonList"] = merged.apply(

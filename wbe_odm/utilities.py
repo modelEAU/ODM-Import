@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import shapely.wkt
 from geojson_rewind import rewind
+from shapely.geometry import Point
 
 UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
@@ -76,10 +77,7 @@ def pick_cphd_poly_by_size(x, poly):
 
 
 def convert_wkt(x):
-    try:
-        return shapely.wkt.loads(x)
-    except Exception:
-        return None
+    return shapely.wkt.loads(x) if x else None
 
 
 def get_polygon_for_cphd(merged, poly, cphd):
@@ -97,8 +95,8 @@ def get_polygon_for_cphd(merged, poly, cphd):
 
 def get_encompassing_polygons(row, poly):
     poly["contains"] = poly["shape"].apply(
-        lambda x: x.contains(row["temp_point"])
-        if x is not None else False)
+        lambda x: x.contains(Point(row["temp_point"]))
+        if (x and row["temp_point"]) else False)
     poly_ids = poly[
         "Polygon_polygonID"].loc[poly["contains"]].to_list()
     poly.drop(columns=["contains"], inplace=True)

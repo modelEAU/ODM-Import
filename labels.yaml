@@ -1,0 +1,287 @@
+poly_names:
+  qc_01_swrcat:
+    french: Bassin versant de la station Québec Est
+    english: Sewershed of Québec East WRRF
+
+  qc_02_swrcat:
+    french: Bassin Versant de la station Québec Ouest
+    english: Sewershed of Québec West WRRF
+
+  prov_qc_hlthreg_laval:
+    french: Laval
+    english: Laval
+
+  prov_qc_hlthreg_chaudiere-appalaches:
+    french: Chaudière-Appalaches
+    english: Chaudière-Appalaches
+
+  prov_qc_hlthreg_nord-du-quebec:
+    french: Nord-du-Québec
+    english: Nord-du:Québec
+
+  prov_qc_hlthreg_estrie:
+    french: Estrie
+    english: Estrie
+
+  prov_qc_hlthreg_capitale-nationale:
+    french: Capitale-Nationale
+    english: Capitale-Nationale
+
+  prov_qc_hlthreg_mauricie-centre-du-quebec:
+    french: Mauricie - Centre-du-Québec
+    english: Mauricie - Centre-du-Québec
+
+  prov_qc_hlthreg_monteregie:
+    french: Montérégie
+    english: Montérégie
+
+  prov_qc_hlthreg_abitibi-temiscamingue:
+    french: Abitibi - Témiscamingue
+    english: Abitibi - Témiscamingue
+
+  prov_qc_hlthreg_outaouais:
+    french: Outaouais
+    english: Outaouais
+
+  prov_qc_hlthreg_bas-saint-laurent:
+    french: Bas-Saint-Laurent
+    english: Bas-Saint-Laurent
+
+  prov_qc_hlthreg_cote-nord:
+    french: Côte-Nord
+    english: Côte-Nord
+
+  prov_qc_hlthreg_montreal:
+    french: Montréal
+    english: Montréal
+
+  prov_qc_hlthreg_laurentides:
+    french: Laurentides
+    english: Laurentides
+
+  prov_qc_hlthreg_lanaudiere:
+    french: Lanaudière
+    english: Lanaudière
+
+  prov_qc_hlthreg_saguenay-lac-saint-jean:
+    french: Saguenay - Lac-Saint-Jean
+    english: Saguenay - Lac-Saint-Jean
+
+  prov_qc_hlthreg_gaspesie-iles-de-la-madeleine:
+    french: Gaspésie - Îles-de-la-Madeleine
+    english: Gaspésie - Îles-de-la-Madeleine
+
+  mtl_01_swrcat:
+    french: Bassin versant de lintercepteur Nord de Montréal
+    english: Montréal North Intercepter Sewer Catchment
+
+  mtl_02_swrcat:
+    french: Bassin versant de lintercepteur Sud de Montréal
+    english: Montréal South Intercepter Sewer Catchment
+
+  riki_01_swrcat:
+    french: Bassin versant des égouts de Rimouski
+    english: Rimouski WRRF sewershed
+
+  mtne_01_swrcat:
+    french: Bassin versant des égouts de Matane
+    english: Matane WRRF sewershed
+
+  trpis_01_swrcat:
+    french: Bassin versant des égouts de Trois-Pistoles
+    english: Trois-Pistoles WRRF sewershed
+
+  rdl_01_swrcat:
+    french: Bassin versant des égouts de Rivière-du-Loup
+    english: Rivière-du-Loup WRRF sewershed
+
+  stak_01_swrcat:
+    french: Bassin versant des égouts de St-Alexandre-de-Kamouraska
+    english: St-Alexandre-de-Kamouraska WRRF sewershed
+
+  lvl_01_swrcat:
+    french: Bassin versant des égouts de la Station Auteuil
+    english: Auteuil WRRF sewershed
+
+  lvl_02_swrcat:
+    french: Bassin versant des égouts de la station Fabreville
+    english: Fabreville WRRF sewershed
+
+  lvl_03_swrcat:
+    french: Bassin versant de Ste-Dorothée
+    english: Ste-Dorothée sewershed
+
+  lvl_04_swrcat:
+    french: Bassin versant des égouts de Bertrand
+    english: Bertand sewershed
+
+  lvl_05_swrcat:
+    french: Bassin versant des égouts de la Pinière
+    english: La Pinière sewershed
+
+collection :
+  cp:
+    french: Composite
+    english: Composite
+  grb:
+    french: Ponctuel
+    english: Grab
+  ps:
+    french: Passif
+    english: Passive
+
+municipalities :
+  qc: Québec
+  mtl: Montréal
+  lvl: Laval
+  tr: Trois-Rivières
+  dr: Drummondville
+  vc: Victoriaville
+  riki: Rimouski
+  rdl: Rivière-du-Loup
+  stak: Saint-Alexandre-de-Kamouraska
+  trpis: Trois-Pistoles
+  mtne: Matane
+
+site_names:
+  québec station est:
+    french: Québec Station Est
+    english: Québec East WRRF
+  québec station ouest:
+    french: Québec Station Ouest
+    english: Québec West WRRF
+  montréal intercepteur nord:
+    french: Montréal Intercepteur Nord
+    english: Montreal North Intercepter
+  montréal intercepteur sud:
+    french: Montréal Intercepteur Sud
+    english: Montreal South Intercepter
+  station rimouski:
+    french: StaRRE de Rimouski
+    english: Rimouski WRRF
+  station rivière-du-loup:
+    french: StaRRE de Rivière-du-Loup
+    english: Rivière-du-Loup WRRF
+  station st-alexandre-de-kamouraska:
+    french: StaRRE de St-Alexandre-de Kamouraska
+    english: St-Alexandre-de-Kamouraska WRRF
+  trois-pistoles:
+    french: StaRRE de Trois-Pistoles
+    english: Trois-Pistoles WRRF
+  matane:
+    french: StaRRE de Matane
+    english: Matane WRRF
+  auteuil:
+    french: StaRRE Auteuil
+    english: Auteuil WRRF
+  fabreville:
+    french: StaRRE Fabreville
+    english: Fabreville WRRF
+  station de pompage sainte-dorothée:
+    french: Station de pompage de Ste-Dorothée
+    english: Ste-Dorothée pumping station
+  station de pompage bertrand:
+    french: Station de pompage Bertrand
+    english: Bertrand pumping station
+  la pinière:
+    french: StaRRE de La Pinière
+    english: La Pinière WRRF
+
+site_types :
+  wwtpmuc:
+    french: StaRRE municipale pour égouts unitaires  # noqa
+    english: WRRF for combined sewers
+  pstat:
+    french: Station de pompage
+    english: Pumping station
+  ltcf:
+    french: Établissement de soins de longue durée
+    english: Long-term care facility
+  airpln:
+    french: Avion
+    english: Airplane
+  corfcil:
+    french: Prison
+    english: Correctional facility
+  school:
+    french: École
+    english: School
+  hosptl:
+    french: Hôpital
+    english: Hospital
+  shelter:
+    french: Refuge
+    english: Shelter
+  swgtrck:
+    french: Camion de vidange
+    english: Sewage truck
+  ucampus:
+    french: Campus universitaire
+    english: University campus
+  mswrppl:
+    french: Collecteur d'égouts
+    english: Sewer main collector
+  holdtnk:
+    french: Bassin de stockage
+    english: Holding tank
+  retpond:
+    french: Bassin de rétention
+    english: Retention tank
+  wwtpmus:
+    french: StaRRE municipale pour égouts sanitaires  # noqa
+    english: Municipal WRRF for sanitary sewers
+  wwtpind:
+    french: StaRRE eaux industrielles
+    english: WWRF for industrial waters
+  lagoon:
+    french: Étang aéré
+    english: Aerated lagoon
+  septtnk:
+    french: Fosse septique
+    english: Septic tank
+  river:
+    french: Rivière
+    english: River
+  lake:
+    french: Lac
+    english: Lake
+  estuary:
+    french: Estuaire
+    english: Estuary
+  sea:
+    french: Mer
+    english: Sea
+  ocean:
+    french: Océan
+    english: Ocean
+
+variables:
+  sars:
+    french: SRAS (gc/ml)
+    english: SARS (gc/ml)
+  pmmv:
+    french: PMMoV (gc/ml)
+    english: PMMoV (gc/ml)
+  norm:
+    french: SRAS/PMMoV (gc/gc)
+    english: SARS/PMMoV (gc/gc)
+  cases:
+    french: Cas journaliers
+    english: Daily cases
+
+plot_titles:
+  centreau:
+    french: Surveillance SRAS-CoV-2 via les eaux usées
+    english: SARS-CoV-2 surveilance in wastewater
+
+axis_titles:
+  centreau:
+    1:
+      french: Nouveaux cas
+      english: New cases
+    2:
+      french: Signal viral normalisé (gc/gc)
+      english: Normalized viral signal (gc/gc)
+    3:
+      french: Signal viral (gc/ml)
+      english: Viral signal (gc/ml)

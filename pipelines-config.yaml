@@ -32,7 +32,7 @@ lod: 0.5
 default_start_date: "2021-01-01"
 lvl_start_date: "2020-10-01"
 
-logo_path:  "/Users/jeandavidt/dev/modelEAU/ODM-Import/Data/images/graph_logos.png"
+logo_path:  "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/Logos/centreau-covid_logos.png"
 data_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input"
 csv_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/odm_csv"
 polygon_output_dir: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Website geo"
@@ -40,38 +40,38 @@ site_output_dir: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLa
 plot_output_dir: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Website figures"
 city_output_dir: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/wide tables"
 
-static_data: "CentrEAU-COVID_Static_Data.xlsx"
+static_data: "Ongoing/CentrEAU-COVID_Static_Data.xlsx"
 
 inspq_data: ""
 inspq_vaccine_data: ""
 
-qc_lab_data: "COVIDProject_Lab Measurements.xlsx"
+qc_lab_data: "Ongoing/COVIDProject_Lab Measurements.xlsx"
 qc_sheet_name: "Lab analyses"
 qc_lab: "modeleau_lab"
 qc_geo_path1: "qc1-poly.txt"
 qc_geo_path2: "qc2-poly.txt"
 
-qc_city_sensor_folder: "Qc_sensors"
-qc_city_plant_folder: "Qc_plant"
-qc_city_rain_folder: "Qc_rain"
+qc_city_sensor_folder: "2021/Qc_sensors"
+qc_city_plant_folder: "2021/Qc_plant"
+qc_city_rain_folder: "2021/Qc_rain"
 
-qc_virus_data: "CentrEau-COVID_Resultats_Quebec.xlsx"
+qc_virus_data: "2021/CentrEau-COVID_Resultats_Quebec.xlsx"
 qc_virus_sheet_name: "QC Data Daily Samples (McGill)"
 qc_quality_sheet_name: "QC_Compil_STEP (int)"
 qc_virus_lab: "frigon_lab"
 
-ul_virus_data: "CentrEau-COVID_Resultats_McGill&Laval_Student_Residences.xlsx"
+ul_virus_data: "2021/CentrEau-COVID_Resultats_McGill&Laval_Student_Residences.xlsx"
 ul_virus_sheet_name: "Data Daily Samples (McGill)"
 ul_virus_lab: "frigon_lab"
 
-mtl_lab_data: "CentrEau-COVID_Resultats_Montreal_final.xlsx"
+mtl_lab_data: "2021/CentrEau-COVID_Resultats_Montreal_final.xlsx"
 mtl_poly_sheet_name: "Mtl Data Daily Samples (Poly)"
 mtl_mcgill_sheet_name: "Mtl Data Daily Samples (McGill)"
 mtl_quality_sheet_name: "MTL_Compil_STEP (int)"
 mcgill_virus_lab: "frigon_lab"
 poly_virus_lab: "dorner_lab"
 
-bsl_lab_data: "CentrEau-COVID_Resultats_BSL_final.xlsx"
+bsl_lab_data: "2021/CentrEau-COVID_Resultats_BSL_final.xlsx"
 bsl_sheet_name: "BSL Data Daily Samples (UQAR)"
 bsl_virus_lab: "bsl_lab"
 bsl_cities:
@@ -82,7 +82,7 @@ bsl_cities:
   - "rdl"
 bsl_quality_sheet_name: "BSL_Compil_STEP (int)"
 
-lvl_lab_data: "CentrEau-COVID_Resultats_Laval_final.xlsx"
+lvl_lab_data: "2021/CentrEau-COVID_Resultats_Laval_final.xlsx"
 lvl_sheet_name: "LVL_Data Daily Samples (Poly)"
 lvl_virus_lab: "dorner_lab"
 lvl_quality_sheet_name: "LVL_Compil_ALL (int)"

@@ -100,13 +100,21 @@ INSPQ_VACCINE_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/d
 
 
 class INSPQ_mapper(bm.BaseMapper):
-    def read(self, filepath=None):
+    def read(self, filepath=None, start=None, end=None):
+        if start:
+            start = pd.to_datetime(start, format="%Y-%m-%d")
+        if end:
+            end = pd.to_datetime(end, format="%Y-%m-%d")
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())].copy()
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
         hist = hist.dropna(subset=["Date"])
+        if start:
+            hist = hist.loc[hist["Date"] >= start].copy()
+        if end:
+            hist = hist.loc[hist["Date"] < end].copy()
         dfs = []
         for item, item_defaults in values_to_save.items():
             df = hist.copy()
@@ -136,13 +144,21 @@ class INSPQ_mapper(bm.BaseMapper):
 
 
 class INSPQVaccineMapper(bm.BaseMapper):
-    def read(self, filepath=None):
+    def read(self, filepath=None, start=None, end=None):
+        if start:
+            start = pd.to_datetime(start, format="%Y-%m-%d")
+        if end:
+            end = pd.to_datetime(end, format="%Y-%m-%d")
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())].copy()
         hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
         hist = hist.dropna(subset=["Date"])
+        if start:
+            hist = hist.loc[hist["Date"] >= start].copy()
+        if end:
+            hist = hist.loc[hist["Date"] < end].copy()
         dfs = []
         for item, item_defaults in vaccine_to_save.items():
             df = hist.copy()

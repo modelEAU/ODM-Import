@@ -52,16 +52,16 @@ def get_data_excerpt(origin_folder):
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-scty', '--cities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to load data from')  # noqa
+    parser.add_argument('-scty', '--cities', type=str2list, default="qc", help='Cities to load data from')  # noqa
     parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtpmus-wwtpmuc-lagoon", help='Types of sites to parse')  # noqa
     parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
     parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
     parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
     parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
-    parser.add_argument('-dcty', '--datacities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
+    parser.add_argument('-dcty', '--datacities', type=str2list, default="qc", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
     parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
     parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
-    parser.add_argument('-con', '--config', type=str, default='pipelines-config.yaml', help="Config file where all the paths are defined")  # noqa
+    parser.add_argument('-con', '--config', type=str, default='pipelines-config2022.yaml', help="Config file where all the paths are defined")  # noqa
     args = parser.parse_args()
 
     source_cities = args.cities
@@ -107,19 +107,12 @@ if __name__ == "__main__":
 
             store.append_from(qc_lab)
 
-            print("Importing data from Université Laval...")
-            print("Importing viral data from Université Laval...")
-            ul_lab = mcgill_mapper.McGillMapper()
-            virus_path = os.path.join(config.data_folder, config.ul_virus_data)
-
-            ul_lab.read(virus_path, static_path, config.ul_virus_sheet_name, config.ul_virus_lab)  # noqa
-            store.append_from(ul_lab)
-
             print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
             path = os.path.join(config.data_folder, config.qc_lab_data)
-            modeleau.read(path, config.qc_sheet_name, lab_id=config.qc_lab, start=None, end="2021-12-31")
+            modeleau.read(path, config.qc_sheet_name, lab_id=config.qc_lab, start="2022-03-01", end=None)
             store.append_from(modeleau)
+
             print("Importing Quebec city sensor data...")
             subfolder = os.path.join(
                 os.path.join(config.data_folder, config.qc_city_sensor_folder))
@@ -129,6 +122,7 @@ if __name__ == "__main__":
                 print("Parsing file " + file + "...")
                 vdq_sensors.read(os.path.join(subfolder, file))
                 store.append_from(vdq_sensors)
+
             print("Importing Quebec city lab data...")
             subfolder = os.path.join(
                 config.data_folder,
@@ -140,66 +134,6 @@ if __name__ == "__main__":
                 vdq_plant.read(os.path.join(subfolder, file))
                 store.append_from(vdq_plant)
 
-        if "mtl" in source_cities:
-            print("Importing data from Montreal...")
-            mcgill_lab = mcgill_mapper.McGillMapper()
-            poly_lab = mcgill_mapper.McGillMapper()
-            print("Importing viral data from McGill...")
-            virus_path = os.path.join(config.data_folder, config.mtl_lab_data)
-            mcgill_lab.read(virus_path, static_path, config.mtl_mcgill_sheet_name, config.mcgill_virus_lab)  # noqa
-            print("Importing viral data from Poly...")
-            poly_lab.read(virus_path, static_path, config.mtl_poly_sheet_name, config.poly_virus_lab)  # noqa
-            print("Adding Quality Checks for mtl...")
-            mtl_quality_checker = mcgill_mapper.QcChecker()
-
-            store.append_from(mcgill_lab)
-            store.append_from(poly_lab)
-            store = mtl_quality_checker.read_validation(
-                store,
-                virus_path,
-                config.mtl_quality_sheet_name)
-
-        if "bsl" in source_cities:
-            print(f"BSL cities found in config file are {config.bsl_cities}")
-            source_cities.remove("bsl")
-            source_cities.extend(config.bsl_cities)
-            print("Importing data from Bas St-Laurent...")
-            bsl_lab = mcgill_mapper.McGillMapper()
-            virus_path = os.path.join(config.data_folder, config.bsl_lab_data)
-            bsl_lab.read(virus_path, static_path, config.bsl_sheet_name, config.bsl_virus_lab)  # noqa
-            print("Adding Quality Checks for BSL...")
-            bsl_quality_check = mcgill_mapper.QcChecker()
-            bsl_quality_check.read_validation(
-                bsl_lab,
-                virus_path,
-                config.bsl_quality_sheet_name)
-            store.append_from(bsl_lab)
-
-        if "lvl" in source_cities:
-            print("Importing data from Laval...")
-            lvl_lab = mcgill_mapper.McGillMapper()
-            virus_path = os.path.join(config.data_folder, config.lvl_lab_data)
-            lvl_lab.read(
-                virus_path,
-                static_path,
-                config.lvl_sheet_name,
-                config.lvl_virus_lab)  # noqa
-            print("Adding Quality Checks for Laval...")
-            lvl_quality_checker = mcgill_mapper.QcChecker()
-            lvl_quality_checker.read_validation(
-                lvl_lab,
-                virus_path,
-                config.lvl_quality_sheet_name)
-            store.append_from(lvl_lab)
-
-        # This loads the complete qc_01 and qc_02 from external files. Useful when the geometry gets clipped in the excel static data file.
-        '''if not store.polygon.empty:
-            for file, poly_id in zip([config.qc_geo_path1, config.qc_geo_path2], ["qc_01_swrcat", "qc_02_swrcat"]):
-                with open(os.path.join(config.data_folder, file), "r") as f:
-                    text = f.read()
-                    text = text[:-1]  # remove line break
-                store.polygon.loc[store.polygon['polygonID'] == poly_id, "wkt"] = text'''
-
         if publichealth:
             print("Importing case data from INSPQ...")
             public_health = inspq_mapper.INSPQ_mapper()
@@ -207,7 +141,7 @@ if __name__ == "__main__":
                 path = None
             else:
                 path = os.path.join(config.data_folder, config.inspq_data)
-            public_health.read(path, start=None, end="2021-12-31")
+            public_health.read(path, start="2022-03-01", end=None)
             store.append_from(public_health)
             print("Importing vaccine data from INSPQ...")
             vacc = inspq_mapper.INSPQVaccineMapper()
@@ -217,7 +151,7 @@ if __name__ == "__main__":
                 path = os.path.join(
                     config.data_folder,
                     config.inspq_vaccine_data)
-            vacc.read(path, start=None, end="2021-12-31")
+            vacc.read(path, start="2022-03-01", end=None)
             store.append_from(vacc)
 
         print("Removing older dataset...")
@@ -299,31 +233,13 @@ if __name__ == "__main__":
 
         for site_id in sites['siteID'].to_list():
             print("building website plots for ", site_id, "...")
-            plot_start_date = config.lvl_start_date\
-                if 'lvl' in site_id.lower()\
-                else config.default_start_date
-            plot_data, metadata = visualizations.centreau_website_data(
-                combined,
-                labels,
-                site_id,
-                plot_start_date)
-            if (isinstance(plot_data, pd.DataFrame) and plot_data.empty or not isinstance(plot_data, pd.DataFrame) and not plot_data):
-                continue
-            visualizations.plot_centreau(
-                plot_data,
-                metadata,
-                plot_start_date,
-                config.plot_output_dir,
-                labels,
-                config.logo_path,
-                lod=config.lod,
-                langs=config.plot_langs)
-
+            plot_start_date = config.default_start_date
+            # insert func to get data to plot here
+            # insert plotting func here
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")
-        print("Generating ML Dataset...")
+        print("Generating site-specific wide datasets...")
         if "bsl" in dataset_cities:
-            print(f"BSL cities found in config file are {config.bsl_cities}")
             dataset_cities.remove("bsl")
             dataset_cities.extend(config.bsl_cities)
         sites = store.site
@@ -337,6 +253,5 @@ if __name__ == "__main__":
                 dataset = utilities.build_site_specific_dataset(
                     combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
-                # dataset = dataset["2021-01-01":]
                 path = os.path.join(config.city_output_dir, f"{city_site}.csv")
                 dataset.to_csv(path)

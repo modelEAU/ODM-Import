@@ -208,19 +208,32 @@ class MapperFuncs:
             df.loc[df["dates"] > cutoff_dates[-1], "reporter"] = reporter_names[-1]
         return df["reporter"]
 
+    @classmethod
+    def slice_on_dates(cls, df, start=None, end=None):
+        if start:
+            df = df.loc[df["J"] >= start].copy()
+        if end:
+            df = df.loc[df["J"] < end].copy()
+        return df
+
 
 class ModelEauMapper(CsvMapper):
     def __init__(self, processing_functions=MapperFuncs):
         super().__init__(processing_functions=processing_functions)
 
     def read(self, filepath, sheet_name,
-             modeleau_map=MODELEAU_MAP_NAME, lab_id="modeleau_lab"):
+             modeleau_map=MODELEAU_MAP_NAME, lab_id="modeleau_lab", start=None, end=None):
+        if start:
+            start = pd.to_datetime(start, format="%Y-%m-%d")
+        if end:
+            end = pd.to_datetime(end, format="%Y-%m-%d")
         lab = pd.read_excel(filepath, sheet_name=sheet_name)
         lab = self.processing_functions.clean_up(lab)
         lab.columns = [
             self.excel_style(i + 1)
             for i, _ in enumerate(lab.columns.to_list())
         ]
+        lab = self.processing_functions.slice_on_dates(lab, start=start, end=end)
         mapping = pd.read_csv(modeleau_map)
         mapping.fillna("", inplace=True)
         mapping = mapping.astype(str)
@@ -243,7 +256,7 @@ class ModelEauMapper(CsvMapper):
 
 
 if __name__ == "__main__":
-    path = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/COVIDProject_Lab Measurements.xlsx"  # noqa
+    path = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/Ongoing/COVIDProject_Lab Measurements.xlsx"  # noqa
     sheet_name = "Lab analyses"
     mapper = ModelEauMapper()
     mapper.read(path, sheet_name)

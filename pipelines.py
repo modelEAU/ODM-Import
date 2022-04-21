@@ -192,12 +192,13 @@ if __name__ == "__main__":
                 config.lvl_quality_sheet_name)
             store.append_from(lvl_lab)
 
-        if not store.polygon.empty:
+        # This loads the complete qc_01 and qc_02 from external files. Useful when the geometry gets clipped in the excel static data file.
+        '''if not store.polygon.empty:
             for file, poly_id in zip([config.qc_geo_path1, config.qc_geo_path2], ["qc_01_swrcat", "qc_02_swrcat"]):
                 with open(os.path.join(config.data_folder, file), "r") as f:
                     text = f.read()
                     text = text[:-1]  # remove line break
-                store.polygon.loc[store.polygon['polygonID'] == poly_id, "wkt"] = text
+                store.polygon.loc[store.polygon['polygonID'] == poly_id, "wkt"] = text'''
 
         if publichealth:
             print("Importing case data from INSPQ...")

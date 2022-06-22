@@ -1,15 +1,13 @@
-#%%
 import os
-import pandas as pd
-import numpy as np
-from wbe_odm.odm_mappers import (
-    base_mapper as bm
-)
-from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
+import numpy as np
+import pandas as pd
+from wbe_odm.odm_mappers import base_mapper as bm
+from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 directory = os.path.dirname(__file__)
 VDQ_LAB_MAP_NAME = directory + "/" + "vdqlab_map.csv"
+VDQ_LAB_MAP_NAME_2022 = directory + "/" + "vdqlab2022_map.csv"
 VDQ_PLUVIO_MAP_NAME = directory + "/" + "vdqpluvio_map.csv"
 VDQ_SENSOR_MAP_NAME = directory + "/" + "vdqsensors_map.csv"
 
@@ -31,14 +29,14 @@ ST_PASCAL_CURVE = pd.DataFrame.from_dict({
         0.553, 0.599, 0.651,
         0.697, 0.76, 0.864,
         0.95, 1.025, 1.612, 2.965]
-    }, orient="columns"
-)
+}, orient="columns")
 
 
 site_map = {
     "Données station Est": "QC_01",
     "Données station Ouest": "QC_02"
 }
+
 
 class MapperFuncs:
     @classmethod
@@ -82,15 +80,16 @@ class MapperFuncs:
 
     @classmethod
     def limoilou_n_flow(cls, flow):
-        return pd.to_numeric(flow, errors="coerce")/3 * 24
+        return pd.to_numeric(flow, errors="coerce") / 3 * 24
 
     @classmethod
     def limoilou_s_flow(cls, flow):
-        return pd.to_numeric(flow, errors="coerce") * 2/3 * 24
-    
+        return pd.to_numeric(flow, errors="coerce") * 2 / 3 * 24
+
     @classmethod
     def m3h_to_m3d(cls, flow):
         return flow * 24
+
 
 class VdQPlantMapper(CsvMapper):
     def __init__(self, processing_functions=MapperFuncs):
@@ -109,7 +108,7 @@ class VdQPlantMapper(CsvMapper):
         site_measure_dfs = []
         for sheet_name, df in xls.items():
             df.columns = [
-                self.excel_style(i+1)
+                self.excel_style(i + 1)
                 for i, _ in enumerate(df.columns.to_list())
             ]
             df["location"] = site_map[sheet_name]
@@ -119,6 +118,35 @@ class VdQPlantMapper(CsvMapper):
             site_measure_dfs.append(dynamic_tables["SiteMeasure"])
 
         site_measure = pd.concat(site_measure_dfs)
+        site_measure.drop_duplicates(keep="first", inplace=True)
+        site_measure.dropna(subset=["value"], inplace=True)
+        site_measure = self.type_cast_table("SiteMeasure", site_measure)
+        self.site_measure = site_measure
+        return
+
+
+class VdQPlantMapper2022(CsvMapper):
+    def __init__(self, processing_functions=MapperFuncs):
+        super().__init__(processing_functions=processing_functions)
+
+    def read(self, lab_path, lab_map=VDQ_LAB_MAP_NAME_2022):
+        xls = pd.read_excel(lab_path, header=3)
+        xls = xls.iloc[1:].copy()
+        static_data = self.read_static_data(None)
+        mapping = pd.read_csv(lab_map)
+        mapping.fillna("", inplace=True)
+        mapping = mapping.astype(str)
+
+        lab_id = None
+        xls.columns = [
+            self.excel_style(i + 1)
+            for i, _ in enumerate(xls.columns.to_list())
+        ]
+        dynamic_tables = self.parse_sheet(
+            mapping, static_data, xls, self.processing_functions, lab_id
+        )
+
+        site_measure = dynamic_tables["SiteMeasure"]
         site_measure.drop_duplicates(keep="first", inplace=True)
         site_measure.dropna(subset=["value"], inplace=True)
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
@@ -138,7 +166,7 @@ class VdQSensorsMapper(CsvMapper):
         mapping = mapping.astype(str)
         lab_id = None
         df.columns = [
-            self.excel_style(i+1)
+            self.excel_style(i + 1)
             for i, _ in enumerate(df.columns.to_list())
         ]
         df = df.loc[
@@ -197,8 +225,7 @@ class VdQRainMapper(bm.BaseMapper):
         df = df.dropna(subset=['Date'], axis=0)
         df = df.reset_index(drop=True)
 
-        df['siteID'] = pd.Series(
-            map(lambda x: 'QC_wstation_' + str(x), df['Pluvio']))
+        df['siteID'] = pd.Series(map(lambda x: f'QC_wstation_{str(x)}', df['Pluvio']))
         del df['Pluvio']
 
         for k, v in rain_default_site_measurement.items():
@@ -211,10 +238,17 @@ class VdQRainMapper(bm.BaseMapper):
         df.rename(columns={
             "Hauteur totale (mm)": "value",
             "Date": "dateTime"
-            }, inplace=True)
+        }, inplace=True)
         df = df[list(rain_default_site_measurement.keys())]
         site_measure = self.type_cast_table(odm_name, df)
         self.site_measure = site_measure
 
     def validates(self):
         return True
+
+
+if __name__ == "__main__":
+    filepath = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/2022/Qc_plant/ULaval_Covid2022.xlsm"
+    mapper = VdQPlantMapper2022()
+    mapper.read(filepath)
+    print(mapper.site_measure.head())

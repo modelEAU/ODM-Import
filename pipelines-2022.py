@@ -113,44 +113,28 @@ if __name__ == "__main__":
             modeleau.read(path, config.qc_sheet_name, lab_id=config.qc_lab, start="2022-03-01", end=None)
             store.append_from(modeleau)
 
-            print("Importing Quebec city sensor data...")
-            subfolder = os.path.join(
-                os.path.join(config.data_folder, config.qc_city_sensor_folder))
-            files = load_files_from_folder(subfolder, "xls")
-            for file in files:
-                vdq_sensors = vdq_mapper.VdQSensorsMapper()
-                print("Parsing file " + file + "...")
-                vdq_sensors.read(os.path.join(subfolder, file))
-                store.append_from(vdq_sensors)
-
             print("Importing Quebec city lab data...")
             subfolder = os.path.join(
                 config.data_folder,
                 config.qc_city_plant_folder)
             files = load_files_from_folder(subfolder, "xls")
             for file in files:
-                vdq_plant = vdq_mapper.VdQPlantMapper()
-                print("Parsing file " + file + "...")
+                vdq_plant = vdq_mapper.VdQPlantMapper2022()
+                print(f"Parsing file {file}...")
                 vdq_plant.read(os.path.join(subfolder, file))
                 store.append_from(vdq_plant)
 
         if publichealth:
             print("Importing case data from INSPQ...")
             public_health = inspq_mapper.INSPQ_mapper()
-            if not config.inspq_data:
-                path = None
-            else:
-                path = os.path.join(config.data_folder, config.inspq_data)
+            path = os.path.join(config.data_folder, config.inspq_data) if config.inspq_data else None
+
             public_health.read(path, start="2022-03-01", end=None)
             store.append_from(public_health)
             print("Importing vaccine data from INSPQ...")
             vacc = inspq_mapper.INSPQVaccineMapper()
-            if not config.inspq_vaccine_data:
-                path = None
-            else:
-                path = os.path.join(
-                    config.data_folder,
-                    config.inspq_vaccine_data)
+            path = os.path.join(config.data_folder, config.inspq_vaccine_data) if config.inspq_vaccine_data else None
+
             vacc.read(path, start="2022-03-01", end=None)
             store.append_from(vacc)
 

@@ -20,51 +20,39 @@ UNKNOWN_TOKENS = [
 CONVERSION_DICT = {
     "ww_measure": {
         "odm_name": "WWMeasure",
-        "source_name": ""
-        },
+        "source_name": ""},
     "site_measure": {
         "odm_name": "SiteMeasure",
-        "source_name": ""
-        },
+        "source_name": ""},
     "sample": {
         "odm_name": "Sample",
-        "source_name": ""
-        },
+        "source_name": ""},
     "site": {
         "odm_name": "Site",
-        "source_name": ""
-        },
+        "source_name": ""},
     "polygon": {
         "odm_name": "Polygon",
-        "source_name": ""
-        },
+        "source_name": ""},
     "cphd": {
         "odm_name": "CovidPublicHealthData",
-        "source_name": ""
-        },
+        "source_name": ""},
     "reporter": {
         "odm_name": "Reporter",
-        "source_name": ""
-        },
+        "source_name": ""},
     "lab": {
         "odm_name": "Lab",
-        "source_name": ""
-        },
+        "source_name": ""},
     "assay_method": {
         "odm_name": "AssayMethod",
-        "source_name": ""
-        },
+        "source_name": ""},
     "instrument": {
         "odm_name": "Instrument",
-        "source_name": ""
-        },
+        "source_name": ""},
 }
 
 
 def replace_unknown_by_default(string, default):
-    if re.fullmatch(utilities.UNKNOWN_REGEX, string):
-        return default
-    return string
+    return default if re.fullmatch(utilities.UNKNOWN_REGEX, string) else string
 
 
 def parse_types(table_name, series):
@@ -124,7 +112,7 @@ class BaseMapper(ABC):
     conversion_dict = CONVERSION_DICT
 
     @abstractmethod
-    def read():
+    def read(self):
         pass
 
     @abstractmethod
@@ -146,8 +134,8 @@ class BaseMapper(ABC):
 
     def type_cast_table(self, odm_name, df):
         return df.apply(
-                lambda x: parse_types(odm_name, x),
-                axis=0)
+            lambda x: parse_types(odm_name, x),
+            axis=0)
 
     def get_attribute_from_odm_name(self, odm_name):
         for attribute, dico in self.conversion_dict.items():
@@ -158,8 +146,8 @@ class BaseMapper(ABC):
 
 
 def get_odm_names(attr=None):
-        if attr is None:
-            return [
-                CONVERSION_DICT[x]["odm_name"]
-                for x in CONVERSION_DICT.keys()]
-        return CONVERSION_DICT[attr]["odm_name"]
+    if attr is None:
+        return [
+            CONVERSION_DICT[x]["odm_name"]
+            for x in CONVERSION_DICT.keys()]
+    return CONVERSION_DICT[attr]["odm_name"]

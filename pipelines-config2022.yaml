@@ -45,6 +45,13 @@ static_data: "Ongoing/CentrEAU-COVID_Static_Data.xlsx"
 inspq_data: ""
 inspq_vaccine_data: ""
 
+bsl_cities:
+  - "stak"
+  - "trpis"
+  - "mtne"
+  - "riki"
+  - "rdl"
+
 qc_lab_data: "Ongoing/COVIDProject_Lab Measurements.xlsx"
 qc_sheet_name: "Lab analyses"
 qc_lab: "modeleau_lab"

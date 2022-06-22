@@ -11,20 +11,25 @@ from easydict import EasyDict
 
 import visualizations
 from wbe_odm import odm, utilities
-from wbe_odm.odm_mappers import (csv_folder_mapper, inspq_mapper,
-                                 mcgill_mapper, modeleau_mapper, vdq_mapper)
+from wbe_odm.odm_mappers import (
+    csv_folder_mapper,
+    inspq_mapper,
+    mcgill_mapper,
+    modeleau_mapper,
+    vdq_mapper,
+)
 
 
 def str2bool(arg):
-    str_yes = {'y', 'yes', 't', 'true'}
-    str_no = {'n', 'no', 'f', 'false'}
+    str_yes = {"y", "yes", "t", "true"}
+    str_no = {"n", "no", "f", "false"}
     value = arg.lower()
     if value in str_yes:
         return True
     elif value in str_no:
         return False
     else:
-        raise argparse.ArgumentError('Unrecognized boolean value.')
+        raise argparse.ArgumentError("Unrecognized boolean value.")
 
 
 def str2list(arg):
@@ -44,24 +49,78 @@ def get_data_excerpt(origin_folder):
         df = pd.read_csv(path)
         if len(df) > 1000:
             df = df.sample(n=1000)
-        df.to_csv(
-            os.path.join(short_csv_path, file),
-            sep=",", index=False)
+        df.to_csv(os.path.join(short_csv_path, file), sep=",", index=False)
 
 
 if __name__ == "__main__":
     # Arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-scty', '--cities', type=str2list, default="qc", help='Cities to load data from')  # noqa
-    parser.add_argument('-st', '--sitetypes', type=str2list, default="wwtpmus-wwtpmuc-lagoon", help='Types of sites to parse')  # noqa
-    parser.add_argument('-cphd', '--publichealth', type=str2bool, default=True, help='Include public health data (default=True')  # noqa
-    parser.add_argument('-re', '--reload', type=str2bool, default=False, help='Reload from raw sources (default=False) instead of from the current csv')  # noqa
-    parser.add_argument('-sh', '--short', type=str2bool, default=False, help='Generate a small dataset for testing purposes')  # noqa
-    parser.add_argument('-gd', '--generate', type=str2bool, default=False, help='Generate datasets for machine learning (default=False)')  # noqa
-    parser.add_argument('-dcty', '--datacities', type=str2list, default="qc", help='Cities for which to generate datasets for machine learning (default=qc)')  # noqa
-    parser.add_argument('-web', '--website', type=str2bool, default=False, help="Build website files.")  # noqa
-    parser.add_argument('-wcty', '--webcities', type=str2list, default="qc-mtl-lvl-bsl", help='Cities to display on the website')  # noqa
-    parser.add_argument('-con', '--config', type=str, default='pipelines-config2022.yaml', help="Config file where all the paths are defined")  # noqa
+    parser.add_argument(
+        "-scty",
+        "--cities",
+        type=str2list,
+        default="qc-mtl-lvl-gtn",
+        help="Cities to load data from",
+    )  # noqa
+    parser.add_argument(
+        "-st",
+        "--sitetypes",
+        type=str2list,
+        default="wwtpmus-wwtpmuc-lagoon",
+        help="Types of sites to parse",
+    )  # noqa
+    parser.add_argument(
+        "-cphd",
+        "--publichealth",
+        type=str2bool,
+        default=True,
+        help="Include public health data (default=True",
+    )  # noqa
+    parser.add_argument(
+        "-re",
+        "--reload",
+        type=str2bool,
+        default=False,
+        help="Reload from raw sources (default=False) instead of from the current csv",
+    )  # noqa
+    parser.add_argument(
+        "-sh",
+        "--short",
+        type=str2bool,
+        default=False,
+        help="Generate a small dataset for testing purposes",
+    )  # noqa
+    parser.add_argument(
+        "-gd",
+        "--generate",
+        type=str2bool,
+        default=False,
+        help="Generate datasets for machine learning (default=False)",
+    )  # noqa
+    parser.add_argument(
+        "-dcty",
+        "--datacities",
+        type=str2list,
+        default="qc-mtl-lvl-gtn",
+        help="Cities for which to generate datasets for machine learning (default=qc)",
+    )  # noqa
+    parser.add_argument(
+        "-web", "--website", type=str2bool, default=False, help="Build website files."
+    )  # noqa
+    parser.add_argument(
+        "-wcty",
+        "--webcities",
+        type=str2list,
+        default="qc-mtl-lvl-gtn",
+        help="Cities to display on the website",
+    )  # noqa
+    parser.add_argument(
+        "-con",
+        "--config",
+        type=str,
+        default="pipelines-config2022.yaml",
+        help="Config file where all the paths are defined",
+    )  # noqa
     args = parser.parse_args()
 
     source_cities = args.cities
@@ -81,10 +140,9 @@ if __name__ == "__main__":
             config = EasyDict(yaml.safe_load(f))
 
     if not os.path.exists(config.csv_folder):
-        raise ValueError(
-            "CSV folder does not exist. Please modify config file.")
+        raise ValueError("CSV folder does not exist. Please modify config file.")
 
-    warnings.filterwarnings('error')
+    warnings.filterwarnings("error")
 
     store = odm.Odm()
     print(source_cities)
@@ -97,26 +155,31 @@ if __name__ == "__main__":
             qc_lab = mcgill_mapper.McGillMapper()
             virus_path = os.path.join(config.data_folder, config.qc_virus_data)
 
-            qc_lab.read(virus_path, static_path, config.qc_virus_sheet_name, config.qc_virus_lab)  # noqa
+            qc_lab.read(
+                virus_path, static_path, config.qc_virus_sheet_name, config.qc_virus_lab
+            )  # noqa
             print("Adding Quality Checks for Qc...")
             qc_quality_checker = mcgill_mapper.QcChecker()
             qc_lab = qc_quality_checker.read_validation(
-                qc_lab,
-                virus_path,
-                config.qc_quality_sheet_name)
+                qc_lab, virus_path, config.qc_quality_sheet_name
+            )
 
             store.append_from(qc_lab)
 
             print("Importing Wastewater lab data from Quebec City...")
             modeleau = modeleau_mapper.ModelEauMapper()
             path = os.path.join(config.data_folder, config.qc_lab_data)
-            modeleau.read(path, config.qc_sheet_name, lab_id=config.qc_lab, start="2022-03-01", end=None)
+            modeleau.read(
+                path,
+                config.qc_sheet_name,
+                lab_id=config.qc_lab,
+                start="2022-03-01",
+                end=None,
+            )
             store.append_from(modeleau)
 
             print("Importing Quebec city lab data...")
-            subfolder = os.path.join(
-                config.data_folder,
-                config.qc_city_plant_folder)
+            subfolder = os.path.join(config.data_folder, config.qc_city_plant_folder)
             files = load_files_from_folder(subfolder, "xls")
             for file in files:
                 vdq_plant = vdq_mapper.VdQPlantMapper2022()
@@ -124,16 +187,81 @@ if __name__ == "__main__":
                 vdq_plant.read(os.path.join(subfolder, file))
                 store.append_from(vdq_plant)
 
+        if "mtl" in source_cities:
+            print("Importing viral data from Montreal...")
+            mtl_lab = mcgill_mapper.McGillMapper()
+            virus_path = os.path.join(config.data_folder, config.mtl_virus_data)
+
+            mtl_lab.read(
+                virus_path,
+                static_path,
+                config.mtl_virus_sheet_name,
+                config.mtl_virus_lab,
+            )  # noqa
+            print("Adding Quality Checks for Montreal...")
+            mtl_quality_checker = mcgill_mapper.QcChecker()
+            mtl_lab = mtl_quality_checker.read_validation(
+                mtl_lab, virus_path, config.mtl_quality_sheet_name
+            )
+
+            store.append_from(mtl_lab)
+
+        if "lvl" in source_cities:
+            print("Importing viral data from Laval...")
+            lvl_lab = mcgill_mapper.McGillMapper()
+            virus_path = os.path.join(config.data_folder, config.lvl_virus_data)
+
+            lvl_lab.read(
+                virus_path,
+                static_path,
+                config.lvl_virus_sheet_name,
+                config.lvl_virus_lab,
+            )  # noqa
+            print("Adding Quality Checks for Laval...")
+            lvl_quality_checker = mcgill_mapper.QcChecker()
+            lvl_lab = lvl_quality_checker.read_validation(
+                lvl_lab, virus_path, config.lvl_quality_sheet_name
+            )
+
+            store.append_from(lvl_lab)
+
+        if "gtn" in source_cities:
+            print("Importing viral data from Gatineau...")
+            gtn_lab = mcgill_mapper.McGillMapper()
+            virus_path = os.path.join(config.data_folder, config.gtn_virus_data)
+
+            gtn_lab.read(
+                virus_path,
+                static_path,
+                config.gtn_virus_sheet_name,
+                config.gtn_virus_lab,
+            )  # noqa
+            print("Adding Quality Checks for Gatineau...")
+            gtn_quality_checker = mcgill_mapper.QcChecker()
+            gtn_lab = gtn_quality_checker.read_validation(
+                gtn_lab, virus_path, config.gtn_quality_sheet_name
+            )
+
+            store.append_from(gtn_lab)
+
         if publichealth:
             print("Importing case data from INSPQ...")
             public_health = inspq_mapper.INSPQ_mapper()
-            path = os.path.join(config.data_folder, config.inspq_data) if config.inspq_data else None
+            path = (
+                os.path.join(config.data_folder, config.inspq_data)
+                if config.inspq_data
+                else None
+            )
 
             public_health.read(path, start="2022-03-01", end=None)
             store.append_from(public_health)
             print("Importing vaccine data from INSPQ...")
             vacc = inspq_mapper.INSPQVaccineMapper()
-            path = os.path.join(config.data_folder, config.inspq_vaccine_data) if config.inspq_vaccine_data else None
+            path = (
+                os.path.join(config.data_folder, config.inspq_vaccine_data)
+                if config.inspq_vaccine_data
+                else None
+            )
 
             vacc.read(path, start="2022-03-01", end=None)
             store.append_from(vacc)
@@ -175,8 +303,9 @@ if __name__ == "__main__":
         if combined_path is None:
             combined = pd.DataFrame()
         combined = pd.read_csv(
-            os.path.join(config.csv_folder, str(f)), low_memory=False)
-        combined = combined.replace('nan', np.nan)
+            os.path.join(config.csv_folder, str(f)), low_memory=False
+        )
+        combined = combined.replace("nan", np.nan)
         combined = utilities.typecast_wide_table(combined)
 
     if website:
@@ -191,11 +320,10 @@ if __name__ == "__main__":
         sites["siteID"] = sites["siteID"].str.lower()
         sites = sites.drop_duplicates(subset=["siteID"], keep="first").copy()
 
-        site_type_filt = sites["type"]\
-            .str.lower().str.contains('|'.join(sitetypes))
+        site_type_filt = sites["type"].str.lower().str.contains("|".join(sitetypes))
         sites = sites.loc[site_type_filt]
 
-        city_filt = sites["siteID"].str.contains('|'.join(web_cities))
+        city_filt = sites["siteID"].str.contains("|".join(web_cities))
         sites = sites.loc[city_filt]
         print("building site geojson...")
         visualizations.get_site_geoJSON(
@@ -205,7 +333,8 @@ if __name__ == "__main__":
             config.site_output_dir,
             config.site_name,
             config.colors,
-            config.default_start_date)
+            config.default_start_date,
+        )
         print("Building polygon geojson...")
         poly_list = sites["polygonID"].to_list()
         visualizations.build_polygon_geoJSON(
@@ -213,13 +342,33 @@ if __name__ == "__main__":
             poly_list,
             config.polygon_output_dir,
             config.poly_name,
-            config.polys_to_extract)
+            config.polys_to_extract,
+        )
 
-        for site_id in sites['siteID'].to_list():
+        for site_id in sites["siteID"].to_list():
             print("building website plots for ", site_id, "...")
             plot_start_date = config.default_start_date
-            # insert func to get data to plot here
-            # insert plotting func here
+            plot_data, metadata = visualizations.centreau_website_data(
+                combined, labels, site_id, plot_start_date
+            )
+            if (
+                isinstance(plot_data, pd.DataFrame)
+                and plot_data.empty
+                or not isinstance(plot_data, pd.DataFrame)
+                and not plot_data
+            ):
+                continue
+            visualizations.plot_centreau(
+                plot_data,
+                metadata,
+                plot_start_date,
+                config.plot_output_dir,
+                labels,
+                config.logo_path,
+                lod=config.lod,
+                langs=config.plot_langs,
+            )
+
     if generate:
         date = datetime.now().strftime("%Y-%m-%d")
         print("Generating site-specific wide datasets...")
@@ -229,13 +378,13 @@ if __name__ == "__main__":
         sites = store.site
         for city in dataset_cities:
             filt_city = sites["siteID"].str.contains(city)
-            site_type_filt = sites["type"].str.contains('|'.join(sitetypes))
-            city_sites = sites.loc[
-                filt_city & site_type_filt, "siteID"].dropna().unique()
+            site_type_filt = sites["type"].str.contains("|".join(sitetypes))
+            city_sites = (
+                sites.loc[filt_city & site_type_filt, "siteID"].dropna().unique()
+            )
             for city_site in city_sites:
                 print(f"Generating dataset for {city_site}")
-                dataset = utilities.build_site_specific_dataset(
-                    combined, city_site)
+                dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
                 path = os.path.join(config.city_output_dir, f"{city_site}.csv")
                 dataset.to_csv(path)

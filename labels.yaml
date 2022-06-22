@@ -119,6 +119,10 @@ poly_names:
     french: Bassin versant des égouts de la Pinière
     english: La Pinière sewershed
 
+  gtn_01_swrcat:
+    french: Bassin versant des égouts de Gatineau
+    english: Gatineau sewershed
+
 collection :
   cp:
     french: Composite
@@ -142,6 +146,8 @@ municipalities :
   stak: Saint-Alexandre-de-Kamouraska
   trpis: Trois-Pistoles
   mtne: Matane
+  gtn: Gatineau
+
 
 site_names:
   québec station est:
@@ -186,6 +192,10 @@ site_names:
   la pinière:
     french: StaRRE de La Pinière
     english: La Pinière WRRF
+  gatineau:
+    french: StaRRE de Gatineau
+    english: Gatineau WRRF
+
 
 site_types :
   wwtpmuc:

@@ -31,6 +31,7 @@ lod: 0.5
 
 default_start_date: "2022-03-01"
 
+logo_path:  "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/Logos/centreau-covid_logos.png"
 data_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input"
 csv_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/odm_csv_2022"
 
@@ -63,6 +64,21 @@ qc_virus_data: "2022/CentrEau-COVID_Resultats_Quebec_2022.xlsx"
 qc_virus_sheet_name: "QC Data Daily Samples (McGill)"
 qc_quality_sheet_name: "QC_Compil_STEP (int)"
 qc_virus_lab: "frigon_lab"
+
+mtl_virus_data: "2022/CentrEau-COVID_Resultats_Montreal_2022.xlsx"
+mtl_virus_sheet_name: "Mtl Data Daily Samples (McGill)"
+mtl_quality_sheet_name: "MTL_Compil_STEP (int)"
+mtl_virus_lab: "frigon_lab"
+
+lvl_virus_data: "2022/CentrEau-COVID_Resultats_Laval_2022.xlsx"
+lvl_virus_sheet_name: "LVL_Data Daily Samples (McGill)"
+lvl_quality_sheet_name: "LVL_Compil_ALL (int)"
+lvl_virus_lab: "frigon_lab"
+
+gtn_virus_data: "2022/CentrEau-COVID_Resultats_Gatineau_2022.xlsx"
+gtn_virus_sheet_name: "GTN_Data Daily Samples (McGill)"
+gtn_quality_sheet_name: "GTN_Compil_ALL (int)"
+gtn_virus_lab: "frigon_lab"
 
 poly_name: "polygons_2022.geojson"
 polys_to_extract:

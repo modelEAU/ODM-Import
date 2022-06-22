@@ -604,12 +604,12 @@ class QcChecker:
             "BRSV (%rec)": {
                 "rejected_col": "Rejected by",
                 "unit": "pctrecovery",
-                "type": "nbrsv",
+                "type": "brsv",
             },
             "PMMV (gc/ml)": {
                 "rejected_col": "Rejected by.1",
                 "unit": "gcml",
-                "type": "npmmov",
+                "type": "pmmov",
             },
             "SARS (gc/ml)": {
                 "rejected_col": "Rejected by.2",

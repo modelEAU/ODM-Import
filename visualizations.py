@@ -126,14 +126,14 @@ def get_viral_timeseries(samples):
     value_cols = []
     dfs = []
     covn1_col = None
-    for virus in ['npmmov', 'covn1']:
+    for virus in ['pmmov', 'covn1']:
         common = "_".join([table, virus, unit, agg_method])
         value_col = "_".join([common, 'value'])
         value_cols.append(value_col)
         if 'covn1' in value_col:
             covn1_col = value_col
-        elif 'npmmov' in value_col:
-            npmmov_col = value_col
+        elif 'pmmov' in value_col:
+            pmmov_col = value_col
         quality_col = "_".join([common, 'qualityFlag'])
         df = samples.loc[:, [value_col, quality_col]]
         quality_filt = ~df[quality_col].str.lower().str.contains('true')
@@ -142,7 +142,7 @@ def get_viral_timeseries(samples):
 
     viral = pd.concat(dfs, axis=1)
     viral = viral[[col for col in viral.columns if 'value' in col]]
-    viral["norm"] = viral[covn1_col] / viral[npmmov_col]
+    viral["norm"] = viral[covn1_col] / viral[pmmov_col]
     return viral
 
 
@@ -320,7 +320,7 @@ def centreau_website_data(combined, labels, site_id, dateStart, dateEnd=None):
     if (isinstance(viral, pd.DataFrame) and viral.empty or not isinstance(viral, pd.DataFrame) and not viral):
         return None, None
     sars_col = [col for col in viral.columns if 'covn1' in col][0]
-    pmmv_col = [col for col in viral.columns if 'npmmov' in col][0]
+    pmmv_col = [col for col in viral.columns if 'pmmov' in col][0]
     norm_col = 'norm'
     cases_col = 'CPHD_conf_report_value'
 

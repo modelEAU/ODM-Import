@@ -125,7 +125,7 @@ Turbidity,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 Turbidity,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 Turbidity,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 Turbidity,WWMeasure,notes,,lab sheet,AA,
-BRSV Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nBRSV:str;AI;__const__1:int,get_wwmeasure_id
+BRSV Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__brsv:str;AI;__const__1:int,get_wwmeasure_id
 BRSV Ct1,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 BRSV Ct1,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 BRSV Ct1,WWMeasure,labID,,lab sheet,__labID__,
@@ -133,7 +133,7 @@ BRSV Ct1,WWMeasure,assayMethodID,,,,
 BRSV Ct1,WWMeasure,analysisDate,,lab sheet,AI,
 BRSV Ct1,WWMeasure,reportDate,,,,
 BRSV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-BRSV Ct1,WWMeasure,type,nBRSV,,,
+BRSV Ct1,WWMeasure,type,brsv,,,
 BRSV Ct1,WWMeasure,value,,lab sheet,AL,validate_value
 BRSV Ct1,WWMeasure,unit,ct,,,
 BRSV Ct1,WWMeasure,aggregation,single,,,
@@ -147,7 +147,7 @@ BRSV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 BRSV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 BRSV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 BRSV Ct1,WWMeasure,notes,,lab sheet,BN,
-BRSV Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nBRSV:str;AI;__const__2:int,get_wwmeasure_id
+BRSV Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__brsv:str;AI;__const__2:int,get_wwmeasure_id
 BRSV Ct2,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 BRSV Ct2,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 BRSV Ct2,WWMeasure,labID,,lab sheet,__labID__,
@@ -155,7 +155,7 @@ BRSV Ct2,WWMeasure,assayMethodID,,,,
 BRSV Ct2,WWMeasure,analysisDate,,lab sheet,AI,
 BRSV Ct2,WWMeasure,reportDate,,,,
 BRSV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-BRSV Ct2,WWMeasure,type,nBRSV,,,
+BRSV Ct2,WWMeasure,type,brsv,,,
 BRSV Ct2,WWMeasure,value,,lab sheet,AM,validate_value
 BRSV Ct2,WWMeasure,unit,ct,,,
 BRSV Ct2,WWMeasure,aggregation,single,,,
@@ -169,7 +169,7 @@ BRSV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 BRSV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 BRSV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 BRSV Ct2,WWMeasure,notes,,lab sheet,BN,
-BRSV Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nBRSV:str;AI;__const__3:int,get_wwmeasure_id
+BRSV Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__brsv:str;AI;__const__3:int,get_wwmeasure_id
 BRSV Ct3,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 BRSV Ct3,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 BRSV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -177,7 +177,7 @@ BRSV Ct3,WWMeasure,assayMethodID,,,,
 BRSV Ct3,WWMeasure,analysisDate,,lab sheet,AI,
 BRSV Ct3,WWMeasure,reportDate,,,,
 BRSV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-BRSV Ct3,WWMeasure,type,nBRSV,,,
+BRSV Ct3,WWMeasure,type,brsv,,,
 BRSV Ct3,WWMeasure,value,,lab sheet,AN,validate_value
 BRSV Ct3,WWMeasure,unit,ct,,,
 BRSV Ct3,WWMeasure,aggregation,single,,,
@@ -191,7 +191,7 @@ BRSV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 BRSV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 BRSV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 BRSV Ct3,WWMeasure,notes,,lab sheet,BN,
-BRSV % recovery,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nBRSV:str;AI;__const__4:int,get_wwmeasure_id
+BRSV % recovery,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__brsv:str;AI;__const__4:int,get_wwmeasure_id
 BRSV % recovery,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 BRSV % recovery,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 BRSV % recovery,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -199,7 +199,7 @@ BRSV % recovery,WWMeasure,assayMethodID,,,,
 BRSV % recovery,WWMeasure,analysisDate,,lab sheet,AI,
 BRSV % recovery,WWMeasure,reportDate,,,,
 BRSV % recovery,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-BRSV % recovery,WWMeasure,type,nBRSV,,,
+BRSV % recovery,WWMeasure,type,brsv,,,
 BRSV % recovery,WWMeasure,value,,lab sheet,AS,validate_value
 BRSV % recovery,WWMeasure,unit,pctRecovery,,,
 BRSV % recovery,WWMeasure,aggregation,single,,,
@@ -213,7 +213,7 @@ BRSV % recovery,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 BRSV % recovery,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 BRSV % recovery,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 BRSV % recovery,WWMeasure,notes,,lab sheet,BN,
-PMMV Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nPMMoV:str;AI;__const__1:int,get_wwmeasure_id
+PMMV Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__pmmov:str;AI;__const__1:int,get_wwmeasure_id
 PMMV Ct1,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 PMMV Ct1,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 PMMV Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -221,7 +221,7 @@ PMMV Ct1,WWMeasure,assayMethodID,,,,
 PMMV Ct1,WWMeasure,analysisDate,,lab sheet,AI,
 PMMV Ct1,WWMeasure,reportDate,,,,
 PMMV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-PMMV Ct1,WWMeasure,type,nPMMoV,,,
+PMMV Ct1,WWMeasure,type,pmmov,,,
 PMMV Ct1,WWMeasure,value,,lab sheet,AU,validate_value
 PMMV Ct1,WWMeasure,unit,ct,,,
 PMMV Ct1,WWMeasure,aggregation,single,,,
@@ -235,7 +235,7 @@ PMMV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 PMMV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 PMMV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 PMMV Ct1,WWMeasure,notes,,lab sheet,BN,
-PMMV Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nPMMoV:str;AI;__const__2:int,get_wwmeasure_id
+PMMV Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__pmmov:str;AI;__const__2:int,get_wwmeasure_id
 PMMV Ct2,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 PMMV Ct2,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 PMMV Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -243,7 +243,7 @@ PMMV Ct2,WWMeasure,assayMethodID,,,,
 PMMV Ct2,WWMeasure,analysisDate,,lab sheet,AI,
 PMMV Ct2,WWMeasure,reportDate,,,,
 PMMV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-PMMV Ct2,WWMeasure,type,nPMMoV,,,
+PMMV Ct2,WWMeasure,type,pmmov,,,
 PMMV Ct2,WWMeasure,value,,lab sheet,AV,validate_value
 PMMV Ct2,WWMeasure,unit,ct,,,
 PMMV Ct2,WWMeasure,aggregation,single,,,
@@ -257,7 +257,7 @@ PMMV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 PMMV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 PMMV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 PMMV Ct2,WWMeasure,notes,,lab sheet,BN,
-PMMV Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nPMMoV:str;AI;__const__3:int,get_wwmeasure_id
+PMMV Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__pmmov:str;AI;__const__3:int,get_wwmeasure_id
 PMMV Ct3,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 PMMV Ct3,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 PMMV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -265,7 +265,7 @@ PMMV Ct3,WWMeasure,assayMethodID,,,,
 PMMV Ct3,WWMeasure,analysisDate,,lab sheet,AI,
 PMMV Ct3,WWMeasure,reportDate,,,,
 PMMV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-PMMV Ct3,WWMeasure,type,nPMMoV,,,
+PMMV Ct3,WWMeasure,type,pmmov,,,
 PMMV Ct3,WWMeasure,value,,lab sheet,AW,validate_value
 PMMV Ct3,WWMeasure,unit,ct,,,
 PMMV Ct3,WWMeasure,aggregation,single,,,
@@ -279,7 +279,7 @@ PMMV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,BT,grant_access
 PMMV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,BU,grant_access
 PMMV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,BV,grant_access
 PMMV Ct3,WWMeasure,notes,,lab sheet,BN,
-PMMV gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__nPMMoV:str;AI;__const__4:int,get_wwmeasure_id
+PMMV gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AB;__labID__;__const__1:int;__const__pmmov:str;AI;__const__4:int,get_wwmeasure_id
 PMMV gcml,WWMeasure,reporterID,,static Reporter+lab sheet,AK,get_reporter_id
 PMMV gcml,WWMeasure,sampleID,,lab sheet,D;B;AB;__labID__;__const__1:int,get_sample_id
 PMMV gcml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
@@ -287,7 +287,7 @@ PMMV gcml,WWMeasure,assayMethodID,,,,
 PMMV gcml,WWMeasure,analysisDate,,lab sheet,AI,
 PMMV gcml,WWMeasure,reportDate,,,,
 PMMV gcml,WWMeasure,fractionAnalyzed,,lab sheet,R,validate_fraction_analyzed
-PMMV gcml,WWMeasure,type,nPMMoV,,,
+PMMV gcml,WWMeasure,type,pmmov,,,
 PMMV gcml,WWMeasure,value,,lab sheet,BB,validate_value
 PMMV gcml,WWMeasure,unit,gcml,,,
 PMMV gcml,WWMeasure,aggregation,single,,,

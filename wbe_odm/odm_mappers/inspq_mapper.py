@@ -42,10 +42,10 @@ values_to_save = {
         "type": "conf",
         "dateType": "report"
     },
-    "act_cum_tot_n": {
-        "type": "active",
-        "dateType": "report"
-    },
+    # "act_cum_tot_n": {
+    #     "type": "active",
+    #     "dateType": "report"
+    # },
     "dec_quo_tot_n": {
         "type": "death",
         "dateType": "report"

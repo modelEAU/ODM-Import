@@ -95,4 +95,5 @@ site_name: "sites.geojson"
 
 plot_langs:
   - "french"
+  - "english"
 

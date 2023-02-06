@@ -3,6 +3,7 @@ import os
 import re
 
 import pandas as pd
+
 from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 
 directory = os.path.dirname(__file__)
@@ -15,11 +16,11 @@ class MapperFuncs:
         df = df.copy()
         df = df.dropna(subset=["Measurement"])
         for col in df.columns.to_list():
-            df.loc[:, col] = pd.to_datetime(cls.replace_excel_dates(df[col])) \
+            df[col] = pd.to_datetime(cls.replace_excel_dates(df[col])) \
                 if "date" in col.lower() else df[col]
-            df.loc[:, col] = df[col].apply(lambda x: None if x in ["None", ""] else x)
+            df[col] = df[col].apply(lambda x: None if x in ["None", ""] else x)
             if col == "Measurement":
-                df.loc[:, col] = df.loc[:, col].apply(lambda x: x.replace("*", "").strip())
+                df[col] = df[col].apply(lambda x: x.replace("*", "").strip())
             if "Unnamed" in col:
                 del df[col]
         df.drop_duplicates(keep="first", inplace=True)

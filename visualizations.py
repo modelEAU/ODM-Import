@@ -354,7 +354,7 @@ def get_plot_titles(metadata, labels):
 def get_column_names(labels, metadata):
     labels = copy.deepcopy(labels)
     for lang in ['french', 'english']:
-        labels['cases'][lang] = labels['cases'][lang] + metadata["poly_name"][lang]
+        labels['cases'][lang] = labels['cases'][lang] + " " + metadata["poly_name"][lang]
     return labels
 
 

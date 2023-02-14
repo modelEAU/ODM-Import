@@ -2,52 +2,22 @@ import re
 from abc import ABC, abstractmethod
 
 import pandas as pd
+
 from wbe_odm import utilities
 
 DATA_TYPES = utilities.get_data_types()
-UNKNOWN_TOKENS = [
-    "nan",
-    "na",
-    "nd"
-    "n.d",
-    "none",
-    "-",
-    "unknown",
-    "n/a",
-    "n/d",
-    ""
-]
+UNKNOWN_TOKENS = ["nan", "na", "nd" "n.d", "none", "-", "unknown", "n/a", "n/d", ""]
 CONVERSION_DICT = {
-    "ww_measure": {
-        "odm_name": "WWMeasure",
-        "source_name": ""},
-    "site_measure": {
-        "odm_name": "SiteMeasure",
-        "source_name": ""},
-    "sample": {
-        "odm_name": "Sample",
-        "source_name": ""},
-    "site": {
-        "odm_name": "Site",
-        "source_name": ""},
-    "polygon": {
-        "odm_name": "Polygon",
-        "source_name": ""},
-    "cphd": {
-        "odm_name": "CovidPublicHealthData",
-        "source_name": ""},
-    "reporter": {
-        "odm_name": "Reporter",
-        "source_name": ""},
-    "lab": {
-        "odm_name": "Lab",
-        "source_name": ""},
-    "assay_method": {
-        "odm_name": "AssayMethod",
-        "source_name": ""},
-    "instrument": {
-        "odm_name": "Instrument",
-        "source_name": ""},
+    "ww_measure": {"odm_name": "WWMeasure", "source_name": ""},
+    "site_measure": {"odm_name": "SiteMeasure", "source_name": ""},
+    "sample": {"odm_name": "Sample", "source_name": ""},
+    "site": {"odm_name": "Site", "source_name": ""},
+    "polygon": {"odm_name": "Polygon", "source_name": ""},
+    "cphd": {"odm_name": "CovidPublicHealthData", "source_name": ""},
+    "reporter": {"odm_name": "Reporter", "source_name": ""},
+    "lab": {"odm_name": "Lab", "source_name": ""},
+    "assay_method": {"odm_name": "AssayMethod", "source_name": ""},
+    "instrument": {"odm_name": "Instrument", "source_name": ""},
 }
 
 
@@ -56,6 +26,8 @@ def replace_unknown_by_default(string, default):
 
 
 def parse_types(table_name, series):
+    if series.empty:
+        return series
     variable_name = series.name.lower()
     types = DATA_TYPES
     lookup_table = types[table_name]
@@ -65,8 +37,7 @@ def parse_types(table_name, series):
         series = series.astype(str)
         default_bool = "false" if "qualityFlag" in variable_name else "true"
         series = series.str.strip().str.lower()
-        series = series.apply(
-            lambda x: replace_unknown_by_default(x, default_bool))
+        series = series.apply(lambda x: replace_unknown_by_default(x, default_bool))
         series = series.str.replace("oui", "true", case=False)
         series = series.str.replace("yes", "true", case=False)
         series = series.str.startswith("true")
@@ -88,26 +59,16 @@ def parse_types(table_name, series):
 
 
 class BaseMapper(ABC):
-    sample = pd.DataFrame(
-        columns=utilities.get_table_fields("Sample"))
-    ww_measure = pd.DataFrame(
-        columns=utilities.get_table_fields("WWMeasure"))
-    site = pd.DataFrame(
-        columns=utilities.get_table_fields("Site"))
-    site_measure = pd.DataFrame(
-        columns=utilities.get_table_fields("SiteMeasure"))
-    reporter = pd.DataFrame(
-        columns=utilities.get_table_fields("Reporter"))
-    lab = pd.DataFrame(
-        columns=utilities.get_table_fields("Lab"))
-    assay_method = pd.DataFrame(
-        columns=utilities.get_table_fields("AssayMethod"))
-    instrument = pd.DataFrame(
-        columns=utilities.get_table_fields("Instrument"))
-    polygon = pd.DataFrame(
-        columns=utilities.get_table_fields("Polygon"))
-    cphd = pd.DataFrame(
-        columns=utilities.get_table_fields("CPHD"))
+    sample = pd.DataFrame(columns=utilities.get_table_fields("Sample"))
+    ww_measure = pd.DataFrame(columns=utilities.get_table_fields("WWMeasure"))
+    site = pd.DataFrame(columns=utilities.get_table_fields("Site"))
+    site_measure = pd.DataFrame(columns=utilities.get_table_fields("SiteMeasure"))
+    reporter = pd.DataFrame(columns=utilities.get_table_fields("Reporter"))
+    lab = pd.DataFrame(columns=utilities.get_table_fields("Lab"))
+    assay_method = pd.DataFrame(columns=utilities.get_table_fields("AssayMethod"))
+    instrument = pd.DataFrame(columns=utilities.get_table_fields("Instrument"))
+    polygon = pd.DataFrame(columns=utilities.get_table_fields("Polygon"))
+    cphd = pd.DataFrame(columns=utilities.get_table_fields("CPHD"))
     # Attribute name to source name
     conversion_dict = CONVERSION_DICT
 
@@ -124,18 +85,13 @@ class BaseMapper(ABC):
             value = self.conversion_dict[attribute]
             table_name = dico["odm_name"]
             if not isinstance(value, pd.DataFrame):
-                return pd.DataFrame(
-                    columns=utilities.get_table_fields(table_name))
+                return pd.DataFrame(columns=utilities.get_table_fields(table_name))
             if value.empty:
-                return pd.DataFrame(
-                    columns=utilities.get_table_fields(table_name))
-            return value.drop_duplicates(
-                keep="first", ignore_index=True)
+                return pd.DataFrame(columns=utilities.get_table_fields(table_name))
+            return value.drop_duplicates(keep="first", ignore_index=True)
 
     def type_cast_table(self, odm_name, df):
-        return df.apply(
-            lambda x: parse_types(odm_name, x),
-            axis=0)
+        return df.apply(lambda x: parse_types(odm_name, x), axis=0)
 
     def get_attribute_from_odm_name(self, odm_name):
         for attribute, dico in self.conversion_dict.items():
@@ -147,7 +103,5 @@ class BaseMapper(ABC):
 
 def get_odm_names(attr=None):
     if attr is None:
-        return [
-            CONVERSION_DICT[x]["odm_name"]
-            for x in CONVERSION_DICT.keys()]
+        return [CONVERSION_DICT[x]["odm_name"] for x in CONVERSION_DICT.keys()]
     return CONVERSION_DICT[attr]["odm_name"]

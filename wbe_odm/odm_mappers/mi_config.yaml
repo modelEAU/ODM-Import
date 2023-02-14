@@ -1,0 +1,7 @@
+static_tables:
+  - Polygon
+  - Site
+  - Lab
+  - Instrument
+  - Reporter
+  - AssayMethod

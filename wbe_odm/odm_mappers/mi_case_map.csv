@@ -1,0 +1,9 @@
+﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+cases,CovidPublicHealthData,cphdID,,lab sheet,__const__metroPlant:str;__const__metro_plant_sw:str;__const__conf:str;__const__report:str;A,build_cphd_id
+cases,CovidPublicHealthData,reporterID,metroPlant,,,
+cases,CovidPublicHealthData,polygonID,metro_plant_sw,,,
+cases,CovidPublicHealthData,date,,lab sheet,A,
+cases,CovidPublicHealthData,type,conf,,,
+cases,CovidPublicHealthData,dateType,report,,,
+cases,CovidPublicHealthData,value,,static Polygon+lab sheet,__const__metro_plant_sw:str;C,cases_100k_to_cases
+cases,CovidPublicHealthData,notes,,,,

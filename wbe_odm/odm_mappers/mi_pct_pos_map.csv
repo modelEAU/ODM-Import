@@ -1,0 +1,57 @@
+﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+anoka,CovidPublicHealthData,cphdID,,lab sheet,__const__anokaCountyRep:str;__const__anoka_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+anoka,CovidPublicHealthData,reporterID,anokaCountyRep,,,
+anoka,CovidPublicHealthData,polygonID,anoka_county_hlthreg,,,
+anoka,CovidPublicHealthData,date,,lab sheet,A,
+anoka,CovidPublicHealthData,type,pPosRt,,,
+anoka,CovidPublicHealthData,dateType,report,,,
+anoka,CovidPublicHealthData,value,,lab sheet,B,coerce_float
+anoka,CovidPublicHealthData,notes,,,,
+dakota,CovidPublicHealthData,cphdID,,lab sheet,__const__dakotaCountyRep:str;__const__dakota_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+dakota,CovidPublicHealthData,reporterID,dakotaCountyRep,,,
+dakota,CovidPublicHealthData,polygonID,dakota_county_hlthreg,,,
+dakota,CovidPublicHealthData,date,,lab sheet,A,
+dakota,CovidPublicHealthData,type,pPosRt,,,
+dakota,CovidPublicHealthData,dateType,report,,,
+dakota,CovidPublicHealthData,value,,lab sheet,D,coerce_float
+dakota,CovidPublicHealthData,notes,,,,
+hennepin,CovidPublicHealthData,cphdID,,lab sheet,__const__hennepinCountyRep:str;__const__hennepin_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+hennepin,CovidPublicHealthData,reporterID,hennepinCountyRep,,,
+hennepin,CovidPublicHealthData,polygonID,hennepin_county_hlthreg,,,
+hennepin,CovidPublicHealthData,date,,lab sheet,A,
+hennepin,CovidPublicHealthData,type,pPosRt,,,
+hennepin,CovidPublicHealthData,dateType,report,,,
+hennepin,CovidPublicHealthData,value,,lab sheet,E,coerce_float
+hennepin,CovidPublicHealthData,notes,,,,
+ramsey,CovidPublicHealthData,cphdID,,lab sheet,__const__ramseyCountyRep:str;__const__ramsey_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+ramsey,CovidPublicHealthData,reporterID,ramseyCountyRep,,,
+ramsey,CovidPublicHealthData,polygonID,ramsey_county_hlthreg,,,
+ramsey,CovidPublicHealthData,date,,lab sheet,A,
+ramsey,CovidPublicHealthData,type,pPosRt,,,
+ramsey,CovidPublicHealthData,dateType,report,,,
+ramsey,CovidPublicHealthData,value,,lab sheet,F,coerce_float
+ramsey,CovidPublicHealthData,notes,,,,
+washington,CovidPublicHealthData,cphdID,,lab sheet,__const__washingtonCountyRep:str;__const__washington_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+washington,CovidPublicHealthData,reporterID,washingtonCountyRep,,,
+washington,CovidPublicHealthData,polygonID,washington_county_hlthreg,,,
+washington,CovidPublicHealthData,date,,lab sheet,A,
+washington,CovidPublicHealthData,type,pPosRt,,,
+washington,CovidPublicHealthData,dateType,report,,,
+washington,CovidPublicHealthData,value,,lab sheet,H,coerce_float
+washington,CovidPublicHealthData,notes,,,,
+carver,CovidPublicHealthData,cphdID,,lab sheet,__const__carverCountyRep:str;__const__carver_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+carver,CovidPublicHealthData,reporterID,carverCountyRep,,,
+carver,CovidPublicHealthData,polygonID,carver_county_hlthreg,,,
+carver,CovidPublicHealthData,date,,lab sheet,A,
+carver,CovidPublicHealthData,type,pPosRt,,,
+carver,CovidPublicHealthData,dateType,report,,,
+carver,CovidPublicHealthData,value,,lab sheet,C,coerce_float
+carver,CovidPublicHealthData,notes,,,,
+scott,CovidPublicHealthData,cphdID,,lab sheet,__const__scottCountyRep:str;__const__scott_county_hlthreg:str;__const__pPosRt:str;__const__report:str;A,build_cphd_id
+scott,CovidPublicHealthData,reporterID,scottCountyRep,,,
+scott,CovidPublicHealthData,polygonID,scott_county_hlthreg,,,
+scott,CovidPublicHealthData,date,,lab sheet,A,
+scott,CovidPublicHealthData,type,pPosRt,,,
+scott,CovidPublicHealthData,dateType,report,,,
+scott,CovidPublicHealthData,value,,lab sheet,G,coerce_float
+scott,CovidPublicHealthData,notes,,,,

@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import shapely.wkt
 from geojson_rewind import rewind
-from shapely.geometry import Point
 
 UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
@@ -31,23 +30,26 @@ def hex_color_adder(color1: str, color2: str) -> str:
         the resulting color between "#000000" and "#FFFFFF"
     """
     hex_pattern = re.compile("^#([A-F]|[0-9]){6}$", flags=re.I)
-    if not re.search(hex_pattern, color1)\
-            or not re.search(hex_pattern, color2):
+    if not re.search(hex_pattern, color1) or not re.search(hex_pattern, color2):
         raise ValueError(f"color strings are not valid: {color1}, {color2}")
     reds = (int(color1[1:3], 16), int(color2[1:3], 16))
     greens = (int(color1[3:5], 16), int(color2[3:5], 16))
     blues = (int(color1[5:], 16), int(color2[5:], 16))
-    final_color = ['#']
-    final_color.extend(hex(min(255, sum(channel)))[2:] for channel in [reds, greens, blues])
+    final_color = ["#"]
+    final_color.extend(
+        hex(min(255, sum(channel)))[2:] for channel in [reds, greens, blues]
+    )
 
-    return ''.join(final_color)
+    return "".join(final_color)
 
 
 def typecast_wide_table(df):
     for col in df.columns:
         name = df[col].name
         if "date" in name or "timestamp" in name:
-            df[col] = pd.to_datetime(df[col], errors="coerce", infer_datetime_format=True)
+            df[col] = pd.to_datetime(
+                df[col], errors="coerce", infer_datetime_format=True
+            )
         elif "value" in name:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         else:
@@ -80,26 +82,34 @@ def convert_wkt(x):
     return shapely.wkt.loads(x) if x else None
 
 
-def get_polygon_for_cphd(merged, poly, cphd):
+def get_minimal_polygon_for_cphd(merged, poly, cphd):
     poly["shape"] = poly["Polygon_wkt"].apply(lambda x: convert_wkt(x))
     poly["area"] = poly["shape"].apply(lambda x: x.area)
     unique_cphd_polys = cphd["CPHD_polygonID"].unique()
     merged["polys_w_cphd"] = merged["Calculated_polygonList"].apply(
-        lambda x: has_cphd_data(x, unique_cphd_polys))
+        lambda x: has_cphd_data(x, unique_cphd_polys)
+    )
     merged["Calculated_polygonIDForCPHD"] = merged["polys_w_cphd"].apply(
-        lambda x: pick_cphd_poly_by_size(x, poly))
+        lambda x: pick_cphd_poly_by_size(x, poly)
+    )
     poly.drop(columns=["shape", "area"], inplace=True)
     merged.drop(columns=["polys_w_cphd"], inplace=True)
     return merged
 
 
-def get_encompassing_polygons(row, poly):
-    poly["contains"] = poly["shape"].apply(
-        lambda x: x.contains(Point(row["temp_point"]))
-        if (x and row["temp_point"]) else False)
-    poly_ids = poly[
-        "Polygon_polygonID"].loc[poly["contains"]].to_list()
-    poly.drop(columns=["contains"], inplace=True)
+def get_intersecting_polygons(row, poly):
+    sewershed_wkts = poly.loc[
+        poly["Polygon_polygonID"] == row["Site_polygonID"], "Polygon_wkt"
+    ]
+    if sewershed_wkts.empty:
+        return ""
+    sewershed_shape = convert_wkt(sewershed_wkts.values[0])
+
+    poly["intersects"] = poly["shape"].apply(
+        lambda shape: shape.intersects(sewershed_shape) if shape else False
+    )
+    poly_ids = poly["Polygon_polygonID"].loc[poly["intersects"]].to_list()
+    poly.drop(columns=["intersects"], inplace=True)
     return ";".join(poly_ids)
 
 
@@ -173,7 +183,8 @@ def clean_composite_data_intervals(df):
     one_day = pd.to_timedelta("23 hours 59 minutes")
     df[result_end] = pd.to_datetime(df[end] + one_day).dt.date
     df[result_start] = df.apply(
-        lambda row: calc_start_date(row[result_end], row[coll]), axis=1)
+        lambda row: calc_start_date(row[result_end], row[coll]), axis=1
+    )
     return df
 
 
@@ -190,9 +201,9 @@ def reduce_dt(x, y):
 def reduce_text(x, y):
     x, y = str(x), str(y)
     if pd.isna(x):
-        x = 'na'
+        x = "na"
     if pd.isna(y):
-        y = 'na'
+        y = "na"
     if x == y:
         return x
     elif re.match(UNKNOWN_REGEX, x) and re.match(UNKNOWN_REGEX, y):
@@ -215,6 +226,16 @@ def reduce_nums(x, y):
     return (x + y) / 2
 
 
+def reduce_bool(x, y):
+    if pd.isna(x) and pd.isna(y):
+        return np.nan
+    elif pd.isna(x):
+        return np.nan
+    elif pd.isna(y):
+        return np.nan
+    return x and y
+
+
 def reduce_by_type(series):
     if series.empty:
         return np.nan
@@ -228,6 +249,8 @@ def reduce_by_type(series):
 
     if data_type in {"float64", "int"}:
         return reduce(reduce_nums, series)
+    if data_type in {"boolean", "bool"}:
+        return reduce(reduce_bool, series)
     else:
         raise TypeError(f"could not parse series of dtype {name}")
 
@@ -242,27 +265,30 @@ def convert_wkt_to_geojson(s):
 
 def rank_polygons_by_desc_area(poly_df):
     df = poly_df.copy()
-    df['area'] = df['wkt'].apply(lambda x: shapely.wkt.loads(x).area)
-    df['order'] = df['area'].rank(ascending=False)
-    return df['order']
+    df["area"] = df["wkt"].apply(lambda x: shapely.wkt.loads(x).area)
+    df["order"] = df["area"].rank(ascending=False)
+    return df["order"]
 
 
 def get_data_types():
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)
     variables["variableName"] = variables["variableName"].str.lower()
-    variables["variableType"] = variables["variableType"]\
-        .replace(r"date(time)?", "datetime64[ns]", regex=True) \
-        .replace("boolean", "bool") \
-        .replace("float", "float64") \
-        .replace("integer", "int64") \
-        .replace("blob", "object") \
+    variables["variableType"] = (
+        variables["variableType"]
+        .replace(r"date(time)?", "datetime64[ns]", regex=True)
+        .replace("boolean", "bool")
+        .replace("float", "float64")
+        .replace("integer", "int64")
+        .replace("blob", "object")
         .replace("category", "string")
+    )
 
-    return variables\
-        .groupby("tableName")[['variableName', 'variableType']] \
-        .apply(lambda x: x.set_index('variableName').to_dict(orient='index')) \
+    return (
+        variables.groupby("tableName")[["variableName", "variableType"]]
+        .apply(lambda x: x.set_index("variableName").to_dict(orient="index"))
         .to_dict()
+    )
 
 
 def get_table_fields(table_name):
@@ -273,18 +299,17 @@ def get_table_fields(table_name):
 
 def clean_primary_key(key):
     key = str(key)
-    key = key.removeprefix('u')
+    key = key.removeprefix("u")
     if key[0].isupper():
         key = key[0].lower() + key[1:]
-    return key.replace('Ww', 'ww')
+    return key.replace("Ww", "ww")
 
 
 def get_primary_key(table_name=None):
     url = "https://raw.githubusercontent.com/Big-Life-Lab/covid-19-wastewater/main/site/Variables.csv"  # noqa
     variables = pd.read_csv(url)
     keys = variables.loc[
-        variables["key"] == "Primary Key",
-        ["tableName", "variableName"]
+        variables["key"] == "Primary Key", ["tableName", "variableName"]
     ].set_index("tableName")
     keys = keys.apply(lambda x: clean_primary_key(x["variableName"]), axis=1)
     keys = keys.to_dict()
@@ -308,10 +333,8 @@ def build_site_specific_dataset(df, site_id):
 
     filt_cphd_df = df.loc[filt_site1, "Calculated_polygonIDForCPHD"]
     if not filt_cphd_df.empty:
-        cphd_poly_id = str(
-            filt_cphd_df.iloc[0]).lower()
-        poly_filt = df["CPHD_polygonID"]\
-            .fillna("").str.lower().str.match(cphd_poly_id)
+        cphd_poly_id = str(filt_cphd_df.iloc[0]).lower()
+        poly_filt = df["CPHD_polygonID"].fillna("").str.lower().str.match(cphd_poly_id)
         df2 = df[poly_filt]
         df2.set_index(idx_col, inplace=True)
         dataset = pd.concat([df1, df2], axis=0)
@@ -323,15 +346,17 @@ def build_site_specific_dataset(df, site_id):
 
 
 def resample_per_day(df):
-    return df if df.empty else df.resample('1D').agg(reduce_by_type)
+    return df if df.empty else df.resample("1D").agg(reduce_by_type)
 
 
 def reduce_with_warnings(series):
-    values = series.repalce('', np.nan).dropna().unique()
+    values = series.repalce("", np.nan).dropna().unique()
     n = len(values)
     if n == 0:
         return np.nan
     if n > 1:
         mismatched_values = series.loc[~series.duplicated()]
-        warnings.warn(f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}")  # noqa
+        warnings.warn(
+            f"Several values for the same field of items with the same id: Name: {series.name},\nmismatched_values: {mismatched_values}"
+        )  # noqa
     return list(values)[0]

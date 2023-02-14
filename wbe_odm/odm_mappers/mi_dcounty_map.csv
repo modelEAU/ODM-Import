@@ -1,0 +1,9 @@
+﻿elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+dd,CovidPublicHealthData,cphdID,,static Reporter+lab sheet,B;__const__death:str;__const__report:str;D,build_cphd_id
+dd,CovidPublicHealthData,reporterID,,static Reporter+lab sheet,B,county_to_reporter
+dd,CovidPublicHealthData,polygonID,,static Polygon+lab sheet,B,county_to_polygon
+dd,CovidPublicHealthData,date,,lab sheet,D,parse_health_date
+dd,CovidPublicHealthData,type,death,,,
+dd,CovidPublicHealthData,dateType,report,,,
+dd,CovidPublicHealthData,value,,lab sheet,C,coerce_float
+dd,CovidPublicHealthData,notes,,,,

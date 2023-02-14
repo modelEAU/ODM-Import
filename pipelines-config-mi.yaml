@@ -1,0 +1,16 @@
+# This is the configuration file for the data ingestion pipeline script for the St Paul data
+
+mapper_config: "wbe_odm/odm_mappers/mi_config.yaml"
+
+data_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/MI/Input"
+
+csv_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/MI/Output"
+
+source_files:
+  static_data: "MI_Static_Data.xlsx"
+  lab_data: "Metro Plant data.xlsx"
+  hosps_data: "hcounty.csv"
+  deaths_data: "dcounty.csv"
+  ppos_data: "ww_MN metro percent positive.xlsx"
+  vaccines_data: "Cumulative vaccinations area.xlsx"
+  cases_data: "case_data.csv"

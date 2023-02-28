@@ -15,6 +15,7 @@ from datetime import datetime
 import pandas as pd
 import yaml
 from easydict import EasyDict
+
 from wbe_odm import utilities
 from wbe_odm.odm_mappers import base_mapper, excel_template_mapper
 
@@ -24,7 +25,9 @@ class CsvMapper(base_mapper.BaseMapper):
     dupes_suffix = "_dupes"
 
     def __init__(self, processing_functions=None, config_file=None):
-        self.start_time = datetime.now()  # Used in format_file_name, to ensure consistent datetime is used
+        self.start_time = (
+            datetime.now()
+        )  # Used in format_file_name, to ensure consistent datetime is used
         self.processing_functions = processing_functions
 
         if config_file:
@@ -49,7 +52,7 @@ class CsvMapper(base_mapper.BaseMapper):
         pd.DataFrame
             The dataframe with all rows with a null in the column removed.
         """
-        filt = (~pd.isnull(df[column]))
+        filt = ~pd.isnull(df[column])
         return df.loc[filt]
 
     @classmethod
@@ -73,22 +76,26 @@ class CsvMapper(base_mapper.BaseMapper):
         for datatype in types:
             if datatype in base_mapper.UNKNOWN_TOKENS:
                 datatype = "string"
-            datatype = str(datatype)\
-                .replace("date", "datetime64[ns]") \
-                .replace("mixed", "object") \
-                .replace("boolean", "bool") \
-                .replace("float", "float64") \
-                .replace("integer", "int64") \
-                .replace("number", "float64") \
-                .replace("text", "string") \
+            datatype = (
+                str(datatype)
+                .replace("date", "datetime64[ns]")
+                .replace("mixed", "object")
+                .replace("boolean", "bool")
+                .replace("float", "float64")
+                .replace("integer", "int64")
+                .replace("number", "float64")
+                .replace("text", "string")
                 .replace("blob", "object")
+            )
             clean_types.append(datatype)
         for i, col_name in enumerate(df.columns):
             df[col_name] = cls.typecast_column(clean_types[i], df[col_name])
         return df
 
     @classmethod
-    def filter_by_date(cls, df, date_col, start, end, date_format="%Y-%m-%d") -> pd.DataFrame:
+    def filter_by_date(
+        cls, df, date_col, start, end, date_format="%Y-%m-%d"
+    ) -> pd.DataFrame:
         """Filter all entries in a DataFrame based on a start and end date, in the
         specified column.
 
@@ -110,12 +117,12 @@ class CsvMapper(base_mapper.BaseMapper):
         """
         if start is not None and str(start).strip() != "":
             startdate = pd.to_datetime(start, format=date_format)
-            start_filt = (df[date_col] > startdate)
+            start_filt = df[date_col] > startdate
         else:
             start_filt = None
         if end is not None and str(end).strip() != "":
             enddate = pd.to_datetime(end, format=date_format)
-            end_filt = (df[date_col] < enddate)
+            end_filt = df[date_col] < enddate
         else:
             end_filt = None
         if start_filt is None and end_filt is None:
@@ -147,16 +154,20 @@ class CsvMapper(base_mapper.BaseMapper):
             series = series.astype(str)
             series = series.str.strip().str.lower()
             series = series.apply(
-                lambda x: base_mapper.replace_unknown_by_default(x, ""))
-            series = series.str.replace("oui", "true", case=False)\
-                .str.replace("yes", "true", case=False)\
+                lambda x: base_mapper.replace_unknown_by_default(x, "")
+            )
+            series = (
+                series.str.replace("oui", "true", case=False)
+                .str.replace("yes", "true", case=False)
                 .str.startswith("true")
+            )
         elif desired_type in ["string", "category"]:
             series = series.astype(str)
             series = series.str.lower()
             series = series.str.strip()
             series = series.apply(
-                lambda x: base_mapper.replace_unknown_by_default(x, ""))
+                lambda x: base_mapper.replace_unknown_by_default(x, "")
+            )
         elif desired_type in ["int64", "float64"]:
             series = pd.to_numeric(series, errors="coerce")
         elif desired_type == "datetime64[ns]":
@@ -178,10 +189,10 @@ class CsvMapper(base_mapper.BaseMapper):
         str
             The Excel-style column name corresponding to col. (column 1 is "A").
         """
-        result = []
+        result: list[str] = []
         while col:
             col, rem = divmod(col - 1, 26)
-            result[:0] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[rem]
+            result[:0] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rem]
         return "".join(result)
 
     @classmethod
@@ -225,7 +236,7 @@ class CsvMapper(base_mapper.BaseMapper):
             timestamp_series convert to a string series, with dates in the format YYYY-mm-dd.
         """
         ts_series = pd.Series(timestamp_series, dtype="datetime64[ns]")
-        str_series = ts_series.dt.strftime('%Y-%m-%d')
+        str_series = ts_series.dt.strftime("%Y-%m-%d")
         return str_series.fillna("")
 
     @classmethod
@@ -279,7 +290,7 @@ class CsvMapper(base_mapper.BaseMapper):
         final_inputs = []
         for input_ in raw_inputs:
             if re.match(r"__const__.*:.*", input_):
-                value, type_ = input_[len("__const__"):].split(":")
+                value, type_ = input_[len("__const__") :].split(":")
                 if type_ == "str":
                     value = str(value)
                 elif type_ == "int":
@@ -345,7 +356,7 @@ class CsvMapper(base_mapper.BaseMapper):
         input_sources = map_row["inputSources"]
         if "static" in input_sources:
             static_table = input_sources.split("+")[0]
-            static_table = static_table[len("static "):]
+            static_table = static_table[len("static ") :]
             return static_data[static_table]
         else:
             return None
@@ -373,11 +384,15 @@ class CsvMapper(base_mapper.BaseMapper):
         if func is None:
             func = cls.pass_raw
             if function_name:
-                print(f"WARNING: Could not find processing function named {function_name}")
+                print(
+                    f"WARNING: Could not find processing function named {function_name}"
+                )
         return func
 
     @classmethod
-    def parse_sheet(cls, mapping, static, lab_data, processing_functions, lab_id) -> dict:
+    def parse_sheet(
+        cls, mapping, static, lab_data, processing_functions, lab_id
+    ) -> dict:
         """Fully parse the lab data and obtain the resulting ODM DataFrames.
 
         Parameters
@@ -401,17 +416,22 @@ class CsvMapper(base_mapper.BaseMapper):
             are the DataFrames.
         """
         mapping["lab_arguments"] = mapping.apply(
-            lambda row: cls.get_labsheet_inputs(row, lab_data, lab_id), axis=1)
+            lambda row: cls.get_labsheet_inputs(row, lab_data, lab_id), axis=1
+        )
         mapping["static"] = mapping.apply(
-            lambda row: cls.get_static_inputs(row, static), axis=1)
+            lambda row: cls.get_static_inputs(row, static), axis=1
+        )
         mapping["final_inputs"] = mapping.apply(
-            lambda row: cls.get_all_inputs(row), axis=1)
-        mapping["func"] = mapping["processingFunction"].apply(lambda x: cls.get_processing_function(processing_functions, x))
+            lambda row: cls.get_all_inputs(row), axis=1
+        )
+        mapping["func"] = mapping["processingFunction"].apply(
+            lambda x: cls.get_processing_function(processing_functions, x)
+        )
 
-        mapping["columnName"] = mapping[
-            ["table", "elementName", "variableName"]].agg("_".join, axis=1)
-        to_apply = mapping.loc[
-            :, ["columnName", "func", "final_inputs"]]
+        mapping["columnName"] = mapping[["table", "elementName", "variableName"]].agg(
+            "_".join, axis=1
+        )
+        to_apply = mapping.loc[:, ["columnName", "func", "final_inputs"]]
         for _, apply_row in to_apply.iterrows():
             col_name = apply_row["columnName"]
             with warnings.catch_warnings():
@@ -419,13 +439,12 @@ class CsvMapper(base_mapper.BaseMapper):
                 lab_data[col_name] = apply_row["func"](*apply_row["final_inputs"])
         tables = {table: None for table in mapping["table"].unique()}
         for table in tables:
-            elements = mapping.loc[
-                mapping["table"] == table, "elementName"
-            ].unique()
+            elements = mapping.loc[mapping["table"] == table, "elementName"].unique()
             sub_dfs = []
             for element in elements:
-                table_element_filt = (mapping["table"] == table)\
-                    & (mapping["elementName"] == element)
+                table_element_filt = (mapping["table"] == table) & (
+                    mapping["elementName"] == element
+                )
                 col_names = mapping.loc[table_element_filt, "columnName"]
                 var_names = mapping.loc[table_element_filt, "variableName"]
                 sub_df = lab_data[col_names]
@@ -449,7 +468,11 @@ class CsvMapper(base_mapper.BaseMapper):
         attr_suffix = attr_suffix or ""
         for table_name, info in self.conversion_dict.items():
             table_name = f"{table_name}{attr_suffix}"
-            setattr(self, table_name, pd.DataFrame(columns=utilities.get_table_fields(info["odm_name"])))
+            setattr(
+                self,
+                table_name,
+                pd.DataFrame(columns=utilities.get_table_fields(info["odm_name"])),
+            )
 
     def set_table_attrs(self, tables, attr_suffix=None):
         """Set all our object's attributes for the ODM DataFrames in the tables dictionary.
@@ -525,9 +548,13 @@ class CsvMapper(base_mapper.BaseMapper):
                         df = df.drop_duplicates(subset=[primary_key], keep="last")
                         len_b = len(df.index)
                         df_dupes = df_dupes.drop(df.index, axis="index")
-                        print(f"Removed duplicates in {attr}: {len_a} -> {len_b} rows ({len_b-len_a})")
+                        print(
+                            f"Removed duplicates in {attr}: {len_a} -> {len_b} rows ({len_b-len_a})"
+                        )
                     else:
-                        print(f"WARNING: Primary key '{primary_key}' of table '{attr}' not found when removing duplicates!")
+                        print(
+                            f"WARNING: Primary key '{primary_key}' of table '{attr}' not found when removing duplicates!"
+                        )
             new_tables[table_name] = df
             dupes_tables[table_name] = df_dupes
         return new_tables, dupes_tables
@@ -550,7 +577,11 @@ class CsvMapper(base_mapper.BaseMapper):
         d = self.start_time.strftime("%Y-%m-%d")
         t = self.start_time.strftime("%H-%M-%S")
         dt = f"{d}_{t}"
-        lab_id = self.config.lab_id if self.config is not None and "lab_id" in self.config else getattr(self, "lab_id", "unknown_lab")
+        lab_id = (
+            self.config.lab_id
+            if self.config is not None and "lab_id" in self.config
+            else getattr(self, "lab_id", "unknown_lab")
+        )
         return file.format(date=d, time=t, datetime=dt, lab_id=lab_id)
 
     def save_all(self, output_file, duplicates_file=None):
@@ -577,7 +608,9 @@ class CsvMapper(base_mapper.BaseMapper):
         output_file = self.write_tables(output_file)
         if duplicates_file:
             duplicates_file = self.format_file_name(duplicates_file)
-            duplicates_file = self.write_tables(duplicates_file, attr_suffix=self.dupes_suffix)
+            duplicates_file = self.write_tables(
+                duplicates_file, attr_suffix=self.dupes_suffix
+            )
 
         return output_file, duplicates_file or None
 
@@ -613,7 +646,13 @@ class CsvMapper(base_mapper.BaseMapper):
         if os.path.dirname(file):
             os.makedirs(os.path.dirname(file), exist_ok=True)
 
-        tables = [{"table_name": table_name, "table": getattr(self, f"{table_name}{attr_suffix}", None)} for table_name in self.conversion_dict.keys()]
+        tables = [
+            {
+                "table_name": table_name,
+                "table": getattr(self, f"{table_name}{attr_suffix}", None),
+            }
+            for table_name in self.conversion_dict.keys()
+        ]
         tables = [t for t in tables if t["table"] is not None]
         if not tables:
             tables = [{"table_name": "empty", "table": pd.DataFrame()}]
@@ -622,7 +661,9 @@ class CsvMapper(base_mapper.BaseMapper):
                 for info in tables:
                     table = info["table"]
                     table_name = info["table_name"]
-                    table.to_excel(writer, sheet_name=table_name, index=False, freeze_panes=(1, 0))
+                    table.to_excel(
+                        writer, sheet_name=table_name, index=False, freeze_panes=(1, 0)
+                    )
 
         return file
 
@@ -707,7 +748,4 @@ class CsvMapper(base_mapper.BaseMapper):
         list[str]
             List of Excel-style column names.
         """
-        return [
-            self.excel_style(i + 1)
-            for i, _ in enumerate(df.columns.to_list())
-        ]
+        return [self.excel_style(i + 1) for i, _ in enumerate(df.columns.to_list())]

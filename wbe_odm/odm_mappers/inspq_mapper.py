@@ -3,25 +3,26 @@ import warnings
 
 import pandas as pd
 import requests
+
 from wbe_odm.odm_mappers import base_mapper as bm
 
 poly_names = {
-    '13 - Laval': "prov_qc_hlthReg_laval",
-    '12 - Chaudière-Appalaches': "prov_qc_hlthReg_chaudiere-appalaches",
-    '10 - Nord-du-Québec': "prov_qc_hlthReg_nord-du-quebec",
-    '05 - Estrie': "prov_qc_hlthReg_estrie",
-    '03 - Capitale-Nationale': "prov_qc_hlthReg_capitale-nationale",
-    '04 - Mauricie et Centre-du-Québec': "prov_qc_hlthReg_mauricie-centre-du-quebec",  # noqa
-    '16 - Montérégie': "prov_qc_hlthReg_monteregie",
-    '08 - Abitibi-Témiscamingue': "prov_qc_hlthReg_abitibi-temiscamingue",
-    '07 - Outaouais': "prov_qc_hlthReg_outaouais",
-    '01 - Bas-Saint-Laurent': "prov_qc_hlthReg_bas-saint-laurent",
-    '09 - Côte-Nord': "prov_qc_hlthReg_cote-nord",
-    '06 - Montréal': "prov_qc_hlthReg_montreal",
-    '15 - Laurentides': "prov_qc_hlthReg_laurentides",
-    '14 - Lanaudière': "prov_qc_hlthReg_lanaudiere",
-    '02 - Saguenay-Lac-Saint-Jean': "prov_qc_hlthReg_saguenay-lac-saint-jean",
-    '11 - Gaspésie-Îles-de-la-Madeleine': "prov_qc_hlthReg_gaspesie-iles-de-la-madeleine",  # noqa
+    "13 - Laval": "prov_qc_hlthReg_laval",
+    "12 - Chaudière-Appalaches": "prov_qc_hlthReg_chaudiere_appalaches",
+    "10 - Nord-du-Québec": "prov_qc_hlthReg_nord_du_quebec",
+    "05 - Estrie": "prov_qc_hlthReg_estrie",
+    "03 - Capitale-Nationale": "prov_qc_hlthReg_capitale_nationale",
+    "04 - Mauricie et Centre-du-Québec": "prov_qc_hlthReg_mauricie_centre_du_quebec",  # noqa
+    "16 - Montérégie": "prov_qc_hlthReg_monteregie",
+    "08 - Abitibi-Témiscamingue": "prov_qc_hlthReg_abitibi_temiscamingue",
+    "07 - Outaouais": "prov_qc_hlthReg_outaouais",
+    "01 - Bas-Saint-Laurent": "prov_qc_hlthReg_bas_saint_laurent",
+    "09 - Côte-Nord": "prov_qc_hlthReg_cote_nord",
+    "06 - Montréal": "prov_qc_hlthReg_montreal",
+    "15 - Laurentides": "prov_qc_hlthReg_laurentides",
+    "14 - Lanaudière": "prov_qc_hlthReg_lanaudiere",
+    "02 - Saguenay-Lac-Saint-Jean": "prov_qc_hlthReg_saguenay_lac_saint_jean",
+    "11 - Gaspésie-Îles-de-la-Madeleine": "prov_qc_hlthReg_gaspesie_iles_de_la_madeleine",  # noqa
 }
 
 
@@ -38,34 +39,16 @@ general_defaults = {
 
 
 values_to_save = {
-    "cas_quo_tot_n": {
-        "type": "conf",
-        "dateType": "report"
-    },
+    "cas_quo_tot_n": {"type": "conf", "dateType": "report"},
     # "act_cum_tot_n": {
     #     "type": "active",
     #     "dateType": "report"
     # },
-    "dec_quo_tot_n": {
-        "type": "death",
-        "dateType": "report"
-    },
-    "hos_quo_tot_n": {
-        "type": "hospCen",
-        "dateType": "report"
-    },
-    "psi_quo_tes_n": {
-        "type": "test",
-        "dateType": "report"
-    },
-    "psi_quo_pos_n": {
-        "type": "posTest",
-        "dateType": "report"
-    },
-    "psi_quo_pos_t": {
-        "type": "pPosRt",
-        "dateType": "report"
-    },
+    "dec_quo_tot_n": {"type": "death", "dateType": "report"},
+    "hos_quo_tot_n": {"type": "hospCen", "dateType": "report"},
+    "psi_quo_tes_n": {"type": "test", "dateType": "report"},
+    "psi_quo_pos_n": {"type": "posTest", "dateType": "report"},
+    "psi_quo_pos_t": {"type": "pPosRt", "dateType": "report"},
 }
 
 vaccine_to_save = {
@@ -73,11 +56,10 @@ vaccine_to_save = {
         "type": "vaccineDose1",
         "dateType": "report",
     },
-
     "vac_cum_2_n": {
         "type": "vaccineDose2",
         "dateType": "report",
-    }
+    },
 }
 
 
@@ -90,9 +72,9 @@ def build_cphd_ids(reporter, region, type_, datetype, date):
 def df_from_req(url):
     req = requests.get(url)
     if not req:
-        raise requests.HTTPError(f'could not get data from {url}')
+        raise requests.HTTPError(f"could not get data from {url}")
     content = req.content
-    return pd.read_csv(io.StringIO(content.decode('utf-8')))
+    return pd.read_csv(io.StringIO(content.decode("utf-8")))
 
 
 INSPQ_DATASET_URL = "https://www.inspq.qc.ca/sites/default/files/covid/donnees/covid19-hist.csv?randNum=27002747"
@@ -109,7 +91,9 @@ class INSPQ_mapper(bm.BaseMapper):
             warnings.filterwarnings(action="ignore")
             hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_DATASET_URL)
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())].copy()
-        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
+        hist["Date"] = pd.to_datetime(
+            hist["Date"], errors="coerce", infer_datetime_format=True
+        )
         hist = hist.dropna(subset=["Date"])
         if start:
             hist = hist.loc[hist["Date"] >= start].copy()
@@ -130,7 +114,8 @@ class INSPQ_mapper(bm.BaseMapper):
                 df["polygonID"],
                 df["type"],
                 df["dateType"],
-                df["date"])
+                df["date"],
+            )
             df = df[list(general_defaults.keys())]
             dfs.append(df)
         cphd = pd.concat(dfs, axis=0)
@@ -151,9 +136,15 @@ class INSPQVaccineMapper(bm.BaseMapper):
             end = pd.to_datetime(end, format="%Y-%m-%d")
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
-            hist = pd.read_csv(filepath) if filepath else df_from_req(INSPQ_VACCINE_DATASET_URL)
+            hist = (
+                pd.read_csv(filepath)
+                if filepath
+                else df_from_req(INSPQ_VACCINE_DATASET_URL)
+            )
         hist = hist.loc[hist["Nom"].isin(poly_names.keys())].copy()
-        hist["Date"] = pd.to_datetime(hist["Date"], errors="coerce", infer_datetime_format=True)
+        hist["Date"] = pd.to_datetime(
+            hist["Date"], errors="coerce", infer_datetime_format=True
+        )
         hist = hist.dropna(subset=["Date"])
         if start:
             hist = hist.loc[hist["Date"] >= start].copy()
@@ -174,7 +165,8 @@ class INSPQVaccineMapper(bm.BaseMapper):
                 df["polygonID"],
                 df["type"],
                 df["dateType"],
-                df["date"])
+                df["date"],
+            )
             df = df[list(general_defaults.keys())]
             dfs.append(df)
         cphd = pd.concat(dfs, axis=0)

@@ -11,11 +11,11 @@ poly_names:
     french: Laval
     english: Laval
 
-  prov_qc_hlthreg_chaudiere-appalaches:
+  prov_qc_hlthreg_chaudiere_appalaches:
     french: Chaudière-Appalaches
     english: Chaudière-Appalaches
 
-  prov_qc_hlthreg_nord-du-quebec:
+  prov_qc_hlthreg_nord_du_quebec:
     french: Nord-du-Québec
     english: Nord-du:Québec
 
@@ -23,11 +23,11 @@ poly_names:
     french: Estrie
     english: Estrie
 
-  prov_qc_hlthreg_capitale-nationale:
+  prov_qc_hlthreg_capitale_nationale:
     french: Capitale-Nationale
     english: Capitale-Nationale
 
-  prov_qc_hlthreg_mauricie-centre-du-quebec:
+  prov_qc_hlthreg_mauricie_centre_du_quebec:
     french: Mauricie - Centre-du-Québec
     english: Mauricie - Centre-du-Québec
 
@@ -35,7 +35,7 @@ poly_names:
     french: Montérégie
     english: Montérégie
 
-  prov_qc_hlthreg_abitibi-temiscamingue:
+  prov_qc_hlthreg_abitibi_temiscamingue:
     french: Abitibi - Témiscamingue
     english: Abitibi - Témiscamingue
 
@@ -43,11 +43,11 @@ poly_names:
     french: Outaouais
     english: Outaouais
 
-  prov_qc_hlthreg_bas-saint-laurent:
+  prov_qc_hlthreg_bas_saint_laurent:
     french: Bas-Saint-Laurent
     english: Bas-Saint-Laurent
 
-  prov_qc_hlthreg_cote-nord:
+  prov_qc_hlthreg_cote_nord:
     french: Côte-Nord
     english: Côte-Nord
 
@@ -63,11 +63,11 @@ poly_names:
     french: Lanaudière
     english: Lanaudière
 
-  prov_qc_hlthreg_saguenay-lac-saint-jean:
+  prov_qc_hlthreg_saguenay_lac_saint_jean:
     french: Saguenay - Lac-Saint-Jean
     english: Saguenay - Lac-Saint-Jean
 
-  prov_qc_hlthreg_gaspesie-iles-de-la-madeleine:
+  prov_qc_hlthreg_gaspesie_iles_de_la_madeleine:
     french: Gaspésie - Îles-de-la-Madeleine
     english: Gaspésie - Îles-de-la-Madeleine
 
@@ -123,7 +123,7 @@ poly_names:
     french: Bassin versant des égouts de Gatineau
     english: Gatineau sewershed
 
-collection :
+collection:
   cp:
     french: Composite
     english: Composite
@@ -134,7 +134,7 @@ collection :
     french: Passif
     english: Passive
 
-municipalities :
+municipalities:
   qc: Québec
   mtl: Montréal
   lvl: Laval
@@ -147,7 +147,6 @@ municipalities :
   trpis: Trois-Pistoles
   mtne: Matane
   gtn: Gatineau
-
 
 site_names:
   québec station est:
@@ -196,10 +195,9 @@ site_names:
     french: StaRRE de Gatineau
     english: Gatineau WRRF
 
-
-site_types :
+site_types:
   wwtpmuc:
-    french: StaRRE municipale pour égouts unitaires  # noqa
+    french: StaRRE municipale pour égouts unitaires # noqa
     english: WRRF for combined sewers
   pstat:
     french: Station de pompage
@@ -238,7 +236,7 @@ site_types :
     french: Bassin de rétention
     english: Retention tank
   wwtpmus:
-    french: StaRRE municipale pour égouts sanitaires  # noqa
+    french: StaRRE municipale pour égouts sanitaires # noqa
     english: Municipal WRRF for sanitary sewers
   wwtpind:
     french: StaRRE eaux industrielles

@@ -2,6 +2,7 @@ import json
 import re
 import warnings
 from functools import reduce
+from typing import Any, Optional
 
 import geomet.wkt
 import numpy as np
@@ -9,6 +10,7 @@ import pandas as pd
 import shapely.wkt
 from geojson_rewind import rewind
 
+Geometry = Any
 UNKNOWN_REGEX = re.compile(r"$^|n\.?[a|d|/|n]+\.?|^-$|unk.*|none", flags=re.I)
 
 
@@ -78,7 +80,7 @@ def pick_cphd_poly_by_size(x, poly):
     return ls[min_idx]
 
 
-def convert_wkt(x):
+def convert_wkt(x: str) -> Optional[Geometry]:
     return shapely.wkt.loads(x) if x else None
 
 
@@ -97,19 +99,30 @@ def get_minimal_polygon_for_cphd(merged, poly, cphd):
     return merged
 
 
-def get_intersecting_polygons(row, poly):
-    sewershed_wkts = poly.loc[
-        poly["Polygon_polygonID"] == row["Site_polygonID"], "Polygon_wkt"
-    ]
-    if sewershed_wkts.empty:
+def get_intersecting_polygons(
+    site_poly_id: Optional[str], polygon_table: pd.DataFrame
+) -> str:
+    if not site_poly_id or pd.isna(site_poly_id):
         return ""
-    sewershed_shape = convert_wkt(sewershed_wkts.values[0])
 
-    poly["intersects"] = poly["shape"].apply(
+    polygon_table["shape"] = polygon_table["Polygon_wkt"].apply(
+        lambda x: convert_wkt(x)  # type: ignore
+    )
+    sewershed_shape = polygon_table.loc[
+        polygon_table["Polygon_polygonID"] == site_poly_id, "shape"
+    ].values[0]
+
+    if sewershed_shape is None or pd.isna(sewershed_shape):
+        return ""
+
+    polygon_table["intersects"] = polygon_table["shape"].apply(
         lambda shape: shape.intersects(sewershed_shape) if shape else False
     )
-    poly_ids = poly["Polygon_polygonID"].loc[poly["intersects"]].to_list()
-    poly.drop(columns=["intersects"], inplace=True)
+    poly_ids = (
+        polygon_table["Polygon_polygonID"].loc[polygon_table["intersects"]].to_list()
+    )
+    polygon_table.drop(columns=["intersects"], inplace=True)
+    del polygon_table["shape"]
     return ";".join(poly_ids)
 
 
@@ -126,8 +139,8 @@ def clean_grab_datetime(df):
     grab_date = "Sample_dateTime"
     grab_token = "grb"
     collection = "Sample_collection"
-    df[result_start] = pd.to_datetime(None)
-    df[result_end] = pd.to_datetime(None)
+    df[result_start] = pd.to_datetime(np.nan)
+    df[result_end] = pd.to_datetime(np.nan)
 
     grb_filt = df[collection].str.contains(grab_token)
     na_filt = ~df[grab_date].isna()
@@ -140,9 +153,9 @@ def clean_grab_datetime(df):
     return df
 
 
-def calc_start_date(end_date, type_):
+def calc_start_date(end_date: pd.Timestamp, type_: str) -> pd.Timestamp:
     if pd.isna(end_date) or pd.isna(type_):
-        return pd.NaT
+        return pd.to_datetime(np.nan)
     x = type_
     hours = None
     if re.match(r"cp[tf]p[0-9]+h", x):
@@ -152,10 +165,10 @@ def calc_start_date(end_date, type_):
     if hours is not None:
         interval = pd.to_timedelta(f"{hours}h")
         return end_date - interval
-    return pd.NaT
+    return pd.to_datetime(np.nan)
 
 
-def clean_composite_data_intervals(df):
+def clean_composite_data_intervals(df: pd.DataFrame) -> pd.DataFrame:
     """This function implements the following rules for
     associating composite samples with a time interval:
         1. The Composite ends at midnight of the day recorded as the end date.
@@ -175,13 +188,18 @@ def clean_composite_data_intervals(df):
             "Sample.dateTimeStart",
             "Sample.dateTimeEnd"
     """
+    if df.empty:
+        return df
     coll = "Sample_collection"
     end = "Sample_dateTimeEnd"
+    if coll not in df.columns or end not in df.columns:
+        raise ValueError(f"Missing columns in DataFrame: {coll} or {end}")
+    df[coll] = df[coll].str.lower().astype(str)
     result_end = "Calculated_dateTimeEnd"
     result_start = "Calculated_dateTimeStart"
 
-    one_day = pd.to_timedelta("23 hours 59 minutes")
-    df[result_end] = pd.to_datetime(df[end] + one_day).dt.date
+    little_less_than_one_day = pd.to_timedelta("23 hours 59 minutes")
+    df[result_end] = pd.to_datetime(df[end] + little_less_than_one_day).dt.date
     df[result_start] = df.apply(
         lambda row: calc_start_date(row[result_end], row[coll]), axis=1
     )
@@ -318,31 +336,28 @@ def get_primary_key(table_name=None):
     return keys[table_name]
 
 
+def get_relevant_polygons(site_id, df):
+    poly_ids = df.loc[df["Site_siteID"] == site_id, "Calculated_polygonList"].unique()
+    poly_lists = [x.split(";") for x in poly_ids]
+    # turn list of lists into a single list
+    poly_ids = set([item for sublist in poly_lists for item in sublist])
+
+    poly_ids = [x for x in poly_ids if x not in ["-", ""]]
+    return poly_ids
+
+
 def build_site_specific_dataset(df, site_id):
     idx_col = "Calculated_timestamp"
     if df.empty:
         return df
-    filt_site1 = df["Site_siteID"] == site_id
-    if "SiteMeasure_siteID" in df.columns:
-        filt_site2 = df["SiteMeasure_siteID"] == site_id
-        filt_site = filt_site1 | filt_site2
-    else:
-        filt_site = filt_site1
+    filt_site = df["Site_siteID"] == site_id
+
     df1 = df[filt_site]
     df1.set_index(idx_col, inplace=True)
 
-    filt_cphd_df = df.loc[filt_site1, "Calculated_polygonIDForCPHD"]
-    if not filt_cphd_df.empty:
-        cphd_poly_id = str(filt_cphd_df.iloc[0]).lower()
-        poly_filt = df["CPHD_polygonID"].fillna("").str.lower().str.match(cphd_poly_id)
-        df2 = df[poly_filt]
-        df2.set_index(idx_col, inplace=True)
-        dataset = pd.concat([df1, df2], axis=0)
-    else:
-        dataset = df1
-
-    dataset.sort_index()
-    return dataset.reindex(sorted(dataset.columns), axis=1)
+    df1 = df1.sort_index()
+    df1 = df1.dropna(how="all", axis=1)
+    return df1.reindex(sorted(df1.columns), axis=1)
 
 
 def resample_per_day(df):

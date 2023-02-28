@@ -3,14 +3,30 @@ import json
 import os
 import sqlite3
 import warnings
+from functools import wraps
+from time import time
 from typing import Optional
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import requests
 
 from wbe_odm import utilities
 from wbe_odm.odm_mappers import base_mapper
+
+
+def timing(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        start = time()
+        result = f(*args, **kwargs)
+        end = time()
+        print(f"{f.__name__}: Elapsed time: { end - start}")
+        return result
+
+    return wrapper
+
 
 # Set pandas to raise en exception when using chained assignment,
 # as that may lead to values being set on a view of the data
@@ -264,6 +280,45 @@ class Odm:
             df.to_csv(complete_path + ".csv", sep=",", index=False)
         return
 
+    def to_parquet(
+        self,
+        path: str,
+        file_prefix: Optional[str] = None,
+        attrs_to_save: Optional[list[str]] = None,
+    ) -> None:
+        """Saves the contents of the ODM object to CSV files.
+
+        Parameters
+        ----------
+        path : str
+            The path to the directory where files will be saved.
+        file_prefix : str, optional
+            The desired prefix that will go in
+            front of the Table name in the .csv file name.
+        attrs_to_save : list, optional
+            The attributes of the ODM object
+            to save to file (each attribute representing a table).
+            If None, all the tables are saved.
+        """
+        if attrs_to_save is None:
+            attrs = self.__dict__
+            attrs_to_save = [
+                name for name, df in attrs.items() if df is not None and not df.empty
+            ]
+
+        conversion_dict = base_mapper.BaseMapper.conversion_dict
+        if not os.path.exists(path):
+            os.mkdir(path)
+        for attr in attrs_to_save:
+            odm_name = conversion_dict[attr]["odm_name"]
+            filename = f"{file_prefix}_" + odm_name if file_prefix else odm_name
+            df = getattr(self, attr)
+            if df is None or df.empty:
+                continue
+            complete_path = os.path.join(path, filename)
+            df.to_parquet(complete_path + ".parquet", sep=",", index=False)
+        return
+
     def append_odm(self, other_odm) -> None:
         """Joins the data inside another Odm instance to this one.
 
@@ -288,7 +343,7 @@ class Odm:
         [pd.DataFrame]
             The combined data.
         """
-        return TableCombiner(self).combine_per_sample()
+        return TableCombiner(self).combine_per_day_per_site()
 
 
 class TableWidener:
@@ -337,7 +392,7 @@ class TableWidener:
                 )
         return df
 
-    def widen(self, agg="mean"):
+    def widen(self, agg="mean") -> pd.DataFrame:
         """Takes important characteristics inside a table (features) and
         creates new columns to store them based on the value of other columns
         (qualifiers).
@@ -347,11 +402,30 @@ class TableWidener:
         pd.DataFrame
             DataFrame with the original feature and qualifier columns removed
             and the features spread out over new columns named after the values
-            of the qualifier columns.
+            of the qualifier columns. The columns have the appropriate data type based on the name of the feature.
         """
+
+        def typecast(df):
+            for col_name in df.columns:
+                low_col_name = col_name.lower()
+                last_part = "_".split(col_name)[-1].lower()  # type: ignore
+                if last_part in ["value", "pop", "temp", "size"]:
+                    df[col_name] = df[col_name].astype(np.float64)
+                elif "timestamp" in last_part or "date" in last_part:
+                    df[col_name] = pd.to_datetime(
+                        df[col_name], infer_datetime_format=True
+                    )
+                elif (
+                    "flag" in low_col_name or "pooled" in low_col_name or "shippedonice" in low_col_name  # type: ignore
+                ):
+                    df[col_name] = df[col_name].fillna(False).astype("boolean")
+                else:
+                    df[col_name] = df[col_name].fillna("").astype(str)
+            return df
+
         df = self.raw_df.copy()
         if df.empty:
-            return
+            return df
         df = self.clean_qualifier_columns()
         for qualifier in self.qualifiers:
             df[qualifier] = df[qualifier].astype(str)
@@ -367,6 +441,7 @@ class TableWidener:
             df.loc[filt, col_name] = df.loc[filt, feature]  # type: ignore
         df.drop(columns=self.features + self.qualifiers, inplace=True)
         df.drop(columns=["col_qualifiers"], inplace=True)
+        df = typecast(df)
         self.wide = df.copy()
         return self.wide
 
@@ -383,14 +458,15 @@ class TableCombiner(Odm):
         self.site = self.parse_site(source_odm.site)
 
     def typecast_combined(self, df: pd.DataFrame) -> pd.DataFrame:
-        for col_name in df.columns:
+        for col_name in df.columns.to_list():
+            low_col_name = col_name.lower()
             last_part = "_".split(col_name)[-1].lower()  # type: ignore
             if last_part in ["value", "pop", "temp", "size"]:
                 df[col_name] = df[col_name].astype(np.float32)
             elif "timestamp" in last_part or "date" in last_part:
                 df[col_name] = pd.to_datetime(df[col_name], infer_datetime_format=True)
             elif (
-                "flag" in col_name or "pooled" in col_name or "shippedOnIce" in col_name  # type: ignore
+                "flag" in low_col_name or "pooled" in low_col_name or "shippedOnIce" in low_col_name  # type: ignore
             ):
                 df[col_name] = df[col_name].fillna(False).astype(np.bool_)
             else:
@@ -446,9 +522,9 @@ class TableCombiner(Odm):
         wide = wide.add_prefix("WWMeasure_")
         return wide
 
-    def parse_site_measure(self, df) -> Optional[pd.DataFrame]:
-        if df.empty:
-            return df
+    def parse_site_measure(self, df: Optional[pd.DataFrame]) -> pd.DataFrame:
+        if df is None or df.empty:
+            return pd.DataFrame()
         df = self.remove_access(df)
         features = ["value"]
         qualifiers = [
@@ -508,15 +584,13 @@ class TableCombiner(Odm):
 
     def widen(self, df, features, qualifiers, table_name):
         wide = TableWidener(df, features, qualifiers).widen()
-        if wide is None:
-            return wide
+        if wide is None or wide.empty:
+            return pd.DataFrame()
         wide = wide.add_prefix(table_name)
         return wide
 
-    def agg_ww_measure_per_sample(
-        self, ww: Optional[pd.DataFrame]
-    ) -> Optional[pd.DataFrame]:
-        """Helper function that aggregates the WWMeasure table by sample.
+    def agg_ww_measure_per_sample_id(self, ww: pd.DataFrame) -> pd.DataFrame:
+        """Helper function that aggregates the WWMeasure table by sample id.
 
         Parameters
         ----------
@@ -532,13 +606,12 @@ class TableCombiner(Odm):
             DataFrame containing the data from the WWMeasure table,
             re-ordered so that each row represents a sample.
         """
-        if ww is None:
-            return ww
         if ww.empty:
             return ww
         return ww.groupby("WWMeasure_sampleID").agg(utilities.reduce_by_type)
 
-    def combine_ww_measure_and_sample(
+    @timing
+    def combine_sample_table_w_agg_ww_measure(
         self, ww: pd.DataFrame, sample: pd.DataFrame
     ) -> pd.DataFrame:
         """Merges tables on sampleID
@@ -565,20 +638,37 @@ class TableCombiner(Odm):
         return pd.merge(
             sample,
             ww,
-            how="left",
+            how="left",  # samples are the ones with temporal info, so any measure without a sample id is not relevant
             left_on="Sample_sampleID",
             right_on="WWMeasure_sampleID",
         )
 
-    def combine_site_measure(self, merged, site_measure):
-        return pd.merge(
-            merged,
-            site_measure,
-            how="left",
-            on="Calculated_timestamp",
+    def combine_wide_w_smeasures_based_on_siteid_and_time(
+        self, wwmeas_samples_sites: pd.DataFrame, wide_site_measure: pd.DataFrame
+    ) -> pd.DataFrame:
+        # We want to keep the samples that have no site measure
+        # And we want site measures that don't have samples
+        # So we use an outer merge
+        # The timestamp and the site matter in this merge
+        if wwmeas_samples_sites.empty:
+            return wide_site_measure
+        elif wide_site_measure.empty:
+            return wwmeas_samples_sites
+        left_columns = wwmeas_samples_sites.columns.tolist()
+        left_site = (
+            "Sample_siteID" if "Sample_siteID" in left_columns else "Site_siteID"
         )
 
-    def combine_site_sample(
+        return pd.merge(
+            wwmeas_samples_sites,
+            wide_site_measure,
+            how="outer",
+            left_on=["Calculated_timestamp", left_site],
+            right_on=["Calculated_timestamp", "SiteMeasure_siteID"],
+        )
+
+    @timing
+    def combine_samples_w_sites(
         self, sample: pd.DataFrame, site: pd.DataFrame
     ) -> pd.DataFrame:
         if site.empty:
@@ -586,17 +676,21 @@ class TableCombiner(Odm):
         elif sample.empty:
             return site
 
+        # Since the samples have the temporal information, the sites without samples are irrelevant
         return pd.merge(
             sample, site, how="left", left_on="Sample_siteID", right_on="Site_siteID"
         )
 
-    def get_unique_polygons(self, polygon_lists: pd.Series) -> list[str]:
-        expanded_lists = pd.DataFrame(polygon_lists.to_list())
+    @timing
+    def select_all_intersected_polygons(self, polygon_lists: npt.NDArray) -> list[str]:
         unique_polygons = set()
-        for col in expanded_lists:
-            unique_polygons.update(expanded_lists[col])
+        for polygon_list in polygon_lists:
+            for polygon in polygon_list:
+                unique_polygons.add(polygon)
         if None in unique_polygons:
             unique_polygons.remove(None)
+        if "" in unique_polygons:
+            unique_polygons.remove("")
         return list(unique_polygons)
 
     def combine_overlapping_polygons(
@@ -604,20 +698,32 @@ class TableCombiner(Odm):
     ) -> pd.DataFrame:
         ...
 
-    def get_polygon_list(self, merged, polygons):
+    @timing
+    def create_polygon_list_from_intersects(
+        self, wide_table: pd.DataFrame, long_polygon_table: pd.DataFrame
+    ) -> pd.DataFrame:
         """
         Adds a column called 'polygonIDs' containing a list
         of polygons that pertain to a site
         """
-        polygons["shape"] = polygons["Polygon_wkt"].apply(
-            lambda x: utilities.convert_wkt(x)
-        )
-        merged["Calculated_polygonList"] = merged.apply(
-            lambda row: utilities.get_intersecting_polygons(row, polygons), axis=1
-        )
-        polygons.drop(["shape"], axis=1, inplace=True)
-        return merged
+        if wide_table.empty or long_polygon_table.empty:
+            return wide_table
 
+        sub_dfs = []
+
+        wide_table["Site_polygonID"] = wide_table["Site_polygonID"].fillna("")
+        for site_polygon_id, site_df in wide_table.groupby("Site_polygonID"):
+            if site_polygon_id == "":
+                site_df["Calculated_polygonList"] = np.nan
+            site_df["Calculated_polygonList"] = utilities.get_intersecting_polygons(
+                str(site_polygon_id), long_polygon_table
+            )
+            sub_dfs.append(site_df)
+        concatenated_wide_table = pd.concat(sub_dfs, axis=0)
+
+        return concatenated_wide_table
+
+    @timing
     def combine_cphd_polygon_sample(
         self, df: pd.DataFrame, polygon: pd.DataFrame
     ) -> pd.DataFrame:
@@ -635,82 +741,62 @@ class TableCombiner(Odm):
             right_on="CPHD-Polygon_polygonID",
         )
 
-    def combine_polygons(self, df: pd.DataFrame, polygon: pd.DataFrame) -> pd.DataFrame:
-        def apply_matching_row(
-            wide_df: pd.DataFrame,
-            polygon_df: pd.DataFrame,
-            test: pd.Series,
-            prefix: str,
-            polygon_id: str,
-        ) -> pd.DataFrame:
-            result_df = wide_df.loc[test].copy()
-            poly_copy = polygon_df.copy().add_prefix(prefix)
-            target_row = poly_copy.loc[
-                poly_copy[f"{prefix}Polygon_polygonID"] == polygon_id
-            ]
-            for col_name in target_row.columns:
-                result_df[col_name] = target_row[col_name].item()  # type: ignore
-            return result_df
+    @timing
+    def combine_polygon_info(
+        self, wide_table: pd.DataFrame, polygon_table: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        Adds the info of each intersecting polygon to the appropriate rows in the wide table.
+        The rows of the wide table each have a Site_siteID.
+        The siteID determines what intersecting polygons are relevant to that row.
+        For each polygon that intersects with the site, new columns are created for to hold on of the field of the polygon.
+        If the polygon is the one mentionned in Site_polygonID, then the prefix of each new column is "SewershedPoly-".
+        Otherwise, the prefix is "OverlappingPoly-{polygonID}".
+        Once each sub-dataframe has had the polygon info added, they are all combined into one dataframe.
+        Because they were split using a groupby, you can concatenate them horizontally.
+        The rows that don't have a siteID are dropped because they don't appear in the groupby groups.
+        """
 
-        if polygon.empty:
-            return df
-        elif df.empty:
-            return polygon
+        if polygon_table.empty or wide_table.empty:
+            return wide_table
 
-        df = df.copy()
-        polygon = polygon.copy()
-        df["Calculated_polygonArr"] = df["Calculated_polygonList"].str.split(";")
-        unique_polygon_ids = self.get_unique_polygons(df["Calculated_polygonArr"])
+        wide_table["Calculated_polygonArr"] = wide_table[
+            "Calculated_polygonList"
+        ].str.split(";")
 
-        overlapping_dfs = []
-        sewershed_dfs = []
+        sub_dfs = []
+        wide_table["Site_polygonID"] = wide_table["Site_polygonID"].fillna("")
+        for poly_id, sub_wide_df in wide_table.groupby("Site_polygonID"):
+            if poly_id != "":
+                polygon_ids = sub_wide_df["Calculated_polygonArr"].iloc[0]
+                for polygon_id in polygon_ids:
+                    if polygon_id == "":
+                        continue
+                    if polygon_id == sub_wide_df["Site_polygonID"].iloc[0]:
+                        prefix = "SewershedPoly-"
+                    else:
+                        prefix = f"OverlappingPoly-{polygon_id}-"
+                    for column in polygon_table.columns:
+                        polygon_row = polygon_table.loc[
+                            polygon_table["Polygon_polygonID"] == polygon_id
+                        ].iloc[0]
+                        sub_wide_df[f"{prefix}{column}"] = polygon_row[column]
+            sub_dfs.append(sub_wide_df)
 
-        for polygon_id in unique_polygon_ids:
-            is_overlapping = df["Calculated_polygonList"].str.contains(polygon_id)
-            is_sewershed_poly = df["Site_polygonID"] == polygon_id
+        full_df = pd.concat(sub_dfs, axis=0)
 
-            test_sewershed = is_overlapping & is_sewershed_poly
-            sewershed_prefix = "SewershedPoly-"
+        del full_df["Calculated_polygonArr"]
+        return full_df
 
-            sewershed_df = apply_matching_row(
-                df, polygon, test_sewershed, sewershed_prefix, polygon_id
-            )
-            sewershed_dfs.append(sewershed_df)
-
-            test_overlapping = is_overlapping & ~is_sewershed_poly
-            overlapping_prefix = f"OverlappingPoly-{polygon_id}-"
-
-            overlapping_df = apply_matching_row(
-                df, polygon, test_overlapping, overlapping_prefix, polygon_id
-            )
-            overlapping_dfs.append(overlapping_df)
-
-        full_sewershed_df = pd.concat(sewershed_dfs, axis=0).sort_index()
-        cols_to_use = full_sewershed_df.columns.difference(df.columns)
-        df = pd.merge(
-            df,
-            full_sewershed_df[cols_to_use],
-            how="left",
-            left_index=True,
-            right_index=True,
-        )
-        for sub_df in overlapping_dfs:
-            if sub_df.empty:
-                continue
-            cols_to_use = sub_df.columns.difference(df.columns)
-            df = pd.merge(
-                df, sub_df[cols_to_use], how="left", left_index=True, right_index=True
-            )
-        del df["Calculated_polygonArr"]
-        return df
-
-    def get_site_measure_ts(self, site_measure):
+    def create_timestamp_from_sm_datetime(self, site_measure):
         if site_measure.empty:
             return site_measure
-        site_measure["Calculated_timestamp"] = site_measure["SiteMeasure_dateTime"]
+        site_measure["Calculated_timestamp"] = pd.to_datetime(
+            site_measure["SiteMeasure_dateTime"]
+        )
         return site_measure
 
-    def get_samples_timestamp(self, df):
+    def create_timestamp_from_sample_dates(self, df):
         # grb -> "dateTime"
         # ps and cp -> if start and end are present: midpoint
         # ps and cp -> if only end is present: end
@@ -724,9 +810,7 @@ class TableCombiner(Odm):
         df.loc[grb_filt, "Sample_dateTimeEnd"] = df.loc[grb_filt, "Sample_dateTime"]
 
         df.loc[s_filt & e_filt, "Calculated_timestamp"] = df.apply(
-            lambda row: utilities.get_midpoint_time(
-                row["Sample_dateTimeStart"], row["Sample_dateTimeEnd"]
-            ),
+            lambda row: pd.to_datetime(row["Sample_dateTimeEnd"].date()),
             axis=1,
         )
         with warnings.catch_warnings():
@@ -743,12 +827,17 @@ class TableCombiner(Odm):
             ]
         return df
 
-    def get_cphd_ts(self, df):
-        df["Calculated_timestamp"] = df["CPHD_date"]
+    def create_timestamp_from_cphd_date(self, df):
+        df["Calculated_timestamp"] = pd.to_datetime(df["CPHD_date"])
         return df
 
-    def combine_cphd(self, merged: pd.DataFrame, cphd_ts: pd.DataFrame) -> pd.DataFrame:
-        def find_intersecting_polygons(column_series: pd.Index) -> list[str]:
+    @timing
+    def combine_cphd_based_on_intersected_polygons(
+        self, wide_table: pd.DataFrame, wide_cphd: pd.DataFrame
+    ) -> pd.DataFrame:
+        def list_overlapping_polygons_from_column_names(
+            column_series: pd.Index,
+        ) -> list[str]:
             columns = column_series.to_list()
             intersecting_polygons = []
             for col in columns:
@@ -756,10 +845,17 @@ class TableCombiner(Odm):
                     intersecting_polygons.append(col.split("-")[1])
             return list(set(intersecting_polygons))
 
-        def find_sewershed_polygon(merged: pd.DataFrame) -> str:
-            return str(merged["SewershedPoly-Polygon_polygonID"].unique().item())
+        def find_sewershed_polygon_from_column_names(
+            merged: pd.DataFrame,
+        ) -> str | None:
+            sewer_poly_id_col = "SewershedPoly-Polygon_polygonID"
+            if sewer_poly_id_col in merged.columns:
+                return str(merged[sewer_poly_id_col].unique().item())
+            return None
 
-        def rename_wide_cphd(wide_cphd: pd.DataFrame, poly_id: str) -> pd.DataFrame:
+        def rename_wide_cphd_based_on_polygonid(
+            wide_cphd: pd.DataFrame, poly_id: str
+        ) -> pd.DataFrame:
             to_rename = {}
             for col in wide_cphd.columns:
                 if not str(col).startswith("CPHD"):
@@ -770,40 +866,63 @@ class TableCombiner(Odm):
             else:
                 return wide_cphd
 
-        def merge_polygon_cphd(
+        def merge_wide_table_with_polygon_cphd(
             merged_df: pd.DataFrame, cphd_df: pd.DataFrame, polygon_id: str
         ) -> pd.DataFrame:
             filtered_cphd = cphd_df.loc[cphd_df["CPHD_polygonID"] == polygon_id]
             if filtered_cphd.empty:
                 return merged_df
-            renamed_cphd = rename_wide_cphd(filtered_cphd, polygon_id)
+            renamed_cphd = rename_wide_cphd_based_on_polygonid(
+                filtered_cphd, polygon_id
+            )
 
             df = pd.merge(
                 merged_df,
                 renamed_cphd,
-                how="left",
+                how="outer",
                 on="Calculated_timestamp",
             )
             return df
 
-        if cphd_ts.empty:
-            return merged
-        elif merged.empty:
-            return cphd_ts
+        if wide_cphd.empty:
+            return wide_table
+        elif wide_table.empty:
+            return wide_cphd
 
-        polygons = find_intersecting_polygons(merged.columns)
-        polygons.append(find_sewershed_polygon(merged))
-        for polygon in polygons:
-            merged = merge_polygon_cphd(merged, cphd_ts, polygon)
-        return merged
+        # Here again, we need to group by siteID, because rows from the same site all have the same polygons attached to them.
+        # So for a given site, we need to merge the CPHD data for each polygon separately.
+        # For the sewershed polygon, we look at the column "SewershedPoly-Polygon_polygonID" and merge the CPHD data for that polygon based on Calculated timestamp.
+        # For each of the overlapping polygons, we look at the columns "OverlappingPoly-<polygon_id>-Polygon_polygonID" and merge the CPHD data for that polygon based on Calculated timestamp.
+        # Once we have merged the CPHD data for each polygon of a site, we append the merged data to the result_dfs list.
+        # Once we've gone through all the sites, we concatenate the result_dfs list into a single dataframe and return it.
+        result_dfs = []
+        for site_id, site_sub_df in wide_table.groupby("Site_siteID"):
+            site_polygons = list_overlapping_polygons_from_column_names(
+                site_sub_df.dropna(how="all", axis=1).columns
+            )
+            site_sewer_polygon = find_sewershed_polygon_from_column_names(site_sub_df)
 
-    def agg_site_measure_per_datetime(self, sm: pd.DataFrame) -> pd.DataFrame:
+            site_polygons.append(site_sewer_polygon) if site_sewer_polygon else None
+
+            for polygon in site_polygons:
+                site_sub_df = merge_wide_table_with_polygon_cphd(
+                    site_sub_df, wide_cphd, polygon
+                )
+
+            site_sub_df["Site_siteID"] = site_id
+
+            result_dfs.append(site_sub_df)
+        return pd.concat(result_dfs, axis=0)
+
+    @timing
+    def agg_site_measure_per_site_and_datetime(self, sm: pd.DataFrame) -> pd.DataFrame:
         if sm.empty:
             return sm
         return sm.groupby(
             ["SiteMeasure_siteID", "SiteMeasure_dateTime"], as_index=False
         ).agg(utilities.reduce_by_type)
 
+    @timing
     def agg_cphd_per_datetime(self, cphd: pd.DataFrame) -> pd.DataFrame:
         if cphd.empty:
             return cphd
@@ -817,54 +936,87 @@ class TableCombiner(Odm):
         )
         return df
 
-    def combine_per_sample(self) -> pd.DataFrame:
-        """Combines data from all tables containing sample-related information
-        into a single DataFrame.
-        To simplify data mining, the categorical columns are separated into
-        distinct columns.
+    @timing
+    def combine_per_day_per_site(self) -> pd.DataFrame:
+        """Combines data from all tables containing data relevant to a given site on a particular day
         Returns
         -------
         pd.DataFrame
-            DataFrame with each row representing a sample
+            DataFrame with each row representing a day of data for a site.
         """
 
-        agg_ww_measure = self.agg_ww_measure_per_sample(self.ww_measure)
-        if agg_ww_measure is None:
-            samples = self.sample
-        elif agg_ww_measure.empty:
-            samples = self.sample
+        # measurements are aligned in time based on the sample date so we align the measurements based on sample id
+        ww_measure_per_sample_id = (
+            self.agg_ww_measure_per_sample_id(self.ww_measure)
+            if self.ww_measure is not None
+            else pd.DataFrame()
+        )
+        if ww_measure_per_sample_id.empty:
+            samples_w_wwmeasures = self.sample
         else:
-            samples = self.combine_ww_measure_and_sample(agg_ww_measure, self.sample)
+            samples_w_wwmeasures = self.combine_sample_table_w_agg_ww_measure(
+                ww_measure_per_sample_id, self.sample
+            )
 
         # clean grab dates
-        samples = utilities.clean_grab_datetime(samples)
+        samples_w_wwmeasures = utilities.clean_grab_datetime(samples_w_wwmeasures)
         # clean composite dates
-        samples = utilities.clean_composite_data_intervals(samples)
-        samples = self.combine_site_sample(samples, self.site)
-        samples_ts = self.get_samples_timestamp(samples)
-        if self.site_measure is None:
-            merged_s_sm = samples_ts
-        elif self.site_measure.empty:
-            merged_s_sm = samples_ts
+        samples_w_wwmeasures = utilities.clean_composite_data_intervals(
+            samples_w_wwmeasures
+        )
+
+        # Add site information to the samples_w_measures table
+        samples_w_wwmeasures_w_sites = self.combine_samples_w_sites(
+            samples_w_wwmeasures, self.site
+        )
+
+        # Add the Calculated_timestamp column to the samples_w_measures_w_sites table
+        samples_w_wwmeasures_w_sites = self.create_timestamp_from_sample_dates(
+            samples_w_wwmeasures_w_sites
+        )
+
+        # With the site information, it's possible to join the site_measure table to the samples_w_measures_w_sites table using the siteID and the timestamp
+        if self.site_measure is None or self.site_measure.empty:
+            samples_w_wwmeasures_w_sites_w_smeasures = samples_w_wwmeasures_w_sites
         else:
-            site_measure = self.agg_site_measure_per_datetime(self.site_measure)
-            site_measure_ts = self.get_site_measure_ts(site_measure)
-            merged_s_sm = self.combine_site_measure(samples_ts, site_measure_ts)
+            wide_site_measures = self.agg_site_measure_per_site_and_datetime(
+                self.site_measure
+            )
+            wide_site_measures = self.create_timestamp_from_sm_datetime(
+                wide_site_measures
+            )
 
-        merged_s_sm = self.get_polygon_list(merged_s_sm, self.polygon)
+            samples_w_wwmeasures_w_sites_w_smeasures = (
+                self.combine_wide_w_smeasures_based_on_siteid_and_time(
+                    samples_w_wwmeasures_w_sites, wide_site_measures
+                )
+            )
+        # at this point, 'wide_table' contains all the data from the sample, site, and site_measure tables.
 
-        merged_s_sm_swp = self.combine_polygons(merged_s_sm, self.polygon)
+        # The next step is to determine what sewershed and public health regions
+        # are relevant to each site and add that information to the table
+
+        wide_table = self.create_polygon_list_from_intersects(
+            samples_w_wwmeasures_w_sites_w_smeasures, self.polygon
+        )
+
+        # Once we have all the intersecting polygons, we can join the polygon information to the wide_table for each intersecting polygon
+
+        wide_table_w_polys = self.combine_polygon_info(wide_table, self.polygon)
 
         #
-        cphd = self.agg_cphd_per_datetime(self.cphd)
-        cphd_ts = self.get_cphd_ts(cphd)
-        merged_s_sm_pp_cphd = self.combine_cphd(merged_s_sm_swp, cphd_ts)
+        wide_cphd = (
+            self.agg_cphd_per_datetime(self.cphd)
+            if self.cphd is not None
+            else pd.DataFrame()
+        )
+        wide_cphd = self.create_timestamp_from_cphd_date(wide_cphd)
 
-        merged_s_sm_pp_cphd.drop_duplicates(
-            keep="first", inplace=True
-        ) if merged_s_sm_pp_cphd is not None else merged_s_sm_pp_cphd
-        self.combined = pd.DataFrame(merged_s_sm_pp_cphd)
-        self.combined = self.typecast_combined(self.combined)
+        wide_w_polys_w_cphds = self.combine_cphd_based_on_intersected_polygons(
+            wide_table_w_polys, wide_cphd
+        )
+
+        self.combined = self.typecast_combined(wide_w_polys_w_cphds)
         return self.combined
 
 

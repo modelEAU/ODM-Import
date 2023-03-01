@@ -12,10 +12,10 @@ from easydict import EasyDict
 import visualizations
 from wbe_odm import odm, utilities
 from wbe_odm.odm_mappers import (
-    csv_folder_mapper,
     inspq_mapper,
     mcgill_mapper,
     modeleau_mapper,
+    parquet_folder_mapper,
     vdq_mapper,
 )
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         "--reload",
         type=str2bool,
         default=False,
-        help="Reload from raw sources (default=False) instead of from the current csv",
+        help="Reload from raw sources (default=False) instead of from the current parquet",
     )  # noqa
     parser.add_argument(
         "-sh",
@@ -130,8 +130,8 @@ if __name__ == "__main__":
         with open(config, "r") as f:
             config = EasyDict(yaml.safe_load(f))
 
-    if not os.path.exists(config.csv_folder):
-        raise ValueError("CSV folder does not exist. Please modify config file.")
+    if not os.path.exists(config.parquet_folder):
+        raise ValueError("Parquet folder does not exist. Please modify config file.")
 
     warnings.filterwarnings("error")
 
@@ -275,38 +275,38 @@ if __name__ == "__main__":
             store.append_from(vacc)
 
         print("Removing older dataset...")
-        for root, dirs, files in os.walk(config.csv_folder):
+        for root, dirs, files in os.walk(config.parquet_folder):
             for f in files:
                 os.unlink(os.path.join(str(root), str(f)))
             for d in dirs:
                 shutil.rmtree(os.path.join(root, d))
 
         print("Saving dataset...")
-        store.to_csv(config.csv_folder)
-        print(f"Saved to folder {config.csv_folder}")
+        store.to_parquet(config.parquet_folder)
+        print(f"Saved to folder {config.parquet_folder}")
 
         combined = store.combine_dataset()
         combined = utilities.typecast_wide_table(combined)
-        combined_path = os.path.join(config.csv_folder, "_" + "combined.csv")
-        combined.to_csv(combined_path, sep=",", index=False)
-        print(f"Saved Combined dataset to folder {config.csv_folder}.")
+        combined_path = os.path.join(config.parquet_folder, "_" + "combined.parquet")
+        combined.to_parquet(combined_path)
+        print(f"Saved Combined dataset to folder {config.parquet_folder}.")
 
     else:
-        print("Reading data back from csv...")
+        print("Reading data back from parquet...")
         store = odm.Odm()
-        from_csv = csv_folder_mapper.CsvFolderMapper()
-        from_csv.read(config.csv_folder)
-        store.append_from(from_csv)
+        from_parquet = parquet_folder_mapper.ParquetFolderMapper()
+        from_parquet.read(config.parquet_folder)
+        store.append_from(from_parquet)
 
-        print("Reading combined data back from csv...")
+        print("Reading combined data back from parquet...")
 
         combined_path = ""
-        for root, dirs, files in os.walk(config.csv_folder):
+        for root, dirs, files in os.walk(config.parquet_folder):
             for filename in files:
                 if "combined" in filename:
                     combined_path = str(filename)
-                    combined = pd.read_csv(
-                        os.path.join(config.csv_folder, filename), low_memory=False
+                    combined = pd.read_parquet(
+                        os.path.join(config.parquet_folder, filename)
                     )
                     combined = combined.replace("nan", np.nan)
                     combined = utilities.typecast_wide_table(combined)
@@ -398,5 +398,5 @@ if __name__ == "__main__":
                 dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
                 # dataset = dataset["2021-01-01":]
-                path = os.path.join(config.city_output_dir, f"{city_site}.csv")
-                dataset.to_csv(path)
+                path = os.path.join(config.city_output_dir, f"{city_site}.parquet")
+                dataset.to_parquet(path)

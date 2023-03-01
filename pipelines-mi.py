@@ -34,14 +34,14 @@ def load_files_from_folder(folder, extension):
 
 
 def get_data_excerpt(origin_folder):
-    short_csv_path = os.path.join(os.path.dirname(origin_folder), "short_csv")
-    files = load_files_from_folder(origin_folder, "csv")
+    short_parquet_path = os.path.join(os.path.dirname(origin_folder), "short_parquet")
+    files = load_files_from_folder(origin_folder, "parquet")
     for file in files:
         path = os.path.join(origin_folder, file)
-        df = pd.read_csv(path)
+        df = pd.read_parquet(path)
         if len(df) > 1000:
             df = df.sample(n=1000)
-        df.to_csv(os.path.join(short_csv_path, file), sep=",", index=False)
+        df.to_parquet(os.path.join(short_parquet_path, file))
 
 
 if __name__ == "__main__":
@@ -61,8 +61,8 @@ if __name__ == "__main__":
     with open(pipeline_config_path, "r") as f:
         config = EasyDict(yaml.safe_load(f))
 
-    if not os.path.exists(config.csv_folder):
-        raise ValueError("CSV folder does not exist. Please modify config file.")
+    if not os.path.exists(config.parquet_folder):
+        raise ValueError("parquet folder does not exist. Please modify config file.")
 
     warnings.filterwarnings("error")
 
@@ -108,18 +108,18 @@ if __name__ == "__main__":
     store.append_from(mapper6)
 
     print("Removing older dataset...")
-    for root, dirs, files in os.walk(config.csv_folder):
+    for root, dirs, files in os.walk(config.parquet_folder):
         for f in files:
             os.unlink(os.path.join(str(root), str(f)))
         for d in dirs:
             shutil.rmtree(os.path.join(root, d))
 
     print("Saving dataset...")
-    store.to_csv(config.csv_folder)
-    print(f"Saved to folder {config.csv_folder}")
+    store.to_parquet(config.parquet_folder)
+    print(f"Saved to folder {config.parquet_folder}")
 
     combined = store.combine_dataset()
     combined = utilities.typecast_wide_table(combined)
-    combined_path = os.path.join(config.csv_folder, "_" + "combined.csv")
-    combined.to_csv(combined_path, sep=",", index=False)
-    print(f"Saved Combined dataset to folder {config.csv_folder}.")
+    combined_path = os.path.join(config.parquet_folder, "_" + "combined.parquet")
+    combined.to_parquet(combined_path)
+    print(f"Saved Combined dataset to folder {config.parquet_folder}.")

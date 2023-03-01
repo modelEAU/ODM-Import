@@ -17,3 +17,4 @@ geomet
 pyyaml
 easydict
 requests
+pyarrow

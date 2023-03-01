@@ -316,7 +316,7 @@ class Odm:
             if df is None or df.empty:
                 continue
             complete_path = os.path.join(path, filename)
-            df.to_parquet(complete_path + ".parquet", sep=",", index=False)
+            df.to_parquet(complete_path + ".parquet")
         return
 
     def append_odm(self, other_odm) -> None:

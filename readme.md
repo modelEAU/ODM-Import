@@ -38,6 +38,7 @@ The `Odm` object is a python data class meant to hold the same data as the Open 
 * `append_odm` appends tables from an `Odm` objects and add it to the calling object.
 * `append_from` appends tables from objects of the [mapper class.](###Mapper-Class) and add it to the calling object.
 * `to_csv` saves the tables inside the `Odm` object in `.csv` files.
+* `to_parquet` saves the tables inside the `Odm` object in `.parquet` files.
 * `to_sqlite3` adds the data inside the `Odm` object to the right tables inside a sqlite3 database.
 * `combine_per_sample` creates a wide table (one row = one sample) with all characteristics recored in the other tables of the data model.
 

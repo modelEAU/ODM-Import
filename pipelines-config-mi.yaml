@@ -5,6 +5,7 @@ mapper_config: "wbe_odm/odm_mappers/mi_config.yaml"
 data_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/MI/Input"
 
 csv_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/MI/Output"
+parquet_folder: "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/MI/Output"
 
 source_files:
   static_data: "MI_Static_Data.xlsx"

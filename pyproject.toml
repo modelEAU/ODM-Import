@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "odm-import"
+version = "0.2023.1"
+description = "A package to import data to ODMv1.1"
+authors = ["jeandavidt <jeandavidt@gmail.com>"]
+license = "CCBY-4"
+readme = "README.md"
+packages = [{ include = "odm_import" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+geojson = "^3.0.1"
+geos = "^0.2.3"
+matplotlib = "^3.7.0"
+unidecode = "^1.3.6"
+dash = "^2.8.1"
+notebook = "^6.5.2"
+numpy = "^1.24.2"
+openpyxl = "3.1.0"
+pandas = "^1.5.3"
+plotly = "^5.13.1"
+pygeoif = "^1.0.0"
+pyproj = "^3.4.1"
+shapely = "^2.0.1"
+sqlalchemy = "^2.0.4"
+geojson-rewind = "^1.0.3"
+geomet = "^1.0.0"
+pyyaml = "^6.0"
+easydict = "^1.10"
+requests = "^2.28.2"
+pyarrow = "^11.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

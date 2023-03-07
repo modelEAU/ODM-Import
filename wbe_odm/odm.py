@@ -816,7 +816,7 @@ class TableCombiner(Odm):
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
-                category=FutureWarning,
+                category=DeprecationWarning,
                 message=(
                     ".*will attempt to set the values inplace instead of always setting a new array. "
                     "To retain the old behavior, use either.*"

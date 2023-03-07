@@ -37,6 +37,25 @@ general_defaults = {
     "notes": None,
 }
 
+populations = {
+    "13 - Laval": 446_572,
+    "12 - Chaudière-Appalaches": 431_910,
+    "10 - Nord-du-Québec": 13_485,
+    "05 - Estrie": 496_770,
+    "03 - Capitale-Nationale": 760_147,
+    "04 - Mauricie et Centre-du-Québec": 524_322,
+    "16 - Montérégie": 1_443_701,
+    "08 - Abitibi-Témiscamingue": 147_658,
+    "07 - Outaouais": 404_456,
+    "01 - Bas-Saint-Laurent": 196_795,
+    "09 - Côte-Nord": 89_368,
+    "06 - Montréal": 2_078_464,
+    "15 - Laurentides": 633_508,
+    "14 - Lanaudière": 524_642,
+    "02 - Saguenay-Lac-Saint-Jean": 277_378,
+    "11 - Gaspésie-Îles-de-la-Madeleine": 89_648,
+}
+
 
 values_to_save = {
     "cas_quo_tot_n": {"type": "conf", "dateType": "report"},
@@ -53,11 +72,11 @@ values_to_save = {
 
 vaccine_to_save = {
     "vac_cum_1_n": {
-        "type": "vaccineDose1",
+        "type": "pctVaccineDose1",
         "dateType": "report",
     },
     "vac_cum_2_n": {
-        "type": "vaccineDose2",
+        "type": "pctVaccineDose2",
         "dateType": "report",
     },
 }
@@ -158,7 +177,7 @@ class INSPQVaccineMapper(bm.BaseMapper):
             df["date"] = df["Date"]
             for variable, value in item_defaults.items():
                 df[variable] = value
-            df["value"] = df[item]
+            df["value"] = df[item] / df["Nom"].map(populations)
             df["polygonID"] = df["Nom"].map(poly_names)
             df["cphdID"] = build_cphd_ids(
                 df["reporterID"],

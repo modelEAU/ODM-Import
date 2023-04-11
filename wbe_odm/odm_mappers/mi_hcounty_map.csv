@@ -3,7 +3,7 @@ dd,CovidPublicHealthData,cphdID,,static Reporter+lab sheet,B;__const__hospAdm:st
 dd,CovidPublicHealthData,reporterID,,static Reporter+lab sheet,B,county_to_reporter
 dd,CovidPublicHealthData,polygonID,,static Polygon+lab sheet,B,county_to_polygon
 dd,CovidPublicHealthData,date,,lab sheet,D,parse_health_date
-dd,CovidPublicHealthData,type,hospAdm,,,
+dd,CovidPublicHealthData,type,hospcen,,,
 dd,CovidPublicHealthData,dateType,report,,,
 dd,CovidPublicHealthData,value,,lab sheet,C,coerce_float
 dd,CovidPublicHealthData,notes,,,,

@@ -120,6 +120,7 @@ if __name__ == "__main__":
 
     combined = store.combine_dataset()
     combined = utilities.typecast_wide_table(combined)
-    combined_path = os.path.join(config.parquet_folder, "_" + "combined.parquet")
+    combined_path = os.path.join(config.parquet_folder, "mi_01.parquet")
+    combined.set_index("Calculated_timestamp", inplace=True)
     combined.to_parquet(combined_path)
     print(f"Saved Combined dataset to folder {config.parquet_folder}.")

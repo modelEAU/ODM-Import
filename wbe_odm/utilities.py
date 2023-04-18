@@ -251,7 +251,7 @@ def reduce_bool(x, y):
         return np.nan
     elif pd.isna(y):
         return np.nan
-    return x and y
+    return x or y
 
 
 def reduce_by_type(series):

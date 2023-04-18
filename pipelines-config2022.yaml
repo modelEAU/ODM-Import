@@ -54,6 +54,8 @@ bsl_cities:
   - "riki"
   - "rdl"
 
+mcgill_virus_map: "/Users/jeandavidt/Developer/modelEAU/ODM-Import/wbe_odm/odm_mappers/mcgill_map_2022.csv"
+
 qc_lab_data: "Ongoing/COVIDProject_Lab Measurements.xlsx"
 qc_sheet_name: "Lab analyses"
 qc_lab: "modeleau_lab"
@@ -70,16 +72,22 @@ mtl_virus_data: "2022/CentrEau-COVID_Resultats_Montreal_2022.xlsx"
 mtl_virus_sheet_name: "Mtl Data Daily Samples (McGill)"
 mtl_quality_sheet_name: "MTL_Compil_STEP (int)"
 mtl_virus_lab: "frigon_lab"
+mtl_city_sheet: "MTL_Water_Quality"
+mtl_city_map: "/Users/jeandavidt/Developer/modelEAU/ODM-Import/wbe_odm/odm_mappers/city_montreal_wq_map.csv"
 
 lvl_virus_data: "2022/CentrEau-COVID_Resultats_Laval_2022.xlsx"
 lvl_virus_sheet_name: "LVL_Data Daily Samples (McGill)"
 lvl_quality_sheet_name: "LVL_Compil_ALL (int)"
 lvl_virus_lab: "frigon_lab"
+lvl_city_sheet: "LVL_Water_Quality"
+lvl_city_map: "/Users/jeandavidt/Developer/modelEAU/ODM-Import/wbe_odm/odm_mappers/city_laval_wq_map.csv"
 
 gtn_virus_data: "2022/CentrEau-COVID_Resultats_Gatineau_2022.xlsx"
 gtn_virus_sheet_name: "GTN_Data Daily Samples (McGill)"
 gtn_quality_sheet_name: "GTN_Compil_ALL (int)"
 gtn_virus_lab: "frigon_lab"
+gtn_city_sheet: "GTN_Water_Quality"
+gtn_city_map: "/Users/jeandavidt/Developer/modelEAU/ODM-Import/wbe_odm/odm_mappers/city_gatineau_wq_map.csv"
 
 poly_name: "polygons_2022.geojson"
 polys_to_extract:
@@ -90,3 +98,47 @@ site_name: "sites2022.geojson"
 plot_langs:
   - "french"
 
+health_polygons:
+  qc_01: prov_qc_hlthreg_capitale_nationale
+  qc_02: prov_qc_hlthreg_capitale_nationale
+  qc_03.1: prov_qc_hlthreg_capitale_nationale
+  qc_03.2: prov_qc_hlthreg_capitale_nationale
+  qc_03.3: prov_qc_hlthreg_capitale_nationale
+  qc_04: prov_qc_hlthreg_capitale_nationale
+  qc_05: prov_qc_hlthreg_capitale_nationale
+  qc_06.1: prov_qc_hlthreg_capitale_nationale
+  qc_06.2: prov_qc_hlthreg_capitale_nationale
+  qc_07.1: prov_qc_hlthreg_capitale_nationale
+  qc_07.2: prov_qc_hlthreg_capitale_nationale
+  qc_08: prov_qc_hlthreg_capitale_nationale
+  qc_09: prov_qc_hlthreg_capitale_nationale
+  qc_10: prov_qc_hlthreg_capitale_nationale
+  qc_11: prov_qc_hlthreg_capitale_nationale
+  qc_12: prov_qc_hlthreg_capitale_nationale
+  qc_13: prov_qc_hlthreg_capitale_nationale
+  qc_14: prov_qc_hlthreg_capitale_nationale
+  qc_15: prov_qc_hlthreg_capitale_nationale
+  qc_16.1: prov_qc_hlthreg_capitale_nationale
+  qc_16.2: prov_qc_hlthreg_capitale_nationale
+  qc_16.3: prov_qc_hlthreg_capitale_nationale
+  qc_16.4: prov_qc_hlthreg_capitale_nationale
+  mtl_01: prov_qc_hlthreg_montreal
+  mtl_02: prov_qc_hlthreg_montreal
+  mtl_05: prov_qc_hlthreg_montreal
+  mtl_08.1: prov_qc_hlthreg_montreal
+  mtl_08.2: prov_qc_hlthreg_montreal
+  mtl_11: prov_qc_hlthreg_montreal
+  mtl_12: prov_qc_hlthreg_montreal
+  mtl_16: prov_qc_hlthreg_montreal
+  riki_01: prov_qc_hlthreg_bas_saint_laurent
+  rdl_01: prov_qc_hlthreg_bas_saint_laurent
+  stak_01: prov_qc_hlthreg_bas_saint_laurent
+  stak_02: prov_qc_hlthreg_bas_saint_laurent
+  trpis_01: prov_qc_hlthreg_bas_saint_laurent
+  mtne_01: prov_qc_hlthreg_bas_saint_laurent
+  lvl_01: prov_qc_hlthreg_laval
+  lvl_02: prov_qc_hlthreg_laval
+  lvl_03: prov_qc_hlthreg_laval
+  lvl_04: prov_qc_hlthreg_laval
+  lvl_05: prov_qc_hlthreg_laval
+  gtn_01: prov_qc_hlthreg_outaouais

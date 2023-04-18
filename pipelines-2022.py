@@ -12,6 +12,7 @@ from easydict import EasyDict
 import visualizations
 from wbe_odm import odm, utilities
 from wbe_odm.odm_mappers import (
+    centreau_city_wq_mapper,
     inspq_mapper,
     mcgill_mapper,
     modeleau_mapper,
@@ -29,7 +30,7 @@ def str2bool(arg):
     elif value in str_no:
         return False
     else:
-        raise argparse.ArgumentError("Unrecognized boolean value.")
+        raise ValueError("Unrecognized boolean value.")
 
 
 def str2list(arg):
@@ -148,18 +149,23 @@ if __name__ == "__main__":
     print(source_cities)
 
     static_path = os.path.join(config.data_folder, config.static_data)
+    combined_path = None
+    combined = None
     if reload:
         if "qc" in source_cities:
             print("Importing data from Quebec City...")
             print("Importing viral data from Quebec City...")
-            qc_lab = mcgill_mapper.McGillMapper()
+            qc_lab = mcgill_mapper.McGillMapper(2022)
             virus_path = os.path.join(config.data_folder, config.qc_virus_data)
 
             qc_lab.read(
-                virus_path, static_path, config.qc_virus_sheet_name, config.qc_virus_lab
+                virus_path,
+                static_path,
+                config.qc_virus_sheet_name,
+                config.qc_virus_lab,
             )  # noqa
             print("Adding Quality Checks for Qc...")
-            qc_quality_checker = mcgill_mapper.QcChecker()
+            qc_quality_checker = mcgill_mapper.QcChecker(2022, date_check=False)
             qc_lab = qc_quality_checker.read_validation(
                 qc_lab, virus_path, config.qc_quality_sheet_name
             )
@@ -189,7 +195,7 @@ if __name__ == "__main__":
 
         if "mtl" in source_cities:
             print("Importing viral data from Montreal...")
-            mtl_lab = mcgill_mapper.McGillMapper()
+            mtl_lab = mcgill_mapper.McGillMapper(2022)
             virus_path = os.path.join(config.data_folder, config.mtl_virus_data)
 
             mtl_lab.read(
@@ -199,16 +205,24 @@ if __name__ == "__main__":
                 config.mtl_virus_lab,
             )  # noqa
             print("Adding Quality Checks for Montreal...")
-            mtl_quality_checker = mcgill_mapper.QcChecker()
+            mtl_quality_checker = mcgill_mapper.QcChecker(2022, date_check=False)
             mtl_lab = mtl_quality_checker.read_validation(
                 mtl_lab, virus_path, config.mtl_quality_sheet_name
             )
-
             store.append_from(mtl_lab)
+
+            print("Adding Water Quality data for Montreal...")
+
+            mtl_city_mapper = centreau_city_wq_mapper.WQCityMapper()
+
+            map_path = config.mtl_city_map
+            sheet_name = config.mtl_city_sheet
+            mtl_city_mapper.read(virus_path, sheet_name, map_path)
+            store.append_from(mtl_city_mapper)
 
         if "lvl" in source_cities:
             print("Importing viral data from Laval...")
-            lvl_lab = mcgill_mapper.McGillMapper()
+            lvl_lab = mcgill_mapper.McGillMapper(2022)
             virus_path = os.path.join(config.data_folder, config.lvl_virus_data)
 
             lvl_lab.read(
@@ -218,16 +232,23 @@ if __name__ == "__main__":
                 config.lvl_virus_lab,
             )  # noqa
             print("Adding Quality Checks for Laval...")
-            lvl_quality_checker = mcgill_mapper.QcChecker()
+            lvl_quality_checker = mcgill_mapper.QcChecker(2022, date_check=False)
             lvl_lab = lvl_quality_checker.read_validation(
                 lvl_lab, virus_path, config.lvl_quality_sheet_name
             )
-
             store.append_from(lvl_lab)
+
+            print("Adding Water Quality data for Laval...")
+            lvl_city_mapper = centreau_city_wq_mapper.WQCityMapper()
+
+            map_path = config.lvl_city_map
+            sheet_name = config.lvl_city_sheet
+            lvl_city_mapper.read(virus_path, sheet_name, map_path)
+            store.append_from(lvl_city_mapper)
 
         if "gtn" in source_cities:
             print("Importing viral data from Gatineau...")
-            gtn_lab = mcgill_mapper.McGillMapper()
+            gtn_lab = mcgill_mapper.McGillMapper(2022)
             virus_path = os.path.join(config.data_folder, config.gtn_virus_data)
 
             gtn_lab.read(
@@ -237,12 +258,20 @@ if __name__ == "__main__":
                 config.gtn_virus_lab,
             )  # noqa
             print("Adding Quality Checks for Gatineau...")
-            gtn_quality_checker = mcgill_mapper.QcChecker()
+            gtn_quality_checker = mcgill_mapper.QcChecker(2022, date_check=False)
             gtn_lab = gtn_quality_checker.read_validation(
                 gtn_lab, virus_path, config.gtn_quality_sheet_name
             )
 
             store.append_from(gtn_lab)
+
+            print("Adding Water Quality data for Gatineau...")
+            gtn_city_mapper = centreau_city_wq_mapper.WQCityMapper()
+
+            map_path = config.gtn_city_map
+            sheet_name = config.gtn_city_sheet
+            gtn_city_mapper.read(virus_path, sheet_name, map_path)
+            store.append_from(gtn_city_mapper)
 
         if publichealth:
             print("Importing case data from INSPQ...")
@@ -302,7 +331,10 @@ if __name__ == "__main__":
                     break
         if combined_path is None:
             combined = pd.DataFrame()
-        combined = pd.read_parquet(os.path.join(config.parquet_folder, str(f)))
+        else:
+            combined = pd.read_parquet(
+                os.path.join(config.parquet_folder, combined_path)
+            )
         combined = combined.replace("nan", np.nan)
         combined = utilities.typecast_wide_table(combined)
 
@@ -347,7 +379,7 @@ if __name__ == "__main__":
             print("building website plots for ", site_id, "...")
             plot_start_date = config.default_start_date
             plot_data, metadata = visualizations.centreau_website_data(
-                combined, labels, site_id, plot_start_date
+                combined, labels, site_id, config.health_polygons, plot_start_date
             )
             if (
                 isinstance(plot_data, pd.DataFrame)
@@ -385,4 +417,5 @@ if __name__ == "__main__":
                 dataset = utilities.build_site_specific_dataset(combined, city_site)
                 dataset = utilities.resample_per_day(dataset)
                 path = os.path.join(config.city_output_dir, f"{city_site}.parquet")
-                dataset.to_parquet(path)
+                if dataset is not None:
+                    dataset.to_parquet(path)

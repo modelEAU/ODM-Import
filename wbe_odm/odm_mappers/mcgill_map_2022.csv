@@ -1,0 +1,479 @@
+elementName,table,variableName,defaultValue,inputSources,labInputs,processingFunction
+Assay,AssayMethod,assayMethodID,,lab sheet,H;T;AJ,get_assay_method_id
+Assay,AssayMethod,instrumentID,,static AssayMethod+lab sheet,H;T,get_assay_instrument
+Assay,AssayMethod,name,,static AssayMethod+lab sheet,H;T,get_assay_name
+Assay,AssayMethod,version,,lab sheet,AJ,
+Assay,AssayMethod,summary,,lab sheet,H;T,
+Assay,AssayMethod,date,,lab sheet,Q,
+Assay,AssayMethod,link,,,,
+Assay,AssayMethod,extractionVolMl,,lab sheet,R,
+Assay,AssayMethod,lod,,lab sheet,LOD,
+Assay,AssayMethod,loq,,lab sheet,LOQ,
+Assay,AssayMethod,unit,gcrx,,,
+Assay,AssayMethod,methodConc,,lab sheet,T;R;W,write_concentration_method
+Assay,AssayMethod,methodExtraction,,lab sheet,AH,
+Assay,AssayMethod,methodPCR,,lab sheet,BZ,
+Assay,AssayMethod,qualityAssQC,,,,
+Assay,AssayMethod,inhibition,,,,
+Assay,AssayMethod,surrogateRecovery,,lab sheet,AC,
+Assay,AssayMethod,notes,,lab sheet,AB;AI,
+single,Sample,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+single,Sample,siteID,,lab sheet,D,get_site_id
+single,Sample,instrumentID,,,,
+single,Sample,reporterID,,static Reporter+lab sheet,N,get_reporter_id
+single,Sample,dateTime,,lab sheet,B;E,get_grab_date
+single,Sample,dateTimeStart,,lab sheet,A;B;E,get_start_date
+single,Sample,dateTimeEnd,,lab sheet,B,
+single,Sample,type,,lab sheet,H,get_sample_type
+single,Sample,collection,,lab sheet,E,get_collection_method
+single,Sample,preTreatment,,,,
+single,Sample,pooled,,lab sheet,L,sample_is_pooled
+single,Sample,children,,lab sheet,L;B,get_children_samples
+single,Sample,parent,,lab sheet,,
+single,Sample,sizeL,,lab sheet,I;__default__,get_sample_volume
+single,Sample,index,1,,,
+single,Sample,fieldSampleTempC,,lab sheet,J,get_field_sample_temp
+single,Sample,shippedOnIce,,lab sheet,K,get_shipped_on_ice
+single,Sample,storageTempC,,lab sheet,M,
+single,Sample,qualityFlag,,lab sheet,O,has_quality_flag
+single,Sample,notes,,lab sheet,P,
+TSS,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__wqTSS:str;Q;__const__1:int,get_wwmeasure_id
+TSS,WWMeasure,reporterID,,static Reporter+lab sheet,T,get_reporter_id
+TSS,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+TSS,WWMeasure,labID,,lab sheet,__labID__,
+TSS,WWMeasure,assayMethodID,,,,
+TSS,WWMeasure,analysisDate,,lab sheet,Q,
+TSS,WWMeasure,reportDate,,,,
+TSS,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+TSS,WWMeasure,type,wqTSS,,,
+TSS,WWMeasure,value,,lab sheet,Z,validate_value
+TSS,WWMeasure,unit,mgl,,,
+TSS,WWMeasure,aggregation,single,,,
+TSS,WWMeasure,index,1,,,
+TSS,WWMeasure,qualityFlag,,lab sheet,AA,has_quality_flag
+TSS,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+TSS,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+TSS,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+TSS,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+TSS,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+TSS,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+TSS,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+TSS,WWMeasure,notes,,lab sheet,AB,
+pH initial,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__wqPh:str;Q;__const__1:int,get_wwmeasure_id
+pH initial,WWMeasure,reporterID,,static Reporter+lab sheet,U,get_reporter_id
+pH initial,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+pH initial,WWMeasure,labID,,lab sheet,__labID__,
+pH initial,WWMeasure,assayMethodID,,,,
+pH initial,WWMeasure,analysisDate,,lab sheet,Q,
+pH initial,WWMeasure,reportDate,,,,
+pH initial,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+pH initial,WWMeasure,type,wqPh,,,
+pH initial,WWMeasure,value,,lab sheet,V,validate_value
+pH initial,WWMeasure,unit,ph,,,
+pH initial,WWMeasure,aggregation,single,,,
+pH initial,WWMeasure,index,1,,,
+pH initial,WWMeasure,qualityFlag,,lab sheet,AA,has_quality_flag
+pH initial,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+pH initial,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+pH initial,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+pH initial,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+pH initial,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+pH initial,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+pH initial,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+pH initial,WWMeasure,notes,,lab sheet,AB,
+Conductivity,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__wqCond:str;Q;__const__1:int,get_wwmeasure_id
+Conductivity,WWMeasure,reporterID,,static Reporter+lab sheet,U,get_reporter_id
+Conductivity,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+Conductivity,WWMeasure,labID,,lab sheet,__labID__,
+Conductivity,WWMeasure,assayMethodID,,,,
+Conductivity,WWMeasure,analysisDate,,lab sheet,Q,
+Conductivity,WWMeasure,reportDate,,,,
+Conductivity,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+Conductivity,WWMeasure,type,wqCond,,,
+Conductivity,WWMeasure,value,,lab sheet,Y,validate_value
+Conductivity,WWMeasure,unit,uscm,,,
+Conductivity,WWMeasure,aggregation,single,,,
+Conductivity,WWMeasure,index,1,,,
+Conductivity,WWMeasure,qualityFlag,,lab sheet,AA,has_quality_flag
+Conductivity,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+Conductivity,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+Conductivity,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+Conductivity,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+Conductivity,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+Conductivity,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+Conductivity,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+Conductivity,WWMeasure,notes,,lab sheet,AB,
+Turbidity,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__wqTurb:str;Q;__const__1:int,get_wwmeasure_id
+Turbidity,WWMeasure,reporterID,,static Reporter+lab sheet,U,get_reporter_id
+Turbidity,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+Turbidity,WWMeasure,labID,,lab sheet,__labID__,
+Turbidity,WWMeasure,assayMethodID,,,,
+Turbidity,WWMeasure,analysisDate,,lab sheet,Q,
+Turbidity,WWMeasure,reportDate,,,,
+Turbidity,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+Turbidity,WWMeasure,type,wqTurb,,,
+Turbidity,WWMeasure,value,,lab sheet,X,validate_value
+Turbidity,WWMeasure,unit,ntu,,,
+Turbidity,WWMeasure,aggregation,single,,,
+Turbidity,WWMeasure,index,1,,,
+Turbidity,WWMeasure,qualityFlag,,lab sheet,AA,has_quality_flag
+Turbidity,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+Turbidity,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+Turbidity,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+Turbidity,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+Turbidity,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+Turbidity,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+Turbidity,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+Turbidity,WWMeasure,notes,,lab sheet,AB,
+BRSV Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__brsv:str;AJ;__const__1:int,get_wwmeasure_id
+BRSV Ct1,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+BRSV Ct1,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+BRSV Ct1,WWMeasure,labID,,lab sheet,__labID__,
+BRSV Ct1,WWMeasure,assayMethodID,,,,
+BRSV Ct1,WWMeasure,analysisDate,,lab sheet,AJ,
+BRSV Ct1,WWMeasure,reportDate,,,,
+BRSV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+BRSV Ct1,WWMeasure,type,brsv,,,
+BRSV Ct1,WWMeasure,value,,lab sheet,AM,validate_value
+BRSV Ct1,WWMeasure,unit,ct,,,
+BRSV Ct1,WWMeasure,aggregation,single,,,
+BRSV Ct1,WWMeasure,index,1,,,
+BRSV Ct1,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+BRSV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+BRSV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+BRSV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+BRSV Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+BRSV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+BRSV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+BRSV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+BRSV Ct1,WWMeasure,notes,,lab sheet,CA,
+BRSV Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__brsv:str;AJ;__const__2:int,get_wwmeasure_id
+BRSV Ct2,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+BRSV Ct2,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+BRSV Ct2,WWMeasure,labID,,lab sheet,__labID__,
+BRSV Ct2,WWMeasure,assayMethodID,,,,
+BRSV Ct2,WWMeasure,analysisDate,,lab sheet,AJ,
+BRSV Ct2,WWMeasure,reportDate,,,,
+BRSV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+BRSV Ct2,WWMeasure,type,brsv,,,
+BRSV Ct2,WWMeasure,value,,lab sheet,AN,validate_value
+BRSV Ct2,WWMeasure,unit,ct,,,
+BRSV Ct2,WWMeasure,aggregation,single,,,
+BRSV Ct2,WWMeasure,index,2,,,
+BRSV Ct2,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+BRSV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+BRSV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+BRSV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+BRSV Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+BRSV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+BRSV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+BRSV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+BRSV Ct2,WWMeasure,notes,,lab sheet,CA,
+BRSV Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__brsv:str;AJ;__const__3:int,get_wwmeasure_id
+BRSV Ct3,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+BRSV Ct3,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+BRSV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+BRSV Ct3,WWMeasure,assayMethodID,,,,
+BRSV Ct3,WWMeasure,analysisDate,,lab sheet,AJ,
+BRSV Ct3,WWMeasure,reportDate,,,,
+BRSV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+BRSV Ct3,WWMeasure,type,brsv,,,
+BRSV Ct3,WWMeasure,value,,lab sheet,AO,validate_value
+BRSV Ct3,WWMeasure,unit,ct,,,
+BRSV Ct3,WWMeasure,aggregation,single,,,
+BRSV Ct3,WWMeasure,index,3,,,
+BRSV Ct3,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+BRSV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+BRSV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+BRSV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+BRSV Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+BRSV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+BRSV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+BRSV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+BRSV Ct3,WWMeasure,notes,,lab sheet,CA,
+BRSV % recovery,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__brsv:str;AJ;__const__4:int,get_wwmeasure_id
+BRSV % recovery,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+BRSV % recovery,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+BRSV % recovery,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+BRSV % recovery,WWMeasure,assayMethodID,,,,
+BRSV % recovery,WWMeasure,analysisDate,,lab sheet,AJ,
+BRSV % recovery,WWMeasure,reportDate,,,,
+BRSV % recovery,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+BRSV % recovery,WWMeasure,type,brsv,,,
+BRSV % recovery,WWMeasure,value,,lab sheet,AT,validate_value
+BRSV % recovery,WWMeasure,unit,pctRecovery,,,
+BRSV % recovery,WWMeasure,aggregation,single,,,
+BRSV % recovery,WWMeasure,index,4,,,
+BRSV % recovery,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+BRSV % recovery,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+BRSV % recovery,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+BRSV % recovery,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+BRSV % recovery,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+BRSV % recovery,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+BRSV % recovery,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+BRSV % recovery,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+BRSV % recovery,WWMeasure,notes,,lab sheet,CA,
+PMMV Ct1,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__pmmov:str;AJ;__const__1:int,get_wwmeasure_id
+PMMV Ct1,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+PMMV Ct1,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+PMMV Ct1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMV Ct1,WWMeasure,assayMethodID,,,,
+PMMV Ct1,WWMeasure,analysisDate,,lab sheet,AJ,
+PMMV Ct1,WWMeasure,reportDate,,,,
+PMMV Ct1,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+PMMV Ct1,WWMeasure,type,pmmov,,,
+PMMV Ct1,WWMeasure,value,,lab sheet,AV,validate_value
+PMMV Ct1,WWMeasure,unit,ct,,,
+PMMV Ct1,WWMeasure,aggregation,single,,,
+PMMV Ct1,WWMeasure,index,1,,,
+PMMV Ct1,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+PMMV Ct1,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+PMMV Ct1,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+PMMV Ct1,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+PMMV Ct1,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+PMMV Ct1,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+PMMV Ct1,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+PMMV Ct1,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+PMMV Ct1,WWMeasure,notes,,lab sheet,CA,
+PMMV Ct2,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__pmmov:str;AJ;__const__2:int,get_wwmeasure_id
+PMMV Ct2,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+PMMV Ct2,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+PMMV Ct2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMV Ct2,WWMeasure,assayMethodID,,,,
+PMMV Ct2,WWMeasure,analysisDate,,lab sheet,AJ,
+PMMV Ct2,WWMeasure,reportDate,,,,
+PMMV Ct2,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+PMMV Ct2,WWMeasure,type,pmmov,,,
+PMMV Ct2,WWMeasure,value,,lab sheet,AW,validate_value
+PMMV Ct2,WWMeasure,unit,ct,,,
+PMMV Ct2,WWMeasure,aggregation,single,,,
+PMMV Ct2,WWMeasure,index,2,,,
+PMMV Ct2,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+PMMV Ct2,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+PMMV Ct2,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+PMMV Ct2,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+PMMV Ct2,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+PMMV Ct2,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+PMMV Ct2,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+PMMV Ct2,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+PMMV Ct2,WWMeasure,notes,,lab sheet,CA,
+PMMV Ct3,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__pmmov:str;AJ;__const__3:int,get_wwmeasure_id
+PMMV Ct3,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+PMMV Ct3,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+PMMV Ct3,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMV Ct3,WWMeasure,assayMethodID,,,,
+PMMV Ct3,WWMeasure,analysisDate,,lab sheet,AJ,
+PMMV Ct3,WWMeasure,reportDate,,,,
+PMMV Ct3,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+PMMV Ct3,WWMeasure,type,pmmov,,,
+PMMV Ct3,WWMeasure,value,,lab sheet,AX,validate_value
+PMMV Ct3,WWMeasure,unit,ct,,,
+PMMV Ct3,WWMeasure,aggregation,single,,,
+PMMV Ct3,WWMeasure,index,3,,,
+PMMV Ct3,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+PMMV Ct3,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+PMMV Ct3,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+PMMV Ct3,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+PMMV Ct3,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+PMMV Ct3,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+PMMV Ct3,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+PMMV Ct3,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+PMMV Ct3,WWMeasure,notes,,lab sheet,CA,
+PMMV gcml,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__pmmov:str;AJ;__const__4:int,get_wwmeasure_id
+PMMV gcml,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+PMMV gcml,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+PMMV gcml,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+PMMV gcml,WWMeasure,assayMethodID,,,,
+PMMV gcml,WWMeasure,analysisDate,,lab sheet,AJ,
+PMMV gcml,WWMeasure,reportDate,,,,
+PMMV gcml,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+PMMV gcml,WWMeasure,type,pmmov,,,
+PMMV gcml,WWMeasure,value,,lab sheet,BC,validate_value
+PMMV gcml,WWMeasure,unit,gcml,,,
+PMMV gcml,WWMeasure,aggregation,single,,,
+PMMV gcml,WWMeasure,index,4,,,
+PMMV gcml,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+PMMV gcml,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+PMMV gcml,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+PMMV gcml,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+PMMV gcml,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+PMMV gcml,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+PMMV gcml,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+PMMV gcml,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+PMMV gcml,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 Ct1 n1,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN1:str;AJ;__const__1:int,get_wwmeasure_id
+SARS-CoV-2 Ct1 n1,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 Ct1 n1,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 Ct1 n1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 Ct1 n1,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 Ct1 n1,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 Ct1 n1,WWMeasure,reportDate,,,,
+SARS-CoV-2 Ct1 n1,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 Ct1 n1,WWMeasure,type,covN1,,,
+SARS-CoV-2 Ct1 n1,WWMeasure,value,,lab sheet,BD,validate_value
+SARS-CoV-2 Ct1 n1,WWMeasure,unit,ct,,,
+SARS-CoV-2 Ct1 n1,WWMeasure,aggregation,single,,,
+SARS-CoV-2 Ct1 n1,WWMeasure,index,1,,,
+SARS-CoV-2 Ct1 n1,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 Ct1 n1,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 Ct2 n1,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN1:str;AJ;__const__2:int,get_wwmeasure_id
+SARS-CoV-2 Ct2 n1,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 Ct2 n1,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 Ct2 n1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 Ct2 n1,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 Ct2 n1,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 Ct2 n1,WWMeasure,reportDate,,,,
+SARS-CoV-2 Ct2 n1,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 Ct2 n1,WWMeasure,type,covN1,,,
+SARS-CoV-2 Ct2 n1,WWMeasure,value,,lab sheet,BE,validate_value
+SARS-CoV-2 Ct2 n1,WWMeasure,unit,ct,,,
+SARS-CoV-2 Ct2 n1,WWMeasure,aggregation,single,,,
+SARS-CoV-2 Ct2 n1,WWMeasure,index,2,,,
+SARS-CoV-2 Ct2 n1,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 Ct2 n1,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 Ct3 n1,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN1:str;AJ;__const__3:int,get_wwmeasure_id
+SARS-CoV-2 Ct3 n1,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 Ct3 n1,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 Ct3 n1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 Ct3 n1,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 Ct3 n1,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 Ct3 n1,WWMeasure,reportDate,,,,
+SARS-CoV-2 Ct3 n1,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 Ct3 n1,WWMeasure,type,covN1,,,
+SARS-CoV-2 Ct3 n1,WWMeasure,value,,lab sheet,BF,validate_value
+SARS-CoV-2 Ct3 n1,WWMeasure,unit,ct,,,
+SARS-CoV-2 Ct3 n1,WWMeasure,aggregation,single,,,
+SARS-CoV-2 Ct3 n1,WWMeasure,index,3,,,
+SARS-CoV-2 Ct3 n1,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 Ct3 n1,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 gcml n1,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN1:str;AJ;__const__4:int,get_wwmeasure_id
+SARS-CoV-2 gcml n1,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 gcml n1,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 gcml n1,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 gcml n1,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 gcml n1,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 gcml n1,WWMeasure,reportDate,,,,
+SARS-CoV-2 gcml n1,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 gcml n1,WWMeasure,type,covN1,,,
+SARS-CoV-2 gcml n1,WWMeasure,value,,lab sheet,BK,validate_value
+SARS-CoV-2 gcml n1,WWMeasure,unit,gcml,,,
+SARS-CoV-2 gcml n1,WWMeasure,aggregation,single,,,
+SARS-CoV-2 gcml n1,WWMeasure,index,4,,,
+SARS-CoV-2 gcml n1,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 gcml n1,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 gcml n1,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 Ct1 n2,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN2:str;AJ;__const__1:int,get_wwmeasure_id
+SARS-CoV-2 Ct1 n2,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 Ct1 n2,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 Ct1 n2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 Ct1 n2,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 Ct1 n2,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 Ct1 n2,WWMeasure,reportDate,,,,
+SARS-CoV-2 Ct1 n2,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 Ct1 n2,WWMeasure,type,covN2,,,
+SARS-CoV-2 Ct1 n2,WWMeasure,value,,lab sheet,BP,validate_value
+SARS-CoV-2 Ct1 n2,WWMeasure,unit,ct,,,
+SARS-CoV-2 Ct1 n2,WWMeasure,aggregation,single,,,
+SARS-CoV-2 Ct1 n2,WWMeasure,index,1,,,
+SARS-CoV-2 Ct1 n2,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 Ct1 n2,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 Ct2 n2,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN2:str;AJ;__const__2:int,get_wwmeasure_id
+SARS-CoV-2 Ct2 n2,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 Ct2 n2,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 Ct2 n2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 Ct2 n2,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 Ct2 n2,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 Ct2 n2,WWMeasure,reportDate,,,,
+SARS-CoV-2 Ct2 n2,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 Ct2 n2,WWMeasure,type,covN2,,,
+SARS-CoV-2 Ct2 n2,WWMeasure,value,,lab sheet,BQ,validate_value
+SARS-CoV-2 Ct2 n2,WWMeasure,unit,ct,,,
+SARS-CoV-2 Ct2 n2,WWMeasure,aggregation,single,,,
+SARS-CoV-2 Ct2 n2,WWMeasure,index,2,,,
+SARS-CoV-2 Ct2 n2,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 Ct2 n2,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 Ct3 n2,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN2:str;AJ;__const__3:int,get_wwmeasure_id
+SARS-CoV-2 Ct3 n2,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 Ct3 n2,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 Ct3 n2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 Ct3 n2,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 Ct3 n2,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 Ct3 n2,WWMeasure,reportDate,,,,
+SARS-CoV-2 Ct3 n2,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 Ct3 n2,WWMeasure,type,covN2,,,
+SARS-CoV-2 Ct3 n2,WWMeasure,value,,lab sheet,BR,validate_value
+SARS-CoV-2 Ct3 n2,WWMeasure,unit,ct,,,
+SARS-CoV-2 Ct3 n2,WWMeasure,aggregation,single,,,
+SARS-CoV-2 Ct3 n2,WWMeasure,index,3,,,
+SARS-CoV-2 Ct3 n2,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 Ct3 n2,WWMeasure,notes,,lab sheet,CA,
+SARS-CoV-2 gcml n2,WWMeasure,wwMeasureID,,lab sheet,D;B;AC;__labID__;__const__1:int;__const__covN2:str;AJ;__const__4:int,get_wwmeasure_id
+SARS-CoV-2 gcml n2,WWMeasure,reporterID,,static Reporter+lab sheet,AL,get_reporter_id
+SARS-CoV-2 gcml n2,WWMeasure,sampleID,,lab sheet,D;B;AC;__labID__;__const__1:int,get_sample_id
+SARS-CoV-2 gcml n2,WWMeasure,labID,,lab sheet,__labID__,get_lab_id
+SARS-CoV-2 gcml n2,WWMeasure,assayMethodID,,,,
+SARS-CoV-2 gcml n2,WWMeasure,analysisDate,,lab sheet,AJ,
+SARS-CoV-2 gcml n2,WWMeasure,reportDate,,,,
+SARS-CoV-2 gcml n2,WWMeasure,fractionAnalyzed,,lab sheet,S,validate_fraction_analyzed
+SARS-CoV-2 gcml n2,WWMeasure,type,covN2,,,
+SARS-CoV-2 gcml n2,WWMeasure,value,,lab sheet,BW,validate_value
+SARS-CoV-2 gcml n2,WWMeasure,unit,gcml,,,
+SARS-CoV-2 gcml n2,WWMeasure,aggregation,single,,,
+SARS-CoV-2 gcml n2,WWMeasure,index,4,,,
+SARS-CoV-2 gcml n2,WWMeasure,qualityFlag,,lab sheet,BY,has_quality_flag
+SARS-CoV-2 gcml n2,WWMeasure,accessToPublic,TRUE,lab sheet,CC,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,accessToAllOrg,TRUE,lab sheet,CD,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,accessToPHAC,TRUE,lab sheet,CE,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,accessToLocalHA,TRUE,lab sheet,CF,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,accessToProvHA,TRUE,lab sheet,CG,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,accessToOtherProv,TRUE,lab sheet,CH,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,accessToDetails,TRUE,lab sheet,CI,grant_access
+SARS-CoV-2 gcml n2,WWMeasure,notes,,lab sheet,CA,

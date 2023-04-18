@@ -143,14 +143,14 @@ if __name__ == "__main__":
         if "qc" in source_cities:
             print("Importing data from Quebec City...")
             print("Importing viral data from Quebec City...")
-            qc_lab = mcgill_mapper.McGillMapper()
+            qc_lab = mcgill_mapper.McGillMapper(2021)
             virus_path = os.path.join(config.data_folder, config.qc_virus_data)
 
             qc_lab.read(
                 virus_path, static_path, config.qc_virus_sheet_name, config.qc_virus_lab
             )  # noqa
             print("Adding Quality Checks for Qc...")
-            qc_quality_checker = mcgill_mapper.QcChecker()
+            qc_quality_checker = mcgill_mapper.QcChecker(2021, date_check=False)
             qc_lab = qc_quality_checker.read_validation(
                 qc_lab, virus_path, config.qc_quality_sheet_name
             )
@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
             print("Importing data from Université Laval...")
             print("Importing viral data from Université Laval...")
-            ul_lab = mcgill_mapper.McGillMapper()
+            ul_lab = mcgill_mapper.McGillMapper(2021)
             virus_path = os.path.join(config.data_folder, config.ul_virus_data)
 
             ul_lab.read(
@@ -199,8 +199,8 @@ if __name__ == "__main__":
 
         if "mtl" in source_cities:
             print("Importing data from Montreal...")
-            mcgill_lab = mcgill_mapper.McGillMapper()
-            poly_lab = mcgill_mapper.McGillMapper()
+            mcgill_lab = mcgill_mapper.McGillMapper(2021)
+            poly_lab = mcgill_mapper.McGillMapper(2021)
             print("Importing viral data from McGill...")
             virus_path = os.path.join(config.data_folder, config.mtl_lab_data)
             mcgill_lab.read(
@@ -217,7 +217,7 @@ if __name__ == "__main__":
                 config.poly_virus_lab,
             )  # noqa
             print("Adding Quality Checks for mtl...")
-            mtl_quality_checker = mcgill_mapper.QcChecker()
+            mtl_quality_checker = mcgill_mapper.QcChecker(2021, date_check=False)
 
             store.append_from(mcgill_lab)
             store.append_from(poly_lab)
@@ -230,13 +230,13 @@ if __name__ == "__main__":
             source_cities.remove("bsl")
             source_cities.extend(config.bsl_cities)
             print("Importing data from Bas St-Laurent...")
-            bsl_lab = mcgill_mapper.McGillMapper()
+            bsl_lab = mcgill_mapper.McGillMapper(2021)
             virus_path = os.path.join(config.data_folder, config.bsl_lab_data)
             bsl_lab.read(
                 virus_path, static_path, config.bsl_sheet_name, config.bsl_virus_lab
             )  # noqa
             print("Adding Quality Checks for BSL...")
-            bsl_quality_check = mcgill_mapper.QcChecker()
+            bsl_quality_check = mcgill_mapper.QcChecker(2021, date_check=False)
             bsl_quality_check.read_validation(
                 bsl_lab, virus_path, config.bsl_quality_sheet_name
             )
@@ -244,13 +244,13 @@ if __name__ == "__main__":
 
         if "lvl" in source_cities:
             print("Importing data from Laval...")
-            lvl_lab = mcgill_mapper.McGillMapper()
+            lvl_lab = mcgill_mapper.McGillMapper(2021)
             virus_path = os.path.join(config.data_folder, config.lvl_lab_data)
             lvl_lab.read(
                 virus_path, static_path, config.lvl_sheet_name, config.lvl_virus_lab
             )  # noqa
             print("Adding Quality Checks for Laval...")
-            lvl_quality_checker = mcgill_mapper.QcChecker()
+            lvl_quality_checker = mcgill_mapper.QcChecker(2021, date_check=False)
             lvl_quality_checker.read_validation(
                 lvl_lab, virus_path, config.lvl_quality_sheet_name
             )

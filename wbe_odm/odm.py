@@ -436,7 +436,10 @@ class TableWidener:
             unique_col_qualifiers, self.features
         ):
             col_name = "_".join([col_qualifier, feature])
-            df[col_name] = pd.Series(dtype=np.float64)
+            if "flag" in col_name.lower():
+                df[col_name] = pd.Series(dtype=np.bool_)
+            else:
+                df[col_name] = pd.Series(dtype=np.float64)
             filt = df["col_qualifiers"] == col_qualifier
             df.loc[filt, col_name] = df.loc[filt, feature]  # type: ignore
         df.drop(columns=self.features + self.qualifiers, inplace=True)

@@ -76,6 +76,8 @@ class CsvMapper(base_mapper.BaseMapper):
         for datatype in types:
             if datatype in base_mapper.UNKNOWN_TOKENS:
                 datatype = "string"
+            if "date" in datatype:
+                datatype = "date"
             datatype = (
                 str(datatype)
                 .replace("date", "datetime64[ns]")
@@ -172,6 +174,8 @@ class CsvMapper(base_mapper.BaseMapper):
             series = pd.to_numeric(series, errors="coerce")
         elif desired_type == "datetime64[ns]":
             series = pd.to_datetime(series, errors="coerce", format=date_format)
+        elif desired_type == "nan":
+            return series
         series = series.astype(desired_type)
         return series
 

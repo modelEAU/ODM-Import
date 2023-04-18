@@ -2,6 +2,7 @@ import os
 import re
 import warnings
 from datetime import datetime
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,8 @@ LABEL_REGEX = r"[a-zA-Z]+_[0-9]+(\.[0-9])?_[a-zA-Z0-9]+_[a-zA-Z0-9]+"
 
 directory = os.path.dirname(__file__)
 
-MCGILL_MAP_NAME = f"{directory}/mcgill_map.csv"
+MCGILL_MAP_2021 = f"{directory}/mcgill_map.csv"
+MCGILL_MAP_2022 = f"{directory}/mcgill_map_2022.csv"
 
 LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -270,7 +272,8 @@ class MapperFuncs:
 
     @classmethod
     def has_quality_flag(cls, flag):
-        return flag != ""
+        negative_flags = ["", "0", "no", "n", "f", "false", "none", "nan"]
+        return ~flag.astype(str).str.lower().isin(negative_flags)
 
     @classmethod
     def get_sample_volume(cls, vols, default):
@@ -475,6 +478,10 @@ def parse_sheet(
 
 
 class QcChecker:
+    def __init__(self, version: Literal[2021, 2022], date_check: bool):
+        self.version = version
+        self.date_check = date_check
+
     def _find_df_borders(self, sheet_cols, idx_col_pos):
         pos_of_cols_w_headers = []
         for i, col in enumerate(sheet_cols):
@@ -578,6 +585,13 @@ class QcChecker:
             renamed_cols[col] = new_col
         return df.rename(columns=renamed_cols)
 
+    def _patch_pmmv_names(self, df):
+        bad_name = "PMMoV (gc/ml)"
+        correct_name = "PMMV (gc/ml)"
+        if bad_name in df.columns:
+            df = df.rename(columns={bad_name: correct_name})
+        return df
+
     def _extract_dfs(self, path, sheet_name, idx_col_pos=0, header_row_pos=4):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
@@ -587,21 +601,37 @@ class QcChecker:
         idx_col = CsvMapper.excel_style(idx_col_pos + 1)
 
         dfs = []
-        cols_to_keep = [
-            "BRSV (%rec)",
-            "Rejected by",
-            "PMMV (gc/ml)",
-            "Rejected by.1",
-            "SARS (gc/ml)",
-            "Rejected by.2",
-            "Quality Note",
-        ]
+        if self.version == 2021:
+            cols_to_keep = [
+                "BRSV (%rec)",
+                "Rejected by",
+                "PMMV (gc/ml)",
+                "Rejected by.1",
+                "SARS (gc/ml)",
+                "Rejected by.2",
+                "Quality Note",
+            ]
+        elif self.version == 2022:
+            cols_to_keep = [
+                "BRSV (%rec)",
+                "Quality_flag_BRSV",
+                "PMMV (gc/ml)",
+                "Quality_flag_PMMoV",
+                "SARS_N1 (gc/ml)",
+                "Quality_flag_SARS_N1",
+                "SARS_N2 (gc/ml)",
+                "Quality_flag_SARS_N2",
+                "Quality_flags_explication",
+            ]
+        else:
+            raise ValueError(f"Version {self.version} not supported")
         for start, end in zip(start_borders, end_borders):
             vals = self._get_values_df(path, sheet_name, start, end, header_row_pos)
             idx = self._get_index_series(path, sheet_name, idx_col, header_row_pos)
             df = vals.set_index(idx)
             df = self._clean_names(df)
-            df = df[cols_to_keep]
+            df = self._patch_pmmv_names(df)
+            df = df.loc[:, cols_to_keep]
             df = df.dropna(how="all")
             df.fillna("", inplace=True)
             dfs.append(df)
@@ -620,28 +650,57 @@ class QcChecker:
     def _apply_quality_checks(
         self, mapper, v_df, last_date, site_id, sample_collection
     ):
-        charac = {
-            "BRSV (%rec)": {
-                "rejected_col": "Rejected by",
-                "unit": "pctrecovery",
-                "type": "brsv",
-            },
-            "PMMV (gc/ml)": {
-                "rejected_col": "Rejected by.1",
-                "unit": "gcml",
-                "type": "pmmov",
-            },
-            "SARS (gc/ml)": {
-                "rejected_col": "Rejected by.2",
-                "unit": "gcml",
-                "type": "covn1",
-            },
-        }
+        if self.version == 2021:
+            charac = {
+                "BRSV (%rec)": {
+                    "rejected_col": "Rejected by",
+                    "unit": "pctrecovery",
+                    "type": "brsv",
+                },
+                "PMMV (gc/ml)": {
+                    "rejected_col": "Rejected by.1",
+                    "unit": "gcml",
+                    "type": "pmmov",
+                },
+                "SARS (gc/ml)": {
+                    "rejected_col": "Rejected by.2",
+                    "unit": "gcml",
+                    "type": "covn1",
+                },
+            }
+        elif self.version == 2022:
+            charac = {
+                "BRSV (%rec)": {
+                    "rejected_col": "Quality_flag_BRSV",
+                    "unit": "pctrecovery",
+                    "type": "brsv",
+                },
+                "PMMV (gc/ml)": {
+                    "rejected_col": "Quality_flag_PMMoV",
+                    "unit": "gcml",
+                    "type": "pmmov",
+                },
+                "SARS_N1 (gc/ml)": {
+                    "rejected_col": "Quality_flag_SARS_N1",
+                    "unit": "gcml",
+                    "type": "covn1",
+                },
+                "SARS_N2 (gc/ml)": {
+                    "rejected_col": "Quality_flag_SARS_N2",
+                    "unit": "gcml",
+                    "type": "covn2",
+                },
+            }
+        else:
+            raise ValueError(f"Version {self.version} not supported")
 
         samples = mapper.sample.copy()
         samples = self._parse_dates(samples)
         ww = mapper.ww_measure.copy()
 
+        quality_note_col = (
+            "Quality Note" if self.version == 2021 else "Quality_flags_explication"
+        )
         sample_collection_filt = (
             samples["collection"].str.lower().str.contains(sample_collection)
         )
@@ -662,7 +721,7 @@ class QcChecker:
 
             samples.loc[sample_tot_filt, ["qualityFlag", "notes"]] = [
                 True,
-                row["Quality Note"],
+                row[quality_note_col],
             ]
 
             sample_list = (
@@ -679,7 +738,7 @@ class QcChecker:
 
                     ww.loc[ww_tot_filt, ["qualityFlag", "notes"]] = [
                         True,
-                        row["Quality Note"],
+                        row[quality_note_col],
                     ]
 
         if "grb" in sample_collection:
@@ -687,26 +746,27 @@ class QcChecker:
         else:
             sample_last_date_filt = samples["dateTimeEnd"] > last_date
 
-        unchecked_filt = (
-            sample_collection_filt & sample_sites_filt & sample_last_date_filt
-        )
-        samples.loc[unchecked_filt, ["qualityFlag", "notes"]] = [
-            True,
-            "Unchecked viral measurements",
-        ]
+        if self.date_check:
+            unchecked_filt = (
+                sample_collection_filt & sample_sites_filt & sample_last_date_filt
+            )
+            samples.loc[unchecked_filt, ["qualityFlag", "notes"]] = [
+                True,
+                "Unchecked viral measurements",
+            ]
 
-        unchecked_sample_ids = (
-            samples.loc[unchecked_filt, "sampleID"].drop_duplicates().to_list()
-        )
+            unchecked_sample_ids = (
+                samples.loc[unchecked_filt, "sampleID"].drop_duplicates().to_list()
+            )
 
-        ww_u_type_filt = (
-            ww["type"].str.lower().isin([x["type"] for x in charac.values()])
-        )
-        ww_u_sample_filt = ww["sampleID"].isin(unchecked_sample_ids)
-        ww.loc[ww_u_type_filt & ww_u_sample_filt, ["qualityFlag", "notes"]] = [
-            True,
-            "Unchecked viral measurement",
-        ]
+            ww_u_type_filt = (
+                ww["type"].str.lower().isin([x["type"] for x in charac.values()])
+            )
+            ww_u_sample_filt = ww["sampleID"].isin(unchecked_sample_ids)
+            ww.loc[ww_u_type_filt & ww_u_sample_filt, ["qualityFlag", "notes"]] = [
+                True,
+                "Unchecked viral measurement",
+            ]
 
         mapper.sample = samples
         mapper.ww_measure = ww
@@ -734,7 +794,8 @@ class QcChecker:
 
 
 class McGillMapper(CsvMapper):
-    def __init__(self, processing_functions=MapperFuncs):
+    def __init__(self, version: Literal[2021, 2022], processing_functions=MapperFuncs):
+        self.version = version
         super().__init__(processing_functions=processing_functions)
 
     def get_attr_from_table_name(self, table_name: str) -> str:
@@ -779,15 +840,24 @@ class McGillMapper(CsvMapper):
         staticdata_path,
         worksheet_name,
         lab_id,
-        map_path=MCGILL_MAP_NAME,
         startdate=None,
         enddate=None,
     ):
+        # choose the right map file
+        if self.version == 2021:
+            map_path = MCGILL_MAP_2021
+            col_range = "A:BV"
+        elif self.version == 2022:
+            map_path = MCGILL_MAP_2022
+            col_range = "A:CI"
+        else:
+            raise ValueError(f"Version {self.version} not supported")
+
         # get the lab data
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore")
             lab = pd.read_excel(
-                labsheet_path, sheet_name=worksheet_name, header=None, usecols="A:BV"
+                labsheet_path, sheet_name=worksheet_name, header=None, usecols=col_range
             )
         # parse the headers to deal with merged cells and get unique names
         lab.columns = self.get_excel_style_columns(lab)
@@ -796,7 +866,7 @@ class McGillMapper(CsvMapper):
         lab = lab.iloc[6:]
         lab = remove_bad_rows(lab)
         lab = self.typecast_lab(lab, lab_datatypes)
-        lab = lab.dropna(how="all")
+        # lab = lab.dropna(how="all")
         mapping = pd.read_csv(map_path, header=0)
         mapping.fillna("", inplace=True)
         mapping = mapping.astype(str)
@@ -821,12 +891,10 @@ class McGillMapper(CsvMapper):
         return True
 
 
-def debug():
-    mapper = McGillMapper(processing_functions=MapperFuncs)
-    lab_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/CentrEau-COVID_Resultats_Quebec_final.xlsx"  # noqa
-    static_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/CentrEAU-COVID_Static_Data.xlsx"  # noqa
-    # lab_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/CentrEau-COVID_Resultats_Quebec_final.xlsx" # noqa
-    # static_data = "/Users/martinwellman/Documents/Health/Wastewater/McGillLabData/mcgill_static.xlsx"  # noqa
+def debug_test():
+    mapper = McGillMapper(2021, processing_functions=MapperFuncs)
+    lab_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/2021/CentrEau-COVID_Resultats_test.xlsx"  # noqa
+    static_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/Ongoing/CentrEAU-COVID_Static_Data.xlsx"  # noqa
     sheet_name = "QC Data Daily Samples (McGill)"
     lab_id = "frigon_lab"
     mapper.read(
@@ -834,19 +902,69 @@ def debug():
         static_data,
         sheet_name,
         lab_id,
-        map_path=MCGILL_MAP_NAME,
         startdate=None,
         enddate=None,
     )
-    print(mapper.ww_measure.head())
-    qc_quality_checker = QcChecker()
+    print(mapper.ww_measure.loc[mapper.ww_measure["qualityFlag"]])
+    qc_quality_checker = QcChecker(2021, date_check=True)
     qc_lab = qc_quality_checker.read_validation(
         mapper, lab_data, "QC_Compil_STEP (int)"
     )
-    print(qc_lab.ww_measure)
+    with_flag = qc_lab.ww_measure.loc[qc_lab.ww_measure["qualityFlag"]]
+    print(with_flag)
+
+
+def debug_2021():
+    mapper = McGillMapper(2021, processing_functions=MapperFuncs)
+    lab_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/2021/CentrEau-COVID_Resultats_Quebec_final.xlsx"  # noqa
+    static_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/Ongoing/CentrEAU-COVID_Static_Data.xlsx"  # noqa
+
+    sheet_name = "QC Data Daily Samples (McGill)"
+    lab_id = "frigon_lab"
+    mapper.read(
+        lab_data,
+        static_data,
+        sheet_name,
+        lab_id,
+        startdate=None,
+        enddate=None,
+    )
+    print(mapper.ww_measure.loc[mapper.ww_measure["qualityFlag"]])
+    qc_quality_checker = QcChecker(2021, date_check=True)
+    qc_lab = qc_quality_checker.read_validation(
+        mapper, lab_data, "QC_Compil_STEP (int)"
+    )
+    with_flag = qc_lab.ww_measure.loc[qc_lab.ww_measure["qualityFlag"]]
+    print(with_flag)
+
+
+def debug_2022():
+    mapper = McGillMapper(2022, processing_functions=MapperFuncs)
+    lab_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/2022/CentrEau-COVID_Resultats_Quebec_2022.xlsx"  # noqa
+    static_data = "/Users/jeandavidt/Library/CloudStorage/OneDrive-UniversitéLaval/Université/Doctorat/COVID/Latest Data/Input/Ongoing/CentrEAU-COVID_Static_Data.xlsx"  # noqa
+
+    sheet_name = "QC Data Daily Samples (McGill)"
+    lab_id = "frigon_lab"
+    mapper.read(
+        lab_data,
+        static_data,
+        sheet_name,
+        lab_id,
+        startdate=None,
+        enddate=None,
+    )
+    print(mapper.ww_measure.loc[mapper.ww_measure["qualityFlag"]])
+    qc_quality_checker = QcChecker(2022, date_check=True)
+    qc_lab = qc_quality_checker.read_validation(
+        mapper, lab_data, "QC_Compil_STEP (int)"
+    )
+
+    print(qc_lab.ww_measure.loc[qc_lab.ww_measure["qualityFlag"]])
 
 
 if __name__ == "__main__":
     with warnings.catch_warnings():
         warnings.filterwarnings(action="error")
-        debug()
+        # debug_test()
+        debug_2021()
+        # debug_2022()

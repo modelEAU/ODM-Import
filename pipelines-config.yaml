@@ -82,11 +82,13 @@ bsl_cities:
   - "riki"
   - "rdl"
 bsl_quality_sheet_name: "BSL_Compil_STEP (int)"
+bsl_city_data: "2021/cities/CentrEau-COVID_Données-de-sites-VILLE-BSL.xlsx"
 
 lvl_lab_data: "2021/CentrEau-COVID_Resultats_Laval_final.xlsx"
 lvl_sheet_name: "LVL_Data Daily Samples (Poly)"
 lvl_virus_lab: "dorner_lab"
 lvl_quality_sheet_name: "LVL_Compil_ALL (int)"
+lvl_city_data: "2021/cities/CentrEau-COVID_Données-de-sites-VILLE LAVAL.xlsx"
 
 poly_name: "polygons.geojson"
 polys_to_extract:

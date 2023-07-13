@@ -42,7 +42,7 @@ class WQCityMapper(CsvMapper):
         )
         final_site_measure_dfs = []
         for site_id, site_df in zip(sites, origin_site_dfs):
-            if site_id == "lvl_05" or site_id == "lvl_02":
+            if site_id in ["lvl_05", "lvl_02"]:
                 # for these, there is no COD or BOD, so we must change remove the rows that have wwCOD or wwBOD5c in the variableName column and for wwTemp, wwTurb and wwCond, we have to change the letter of the column containing the data to the current one minus 2
 
                 variable_mapping = mapping[
@@ -174,8 +174,9 @@ class WQCityMapper(CsvMapper):
         sheet_cols = [str(col) for col in sheet_df.columns]
         start_borders, end_borders = self._find_df_borders(sheet_cols, idx_col_pos)
         # remove every second item in start_borders and end_borders
-        start_borders = start_borders[::2]
-        end_borders = end_borders[::2]
+        if "mtl" not in site_ids[0]:
+            start_borders = start_borders[::2]
+            end_borders = end_borders[::2]
 
         idx_col = CsvMapper.excel_style(idx_col_pos + 1)
 

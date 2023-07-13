@@ -12,6 +12,7 @@ from easydict import EasyDict
 import visualizations
 from wbe_odm import odm, utilities
 from wbe_odm.odm_mappers import (
+    cities_2021_centreau_mapper,
     inspq_mapper,
     mcgill_mapper,
     modeleau_mapper,
@@ -242,6 +243,13 @@ if __name__ == "__main__":
             )
             store.append_from(bsl_lab)
 
+            bsl_city = cities_2021_centreau_mapper.WQCityMapper2021()
+            city_path = os.path.join(config.data_folder, config.bsl_city_data)
+            bsl_city.read(
+                city_path,
+            )
+            store.append_from(bsl_city)
+
         if "lvl" in source_cities:
             print("Importing data from Laval...")
             lvl_lab = mcgill_mapper.McGillMapper(2021)
@@ -255,6 +263,10 @@ if __name__ == "__main__":
                 lvl_lab, virus_path, config.lvl_quality_sheet_name
             )
             store.append_from(lvl_lab)
+            lvl_city = cities_2021_centreau_mapper.WQCityMapper2021()
+            city_path = os.path.join(config.data_folder, config.lvl_city_data)
+            lvl_city.read(city_path)
+            store.append_from(lvl_city)
 
         if publichealth:
             print("Importing case data from INSPQ...")

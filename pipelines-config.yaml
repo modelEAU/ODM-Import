@@ -71,6 +71,8 @@ mtl_mcgill_sheet_name: "Mtl Data Daily Samples (McGill)"
 mtl_quality_sheet_name: "MTL_Compil_STEP (int)"
 mcgill_virus_lab: "frigon_lab"
 poly_virus_lab: "dorner_lab"
+mtl_city_data: "2021/cities/CentrEau-COVID_Données-de-sites-VILLE MONTRÉAL.xlsx"
+mtl_city_map: "cities_2021_mtl_map.csv"
 
 bsl_lab_data: "2021/CentrEau-COVID_Resultats_BSL_final.xlsx"
 bsl_sheet_name: "BSL Data Daily Samples (UQAR)"

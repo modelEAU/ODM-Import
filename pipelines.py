@@ -225,6 +225,11 @@ if __name__ == "__main__":
             store = mtl_quality_checker.read_validation(
                 store, virus_path, config.mtl_quality_sheet_name
             )
+            print("Adding Water Quality Data for mtl...")
+            mtl_city = cities_2021_centreau_mapper.WQCityMapper2021()
+            city_path = os.path.join(config.data_folder, config.mtl_city_data)
+            mtl_city.read(city_path, map_name=config.mtl_city_map)
+            store.append_from(mtl_city)
 
         if "bsl" in source_cities:
             print(f"BSL cities found in config file are {config.bsl_cities}")

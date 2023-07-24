@@ -7,6 +7,7 @@ from wbe_odm.odm_mappers.csv_mapper import CsvMapper
 CITY_MAP_PATH = Path(str(sys.modules[__name__].__file__)).parent
 CITY_MAP_FILE = "cities_2021_centreau_map.csv"
 
+
 class MapperFuncs:
     @classmethod
     def create_site_measure_id(cls, site_id, dates, parameters):
@@ -26,18 +27,18 @@ class MapperFuncs:
     @classmethod
     def parse_date(cls, dates):
         return pd.to_datetime(dates)
-    
+
 
 class WQCityMapper2021(CsvMapper):
     def __init__(self, processing_functions=MapperFuncs):
         super().__init__(processing_functions=processing_functions)
-    
-    def read(self, data_path, map_path = CITY_MAP_PATH / CITY_MAP_FILE):
+
+    def read(self, data_path, map_dir=CITY_MAP_PATH, map_name=CITY_MAP_FILE):
+        map_path = Path(map_dir) / map_name
         static_data = self.read_static_data(None)
         mapping = pd.read_csv(map_path)
         mapping.fillna("", inplace=True)
         mapping = mapping.astype(str)
-
 
         site_dfs = pd.read_excel(data_path, sheet_name=None, header=0)
         final_dfs = []
@@ -45,7 +46,7 @@ class WQCityMapper2021(CsvMapper):
             site_df = df.copy()
             # drop the first row
             site_df.drop(site_df.index[0], inplace=True)
-            
+
             site_df.columns = [
                 self.excel_style(i + 1) for i, _ in enumerate(site_df.columns.to_list())
             ]
@@ -65,5 +66,4 @@ class WQCityMapper2021(CsvMapper):
         site_measure.dropna(subset=["value"], inplace=True)
         site_measure = self.type_cast_table("SiteMeasure", site_measure)
         self.site_measure = site_measure
-        return 
-    
+        return
